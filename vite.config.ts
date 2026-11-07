@@ -2,7 +2,7 @@
 // the @ alias and the Lovable preview helpers — do NOT add them again here.
 //
 // Default build (outside Lovable): dist/client (static files) + dist/server/server.js
-// (a standard fetch handler) served by `npm start` (server.mjs) on any Node.js host.
+// (a standard fetch handler) served by `npm start` (start.mjs) on any Node.js host.
 // Serverless targets (Vercel, Netlify, Cloudflare…) are opt-in through Nitro:
 //   NITRO_PRESET=vercel npm run build
 import { loadEnv } from "vite";

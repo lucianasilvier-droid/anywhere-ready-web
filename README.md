@@ -15,7 +15,7 @@ roda em VPS, Docker, servidor tradicional com Nginx, Render, Railway, Fly.io ou 
 | --- | --- |
 | `npm run dev` | Desenvolvimento em http://localhost:3000 (recarrega ao salvar) |
 | `npm run build` | Build de produção em `dist/` (`dist/client` estático + `dist/server/server.js`) |
-| `npm start` | Servidor de produção autônomo (`server.mjs`) |
+| `npm start` | Servidor de produção autônomo (`start.mjs`) |
 | `npm run preview` | Build + start, para testar a produção localmente |
 | `npm run db:migrate` | Aplica as migrações pendentes do banco |
 | `npm run db:status` | Lista migrações aplicadas e pendentes |
@@ -35,7 +35,7 @@ npm run dev                   # ou: npm run build && npm start
 ## Estrutura
 
 ```text
-server.mjs                 servidor Node de produção (estáticos + SSR + API, gzip/brotli, /healthz)
+start.mjs                  servidor Node de produção (estáticos + SSR + API, gzip/brotli, /healthz)
 src/
   routes/                  páginas e rotas de API (src/routes/api/*)
   components/  hooks/      interface

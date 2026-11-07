@@ -7,7 +7,7 @@ import { join, relative, sep } from "node:path";
 const PASTAS = ["src", "db", "scripts", "deploy", "public"];
 const ARQUIVOS_RAIZ = [
   "package.json",
-  "server.mjs",
+  "start.mjs",
   "Dockerfile",
   ".dockerignore",
   "docker-compose.yml",
