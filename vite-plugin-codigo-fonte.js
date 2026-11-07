@@ -15,15 +15,12 @@ const ARQUIVOS_RAIZ = [
   "vercel.json",
   ".env.example",
   "README.md",
-  "vite.config.js",
+  "vite.config.ts",
   "eslint.config.js",
   "vite-plugin-codigo-fonte.js",
   "drizzle.config.ts",
   "tailwind.config.js",
-  "postcss.config.js",
   "components.json",
-  "jsconfig.json",
-  "index.html",
 ];
 const EXTENSOES = /\.(js|jsx|ts|tsx|mjs|cjs|css|json|sql|html|md|txt|xml|svg|toml|conf|yml|yaml|service)$/i;
 const IGNORAR = /(^|\/)(node_modules|dist|storage|\.git)(\/|$)|(^|\/)\.env(?!\.example$)/;
