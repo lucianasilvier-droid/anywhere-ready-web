@@ -1,0 +1,400 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Search, Loader2, Plus, MapPin, Phone, Star, Check, Target, X, CalendarClock } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { searchPlacesFn } from "@/lib/admin-fns";
+import { meuLimiteCrmFn } from "@/lib/representantes-fns";
+import { useEntityList } from "@/hooks/useEntityList";
+import { FUNIL_STAGES } from "@/lib/site-content";
+import StatusPill from "@/components/admin/StatusPill";
+import EmptyState from "@/components/admin/EmptyState";
+import { STATUS_CONSENT } from "@/lib/format";
+import { useAuth } from "@/lib/AuthContext";
+import RepresentanteDoLead from "@/components/crm/RepresentanteDoLead";
+
+/**
+ * CRM · prospecção e lista de leads. Usado no painel do administrador (base "/admin")
+ * e no painel do representante (base "/representante"), onde só aparecem os clientes
+ * do próprio representante e vale o limite diário de novos clientes.
+ */
+export default function CrmLeads({ base = "/admin" }) {
+  const representante = base === "/representante";
+  const carregarLimite = useServerFn(meuLimiteCrmFn);
+  const [limite, setLimite] = useState(null);
+  const atualizarLimite = () => {
+    if (!representante) return;
+    carregarLimite()
+      .then((r) => setLimite(r?.liberado ? r : null))
+      .catch(() => {});
+  };
+  useEffect(() => {
+    atualizarLimite();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [representante]);
+  const esgotado = representante && limite && limite.restantes <= 0;
+
+  const { user } = useAuth();
+  const buscar = useServerFn(searchPlacesFn);
+  const { items: leads, loading, reload } = useEntityList("Lead", {}, { limit: 300 });
+  const [termo, setTermo] = useState("");
+  const [local, setLocal] = useState("");
+  const [resultados, setResultados] = useState([]);
+  const [erroBusca, setErroBusca] = useState("");
+  const [salvando, setSalvando] = useState("");
+  const [filtro, setFiltro] = useState("");
+  const [filtroRep, setFiltroRep] = useState("");
+  const [buscaLocal, setBuscaLocal] = useState("");
+  const [manual, setManual] = useState(false);
+  const [novo, setNovo] = useState({ empresa: "", telefone: "", cidade: "", categoria: "" });
+
+  const existentes = useMemo(
+    () => new Set(leads.map((l) => l.place_id).filter(Boolean)),
+    [leads],
+  );
+
+  const mutation = useMutation({
+    mutationFn: (textQuery) => buscar({ data: { textQuery, max: 12 } }),
+    onSuccess: (r) => {
+      setResultados(r?.places || []);
+      setErroBusca(r?.ok ? r?.aviso || "" : r?.error || "Não foi possível pesquisar agora.");
+    },
+    onError: (e) => {
+      setResultados([]);
+      setErroBusca(e?.message || "Não foi possível pesquisar agora.");
+    },
+  });
+
+  function pesquisar(e) {
+    e.preventDefault();
+    setErroBusca("");
+    if (termo.trim().length < 3) return setErroBusca("Digite ao menos 3 letras (ex.: restaurante).");
+    const query = local.trim() ? `${termo.trim()} em ${local.trim()}` : termo.trim();
+    mutation.mutate(query);
+  }
+
+  async function salvarLead(place) {
+    setSalvando(place.place_id);
+    try {
+      await base44.entities.Lead.create({
+        ...place,
+        origem: place.fonte === "openstreetmap" ? "openstreetmap" : "google_places",
+        etapa: "novo_lead",
+        responsavel: user?.full_name || user?.email || "",
+        responsavel_email: user?.email || "",
+        consentimento: "nao_solicitado",
+      });
+      toast.success(`${place.empresa} salvo no CRM.`);
+      await reload();
+      atualizarLimite();
+    } catch (e) {
+      toast.error(e?.message || "Não foi possível salvar o lead.");
+      atualizarLimite();
+    } finally {
+      setSalvando("");
+    }
+  }
+
+  async function criarManual(e) {
+    e.preventDefault();
+    if (novo.empresa.trim().length < 2) return toast.error("Informe o nome da empresa.");
+    try {
+      await base44.entities.Lead.create({
+        ...novo,
+        origem: "manual",
+        etapa: "novo_lead",
+        responsavel: user?.full_name || "",
+        responsavel_email: user?.email || "",
+        consentimento: "nao_solicitado",
+      });
+      toast.success("Lead criado.");
+      setNovo({ empresa: "", telefone: "", cidade: "", categoria: "" });
+      setManual(false);
+      await reload();
+      atualizarLimite();
+    } catch (err) {
+      toast.error(err?.message || "Não foi possível criar o lead.");
+      atualizarLimite();
+    }
+  }
+
+  // Representantes que têm clientes no CRM, para o filtro do administrador.
+  const repsDosLeads = useMemo(() => {
+    const mapa = new Map();
+    for (const l of leads) {
+      if (!l.representante_id) continue;
+      const atual = mapa.get(l.representante_id) || { id: l.representante_id, nome: l.representante_nome || "Representante", total: 0 };
+      atual.total += 1;
+      mapa.set(l.representante_id, atual);
+    }
+    return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [leads]);
+
+  const filtrados = leads.filter((l) => {
+    if (filtro && l.etapa !== filtro) return false;
+    if (filtroRep === "_equipe" && l.representante_id) return false;
+    if (filtroRep && filtroRep !== "_equipe" && l.representante_id !== filtroRep) return false;
+    if (buscaLocal) {
+      const q = buscaLocal.toLowerCase();
+      return `${l.empresa} ${l.cidade} ${l.bairro} ${l.categoria}`.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/80">CRM</p>
+          <h1 className="mt-1.5 font-heading text-2xl font-extrabold text-white">Prospecção de empresas</h1>
+          <p className="mt-1 text-[13px] text-white/45">
+            {representante
+              ? "Pesquise empresas reais no Google, adicione os seus clientes ao CRM e acompanhe cada um no funil."
+              : "Pesquise empresas reais no Google Places, salve como lead e evite duplicidades."}
+          </p>
+        </div>
+        <button
+          disabled={esgotado}
+          onClick={() => setManual((v) => !v)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-4 py-2 text-[12.5px] font-semibold text-white/75 hover:border-primary/40 disabled:opacity-40"
+        >
+          <Plus className="h-3.5 w-3.5" /> {representante ? "Cliente manual" : "Lead manual"}
+        </button>
+      </header>
+
+      {representante && limite && (
+        <div
+          className={`flex flex-wrap items-center gap-2 rounded-2xl border px-4 py-3 text-[12.5px] ${
+            esgotado ? "border-amber-500/30 bg-amber-500/10 text-amber-200" : "border-primary/25 bg-primary/[0.06] text-white/75"
+          }`}
+        >
+          <CalendarClock className="h-4 w-4 shrink-0 text-primary" />
+          <span>
+            Hoje você adicionou <strong className="text-white">{limite.usados}</strong> de{" "}
+            <strong className="text-white">{limite.limite}</strong> clientes permitidos por dia.
+            {esgotado
+              ? " O limite de hoje acabou: amanhã você pode adicionar mais."
+              : ` Ainda pode adicionar ${limite.restantes}.`}
+          </span>
+        </div>
+      )}
+
+      {manual && !esgotado && (
+        <form onSubmit={criarManual} className="grid gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:grid-cols-5">
+          <input value={novo.empresa} onChange={(e) => setNovo({ ...novo, empresa: e.target.value })} placeholder="Empresa *" className={inputCls} />
+          <input value={novo.telefone} onChange={(e) => setNovo({ ...novo, telefone: e.target.value })} placeholder="Telefone" className={inputCls} />
+          <input value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} placeholder="Cidade" className={inputCls} />
+          <input value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} placeholder="Categoria" className={inputCls} />
+          <button type="submit" className="rounded-lg bg-primary px-3 py-2 text-[12.5px] font-bold text-[#0a1128]">
+            Salvar
+          </button>
+        </form>
+      )}
+
+      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+        <form onSubmit={pesquisar} className="grid gap-2.5 sm:grid-cols-[1.2fr_1fr_auto]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+            <input
+              value={termo}
+              onChange={(e) => setTermo(e.target.value)}
+              placeholder="Ex.: restaurante, barbearia, clínica..."
+              className={`${inputCls} pl-9`}
+            />
+          </div>
+          <input
+            value={local}
+            onChange={(e) => setLocal(e.target.value)}
+            placeholder="Cidade, bairro ou região"
+            className={inputCls}
+          />
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-5 py-2 text-[12.5px] font-bold text-[#0a1128] disabled:opacity-60"
+          >
+            {mutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            Buscar empresas
+          </button>
+        </form>
+        <p className="mt-2 text-[11px] leading-relaxed text-white/30">
+          A busca usa a Google Places API com os limites e termos de uso do Google. Resultados são
+          empresas reais retornadas pela fonte.
+        </p>
+
+        {erroBusca && (
+          <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12px] leading-relaxed text-amber-200">
+            {erroBusca}
+          </p>
+        )}
+
+        {resultados.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {resultados.map((place) => {
+              const jaSalvo = existentes.has(place.place_id);
+              return (
+                <div
+                  key={place.place_id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-white">{place.empresa}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
+                      <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
+                      {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}
+                      {place.nota_google != null && (
+                        <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{place.nota_google} ({place.total_avaliacoes || 0})</span>
+                      )}
+                      {place.categoria && <span>· {place.categoria}</span>}
+                      {!place.site && <span className="rounded-full bg-primary/15 px-1.5 py-0.5 font-semibold text-primary">Sem site · oferecer site</span>}
+                    </p>
+                  </div>
+                  <button
+                    disabled={jaSalvo || esgotado || salvando === place.place_id}
+                    onClick={() => salvarLead(place)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-bold ${
+                      jaSalvo
+                        ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                        : "bg-primary text-[#0a1128] disabled:opacity-60"
+                    }`}
+                  >
+                    {salvando === place.place_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : jaSalvo ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                    {jaSalvo ? "Já no CRM" : representante ? "Adicionar ao CRM" : "Salvar lead"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="mr-auto font-heading text-sm font-bold text-white">
+            Leads salvos <span className="text-white/30">({filtrados.length})</span>
+          </h2>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+            <input
+              value={buscaLocal}
+              onChange={(e) => setBuscaLocal(e.target.value)}
+              placeholder="Filtrar por nome/cidade"
+              className="w-48 rounded-lg border border-white/10 bg-white/[0.04] py-1.5 pl-8 pr-2 text-[12px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
+            />
+          </div>
+          <select value={filtro} onChange={(e) => setFiltro(e.target.value)} className="rounded-lg border border-white/10 bg-[#0d1729] px-2 py-1.5 text-[12px] text-white">
+            <option value="">Todas as etapas</option>
+            {FUNIL_STAGES.map((s) => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
+          {!representante && (
+            <select value={filtroRep} onChange={(e) => setFiltroRep(e.target.value)} className="rounded-lg border border-white/10 bg-[#0d1729] px-2 py-1.5 text-[12px] text-white">
+              <option value="">Todos os representantes</option>
+              <option value="_equipe">Só da equipe (sem representante)</option>
+              {repsDosLeads.map((r) => (
+                <option key={r.id} value={r.id}>{r.nome} ({r.total})</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="flex items-center gap-2 py-10 text-sm text-white/40">
+            <Loader2 className="h-4 w-4 animate-spin" /> Carregando leads...
+          </div>
+        ) : filtrados.length === 0 ? (
+          <EmptyState
+            icon={Target}
+            title="Nenhum lead encontrado"
+            description="Pesquise empresas reais acima e salve as que fazem sentido para os seus serviços."
+          />
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+            <table className="w-full min-w-[760px] text-left">
+              <thead className="bg-white/[0.03] text-[10.5px] uppercase tracking-wider text-white/40">
+                <tr>
+                  <th className="px-4 py-2.5">Empresa</th>
+                  {!representante && <th className="px-4 py-2.5">Representante</th>}
+                  <th className="px-4 py-2.5">Local</th>
+                  <th className="px-4 py-2.5">Contato</th>
+                  <th className="px-4 py-2.5">Etapa</th>
+                  <th className="px-4 py-2.5">Autorização</th>
+                  <th className="px-4 py-2.5" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.05]">
+                {filtrados.map((lead) => {
+                  const etapa = FUNIL_STAGES.find((s) => s.key === lead.etapa);
+                  return (
+                    <tr key={lead.id} className="text-[12.5px] hover:bg-white/[0.02]">
+                      <td className="max-w-[220px] px-4 py-2.5">
+                        <p className="truncate font-semibold text-white">{lead.empresa}</p>
+                        <p className="truncate text-[11px] text-white/35">
+                          {lead.categoria || "—"}
+                          {!lead.site && (
+                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${lead.site_demo_slug ? "bg-emerald-500/15 text-emerald-300" : "bg-primary/15 text-primary"}`}>
+                              {lead.site_demo_slug ? "Site demo criado" : "Sem site"}
+                            </span>
+                          )}
+                        </p>
+                      </td>
+                      {!representante && (
+                        <td className="max-w-[180px] px-4 py-2.5">
+                          <RepresentanteDoLead lead={lead} />
+                        </td>
+                      )}
+                      <td className="max-w-[180px] px-4 py-2.5 text-white/55">
+                        <p className="truncate">{lead.cidade || "—"}{lead.bairro ? ` · ${lead.bairro}` : ""}</p>
+                      </td>
+                      <td className="px-4 py-2.5 text-white/55">{lead.telefone || "—"}</td>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className="inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[10.5px] font-semibold"
+                          style={{ borderColor: `${etapa?.color || "#64748b"}55`, backgroundColor: `${etapa?.color || "#64748b"}1a`, color: etapa?.color || "#94a3b8" }}
+                        >
+                          {etapa?.label || lead.etapa}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5"><StatusPill map={STATUS_CONSENT} value={lead.consentimento} /></td>
+                      <td className="px-4 py-2.5 text-right">
+                        <Link
+                          to={`${base}/lead/$leadId`}
+                          params={{ leadId: lead.id }}
+                          className="text-[11.5px] font-semibold text-primary hover:underline"
+                        >
+                          Abrir
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {filtroRep && (
+          <button onClick={() => setFiltroRep("")} className="mr-3 inline-flex items-center gap-1 text-[11.5px] text-white/40 hover:text-white">
+            <X className="h-3 w-3" /> Limpar filtro de representante
+          </button>
+        )}
+        {filtro && (
+          <button onClick={() => setFiltro("")} className="inline-flex items-center gap-1 text-[11.5px] text-white/40 hover:text-white">
+            <X className="h-3 w-3" /> Limpar filtro de etapa
+          </button>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const inputCls =
+  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12.5px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none";
