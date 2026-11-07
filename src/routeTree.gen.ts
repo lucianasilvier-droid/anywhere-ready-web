@@ -9,57 +9,1535 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArquivoRouteImport } from './routes/$arquivo'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as SiteRouteImport } from './routes/_site'
+import { Route as AcessoAdminRouteImport } from './routes/acesso-admin'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
+import { Route as AuthedContaRouteImport } from './routes/_authed/conta'
+import { Route as AuthedRepresentanteRouteImport } from './routes/_authed/representante'
+import { Route as SiteIndexRouteImport } from './routes/_site/index'
+import { Route as SiteCarrinhoRouteImport } from './routes/_site/carrinho'
+import { Route as SiteSejaRepresentanteRouteImport } from './routes/_site/seja-representante'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiTimeRouteImport } from './routes/api/time'
+import { Route as RSlugRouteImport } from './routes/r.$slug'
+import { Route as SiteSlugRouteImport } from './routes/site.$slug'
+import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin.index'
+import { Route as AuthedAdminBackupRouteImport } from './routes/_authed/admin.backup'
+import { Route as AuthedAdminClientesRouteImport } from './routes/_authed/admin.clientes'
+import { Route as AuthedAdminConfiguracoesRouteImport } from './routes/_authed/admin.configuracoes'
+import { Route as AuthedAdminEquipeRouteImport } from './routes/_authed/admin.equipe'
+import { Route as AuthedAdminFunilRouteImport } from './routes/_authed/admin.funil'
+import { Route as AuthedAdminIntegracoesRouteImport } from './routes/_authed/admin.integracoes'
+import { Route as AuthedAdminLeadsRouteImport } from './routes/_authed/admin.leads'
+import { Route as AuthedAdminPagamentosRouteImport } from './routes/_authed/admin.pagamentos'
+import { Route as AuthedAdminPedidosRouteImport } from './routes/_authed/admin.pedidos'
+import { Route as AuthedAdminPlacasRouteImport } from './routes/_authed/admin.placas'
+import { Route as AuthedAdminProdutosRouteImport } from './routes/_authed/admin.produtos'
+import { Route as AuthedAdminRepresentantesRouteImport } from './routes/_authed/admin.representantes'
+import { Route as AuthedAdminServicosRouteImport } from './routes/_authed/admin.servicos'
+import { Route as AuthedContaIndexRouteImport } from './routes/_authed/conta.index'
+import { Route as AuthedContaDadosRouteImport } from './routes/_authed/conta.dados'
+import { Route as AuthedContaPedidosRouteImport } from './routes/_authed/conta.pedidos'
+import { Route as AuthedContaPlacasRouteImport } from './routes/_authed/conta.placas'
+import { Route as AuthedContaServicosRouteImport } from './routes/_authed/conta.servicos'
+import { Route as AuthedRepresentanteIndexRouteImport } from './routes/_authed/representante.index'
+import { Route as AuthedRepresentanteCrmRouteImport } from './routes/_authed/representante.crm'
+import { Route as AuthedRepresentanteFinanceiroRouteImport } from './routes/_authed/representante.financeiro'
+import { Route as AuthedRepresentanteFunilRouteImport } from './routes/_authed/representante.funil'
+import { Route as AuthedRepresentantePaginaRouteImport } from './routes/_authed/representante.pagina'
+import { Route as AuthedRepresentanteVendasRouteImport } from './routes/_authed/representante.vendas'
+import { Route as SiteLojaIndexRouteImport } from './routes/_site/loja.index'
+import { Route as SiteLojaSlugRouteImport } from './routes/_site/loja.$slug'
+import { Route as SitePagamentoCodigoRouteImport } from './routes/_site/pagamento.$codigo'
+import { Route as SitePlacaCodeRouteImport } from './routes/_site/placa.$code'
+import { Route as SiteServicosCriacaoSiteRouteImport } from './routes/_site/servicos.criacao-site'
+import { Route as SiteServicosGestaoPerfilRouteImport } from './routes/_site/servicos.gestao-perfil'
+import { Route as SiteServicosPerfilGoogleRouteImport } from './routes/_site/servicos.perfil-google'
+import { Route as SiteServicosPlacaNfcRouteImport } from './routes/_site/servicos.placa-nfc'
+import { Route as ApiAuthConfirmRouteImport } from './routes/api/auth/confirm'
+import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google-callback'
+import { Route as ApiBackupsDownloadRouteImport } from './routes/api/backups/download'
+import { Route as ApiBackupsUploadRouteImport } from './routes/api/backups/upload'
+import { Route as ApiPaymentsInfinitepayRouteImport } from './routes/api/payments/infinitepay'
+import { Route as ApiPaymentsMercadopagoRouteImport } from './routes/api/payments/mercadopago'
+import { Route as ApiRepresentantesFotoRouteImport } from './routes/api/representantes/foto'
+import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp.webhook'
+import { Route as AuthedAdminClientesClientIdRouteImport } from './routes/_authed/admin.clientes.$clientId'
+import { Route as AuthedAdminLeadLeadIdRouteImport } from './routes/_authed/admin.lead.$leadId'
+import { Route as AuthedAdminRepresentantesIndexRouteImport } from './routes/_authed/admin.representantes.index'
+import { Route as AuthedAdminRepresentantesInscricoesRouteImport } from './routes/_authed/admin.representantes.inscricoes'
+import { Route as AuthedAdminRepresentantesPagamentosRouteImport } from './routes/_authed/admin.representantes.pagamentos'
+import { Route as AuthedAdminRepresentantesVendasRouteImport } from './routes/_authed/admin.representantes.vendas'
+import { Route as AuthedAdminRepresentantesRepIdRouteImport } from './routes/_authed/admin.representantes_.$repId'
+import { Route as AuthedRepresentanteLeadLeadIdRouteImport } from './routes/_authed/representante.lead.$leadId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ArquivoRoute = ArquivoRouteImport.update({
+  id: '/$arquivo',
+  path: '/$arquivo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteRoute = SiteRouteImport.update({
+  id: '/_site',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcessoAdminRoute = AcessoAdminRouteImport.update({
+  id: '/acesso-admin',
+  path: '/acesso-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedAdminRoute = AuthedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedContaRoute = AuthedContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRepresentanteRoute = AuthedRepresentanteRouteImport.update({
+  id: '/representante',
+  path: '/representante',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteCarrinhoRoute = SiteCarrinhoRouteImport.update({
+  id: '/carrinho',
+  path: '/carrinho',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteSejaRepresentanteRoute = SiteSejaRepresentanteRouteImport.update({
+  id: '/seja-representante',
+  path: '/seja-representante',
+  getParentRoute: () => SiteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTimeRoute = ApiTimeRouteImport.update({
+  id: '/api/time',
+  path: '/api/time',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RSlugRoute = RSlugRouteImport.update({
+  id: '/r/$slug',
+  path: '/r/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteSlugRoute = SiteSlugRouteImport.update({
+  id: '/site/$slug',
+  path: '/site/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminBackupRoute = AuthedAdminBackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminClientesRoute = AuthedAdminClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminConfiguracoesRoute =
+  AuthedAdminConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
+const AuthedAdminEquipeRoute = AuthedAdminEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminFunilRoute = AuthedAdminFunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminIntegracoesRoute = AuthedAdminIntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminLeadsRoute = AuthedAdminLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminPagamentosRoute = AuthedAdminPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminPedidosRoute = AuthedAdminPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminPlacasRoute = AuthedAdminPlacasRouteImport.update({
+  id: '/placas',
+  path: '/placas',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminProdutosRoute = AuthedAdminProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminRepresentantesRoute =
+  AuthedAdminRepresentantesRouteImport.update({
+    id: '/representantes',
+    path: '/representantes',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
+const AuthedAdminServicosRoute = AuthedAdminServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedContaIndexRoute = AuthedContaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedContaRoute,
+} as any)
+const AuthedContaDadosRoute = AuthedContaDadosRouteImport.update({
+  id: '/dados',
+  path: '/dados',
+  getParentRoute: () => AuthedContaRoute,
+} as any)
+const AuthedContaPedidosRoute = AuthedContaPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthedContaRoute,
+} as any)
+const AuthedContaPlacasRoute = AuthedContaPlacasRouteImport.update({
+  id: '/placas',
+  path: '/placas',
+  getParentRoute: () => AuthedContaRoute,
+} as any)
+const AuthedContaServicosRoute = AuthedContaServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => AuthedContaRoute,
+} as any)
+const AuthedRepresentanteIndexRoute =
+  AuthedRepresentanteIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
+const AuthedRepresentanteCrmRoute = AuthedRepresentanteCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AuthedRepresentanteRoute,
+} as any)
+const AuthedRepresentanteFinanceiroRoute =
+  AuthedRepresentanteFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
+const AuthedRepresentanteFunilRoute =
+  AuthedRepresentanteFunilRouteImport.update({
+    id: '/funil',
+    path: '/funil',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
+const AuthedRepresentantePaginaRoute =
+  AuthedRepresentantePaginaRouteImport.update({
+    id: '/pagina',
+    path: '/pagina',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
+const AuthedRepresentanteVendasRoute =
+  AuthedRepresentanteVendasRouteImport.update({
+    id: '/vendas',
+    path: '/vendas',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
+const SiteLojaIndexRoute = SiteLojaIndexRouteImport.update({
+  id: '/loja/',
+  path: '/loja/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteLojaSlugRoute = SiteLojaSlugRouteImport.update({
+  id: '/loja/$slug',
+  path: '/loja/$slug',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePagamentoCodigoRoute = SitePagamentoCodigoRouteImport.update({
+  id: '/pagamento/$codigo',
+  path: '/pagamento/$codigo',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePlacaCodeRoute = SitePlacaCodeRouteImport.update({
+  id: '/placa/$code',
+  path: '/placa/$code',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteServicosCriacaoSiteRoute = SiteServicosCriacaoSiteRouteImport.update({
+  id: '/servicos/criacao-site',
+  path: '/servicos/criacao-site',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteServicosGestaoPerfilRoute =
+  SiteServicosGestaoPerfilRouteImport.update({
+    id: '/servicos/gestao-perfil',
+    path: '/servicos/gestao-perfil',
+    getParentRoute: () => SiteRoute,
+  } as any)
+const SiteServicosPerfilGoogleRoute =
+  SiteServicosPerfilGoogleRouteImport.update({
+    id: '/servicos/perfil-google',
+    path: '/servicos/perfil-google',
+    getParentRoute: () => SiteRoute,
+  } as any)
+const SiteServicosPlacaNfcRoute = SiteServicosPlacaNfcRouteImport.update({
+  id: '/servicos/placa-nfc',
+  path: '/servicos/placa-nfc',
+  getParentRoute: () => SiteRoute,
+} as any)
+const ApiAuthConfirmRoute = ApiAuthConfirmRouteImport.update({
+  id: '/api/auth/confirm',
+  path: '/api/auth/confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
+  id: '/api/auth/google',
+  path: '/api/auth/google',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
+  id: '/api/auth/google-callback',
+  path: '/api/auth/google-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBackupsDownloadRoute = ApiBackupsDownloadRouteImport.update({
+  id: '/api/backups/download',
+  path: '/api/backups/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBackupsUploadRoute = ApiBackupsUploadRouteImport.update({
+  id: '/api/backups/upload',
+  path: '/api/backups/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsInfinitepayRoute = ApiPaymentsInfinitepayRouteImport.update({
+  id: '/api/payments/infinitepay',
+  path: '/api/payments/infinitepay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsMercadopagoRoute = ApiPaymentsMercadopagoRouteImport.update({
+  id: '/api/payments/mercadopago',
+  path: '/api/payments/mercadopago',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRepresentantesFotoRoute = ApiRepresentantesFotoRouteImport.update({
+  id: '/api/representantes/foto',
+  path: '/api/representantes/foto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
+  id: '/api/whatsapp/webhook',
+  path: '/api/whatsapp/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedAdminClientesClientIdRoute =
+  AuthedAdminClientesClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => AuthedAdminClientesRoute,
+  } as any)
+const AuthedAdminLeadLeadIdRoute = AuthedAdminLeadLeadIdRouteImport.update({
+  id: '/lead/$leadId',
+  path: '/lead/$leadId',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminRepresentantesIndexRoute =
+  AuthedAdminRepresentantesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedAdminRepresentantesRoute,
+  } as any)
+const AuthedAdminRepresentantesInscricoesRoute =
+  AuthedAdminRepresentantesInscricoesRouteImport.update({
+    id: '/inscricoes',
+    path: '/inscricoes',
+    getParentRoute: () => AuthedAdminRepresentantesRoute,
+  } as any)
+const AuthedAdminRepresentantesPagamentosRoute =
+  AuthedAdminRepresentantesPagamentosRouteImport.update({
+    id: '/pagamentos',
+    path: '/pagamentos',
+    getParentRoute: () => AuthedAdminRepresentantesRoute,
+  } as any)
+const AuthedAdminRepresentantesVendasRoute =
+  AuthedAdminRepresentantesVendasRouteImport.update({
+    id: '/vendas',
+    path: '/vendas',
+    getParentRoute: () => AuthedAdminRepresentantesRoute,
+  } as any)
+const AuthedAdminRepresentantesRepIdRoute =
+  AuthedAdminRepresentantesRepIdRouteImport.update({
+    id: '/representantes_/$repId',
+    path: '/representantes/$repId',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
+const AuthedRepresentanteLeadLeadIdRoute =
+  AuthedRepresentanteLeadLeadIdRouteImport.update({
+    id: '/lead/$leadId',
+    path: '/lead/$leadId',
+    getParentRoute: () => AuthedRepresentanteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/$arquivo': typeof ArquivoRoute
+  '/': typeof SiteIndexRoute
+  '/acesso-admin': typeof AcessoAdminRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthedAdminRouteWithChildren
+  '/conta': typeof AuthedContaRouteWithChildren
+  '/representante': typeof AuthedRepresentanteRouteWithChildren
+  '/carrinho': typeof SiteCarrinhoRoute
+  '/seja-representante': typeof SiteSejaRepresentanteRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/time': typeof ApiTimeRoute
+  '/r/$slug': typeof RSlugRoute
+  '/site/$slug': typeof SiteSlugRoute
+  '/admin/backup': typeof AuthedAdminBackupRoute
+  '/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
+  '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
+  '/admin/equipe': typeof AuthedAdminEquipeRoute
+  '/admin/funil': typeof AuthedAdminFunilRoute
+  '/admin/integracoes': typeof AuthedAdminIntegracoesRoute
+  '/admin/leads': typeof AuthedAdminLeadsRoute
+  '/admin/pagamentos': typeof AuthedAdminPagamentosRoute
+  '/admin/pedidos': typeof AuthedAdminPedidosRoute
+  '/admin/placas': typeof AuthedAdminPlacasRoute
+  '/admin/produtos': typeof AuthedAdminProdutosRoute
+  '/admin/representantes': typeof AuthedAdminRepresentantesRouteWithChildren
+  '/admin/servicos': typeof AuthedAdminServicosRoute
+  '/conta/dados': typeof AuthedContaDadosRoute
+  '/conta/pedidos': typeof AuthedContaPedidosRoute
+  '/conta/placas': typeof AuthedContaPlacasRoute
+  '/conta/servicos': typeof AuthedContaServicosRoute
+  '/representante/crm': typeof AuthedRepresentanteCrmRoute
+  '/representante/financeiro': typeof AuthedRepresentanteFinanceiroRoute
+  '/representante/funil': typeof AuthedRepresentanteFunilRoute
+  '/representante/pagina': typeof AuthedRepresentantePaginaRoute
+  '/representante/vendas': typeof AuthedRepresentanteVendasRoute
+  '/loja/$slug': typeof SiteLojaSlugRoute
+  '/pagamento/$codigo': typeof SitePagamentoCodigoRoute
+  '/placa/$code': typeof SitePlacaCodeRoute
+  '/servicos/criacao-site': typeof SiteServicosCriacaoSiteRoute
+  '/servicos/gestao-perfil': typeof SiteServicosGestaoPerfilRoute
+  '/servicos/perfil-google': typeof SiteServicosPerfilGoogleRoute
+  '/servicos/placa-nfc': typeof SiteServicosPlacaNfcRoute
+  '/api/auth/confirm': typeof ApiAuthConfirmRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/auth/google-callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/backups/download': typeof ApiBackupsDownloadRoute
+  '/api/backups/upload': typeof ApiBackupsUploadRoute
+  '/api/payments/infinitepay': typeof ApiPaymentsInfinitepayRoute
+  '/api/payments/mercadopago': typeof ApiPaymentsMercadopagoRoute
+  '/api/representantes/foto': typeof ApiRepresentantesFotoRoute
+  '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
+  '/admin/': typeof AuthedAdminIndexRoute
+  '/conta/': typeof AuthedContaIndexRoute
+  '/representante/': typeof AuthedRepresentanteIndexRoute
+  '/loja/': typeof SiteLojaIndexRoute
+  '/admin/clientes/$clientId': typeof AuthedAdminClientesClientIdRoute
+  '/admin/lead/$leadId': typeof AuthedAdminLeadLeadIdRoute
+  '/admin/representantes/inscricoes': typeof AuthedAdminRepresentantesInscricoesRoute
+  '/admin/representantes/pagamentos': typeof AuthedAdminRepresentantesPagamentosRoute
+  '/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
+  '/admin/representantes/$repId': typeof AuthedAdminRepresentantesRepIdRoute
+  '/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/admin/representantes/': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/$arquivo': typeof ArquivoRoute
+  '/': typeof SiteIndexRoute
+  '/acesso-admin': typeof AcessoAdminRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/carrinho': typeof SiteCarrinhoRoute
+  '/seja-representante': typeof SiteSejaRepresentanteRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/time': typeof ApiTimeRoute
+  '/r/$slug': typeof RSlugRoute
+  '/site/$slug': typeof SiteSlugRoute
+  '/admin/backup': typeof AuthedAdminBackupRoute
+  '/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
+  '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
+  '/admin/equipe': typeof AuthedAdminEquipeRoute
+  '/admin/funil': typeof AuthedAdminFunilRoute
+  '/admin/integracoes': typeof AuthedAdminIntegracoesRoute
+  '/admin/leads': typeof AuthedAdminLeadsRoute
+  '/admin/pagamentos': typeof AuthedAdminPagamentosRoute
+  '/admin/pedidos': typeof AuthedAdminPedidosRoute
+  '/admin/placas': typeof AuthedAdminPlacasRoute
+  '/admin/produtos': typeof AuthedAdminProdutosRoute
+  '/admin/servicos': typeof AuthedAdminServicosRoute
+  '/conta/dados': typeof AuthedContaDadosRoute
+  '/conta/pedidos': typeof AuthedContaPedidosRoute
+  '/conta/placas': typeof AuthedContaPlacasRoute
+  '/conta/servicos': typeof AuthedContaServicosRoute
+  '/representante/crm': typeof AuthedRepresentanteCrmRoute
+  '/representante/financeiro': typeof AuthedRepresentanteFinanceiroRoute
+  '/representante/funil': typeof AuthedRepresentanteFunilRoute
+  '/representante/pagina': typeof AuthedRepresentantePaginaRoute
+  '/representante/vendas': typeof AuthedRepresentanteVendasRoute
+  '/loja/$slug': typeof SiteLojaSlugRoute
+  '/pagamento/$codigo': typeof SitePagamentoCodigoRoute
+  '/placa/$code': typeof SitePlacaCodeRoute
+  '/servicos/criacao-site': typeof SiteServicosCriacaoSiteRoute
+  '/servicos/gestao-perfil': typeof SiteServicosGestaoPerfilRoute
+  '/servicos/perfil-google': typeof SiteServicosPerfilGoogleRoute
+  '/servicos/placa-nfc': typeof SiteServicosPlacaNfcRoute
+  '/api/auth/confirm': typeof ApiAuthConfirmRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/auth/google-callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/backups/download': typeof ApiBackupsDownloadRoute
+  '/api/backups/upload': typeof ApiBackupsUploadRoute
+  '/api/payments/infinitepay': typeof ApiPaymentsInfinitepayRoute
+  '/api/payments/mercadopago': typeof ApiPaymentsMercadopagoRoute
+  '/api/representantes/foto': typeof ApiRepresentantesFotoRoute
+  '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
+  '/admin': typeof AuthedAdminIndexRoute
+  '/conta': typeof AuthedContaIndexRoute
+  '/representante': typeof AuthedRepresentanteIndexRoute
+  '/loja': typeof SiteLojaIndexRoute
+  '/admin/clientes/$clientId': typeof AuthedAdminClientesClientIdRoute
+  '/admin/lead/$leadId': typeof AuthedAdminLeadLeadIdRoute
+  '/admin/representantes/inscricoes': typeof AuthedAdminRepresentantesInscricoesRoute
+  '/admin/representantes/pagamentos': typeof AuthedAdminRepresentantesPagamentosRoute
+  '/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
+  '/admin/representantes/$repId': typeof AuthedAdminRepresentantesRepIdRoute
+  '/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/admin/representantes': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/$arquivo': typeof ArquivoRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/_site': typeof SiteRouteWithChildren
+  '/acesso-admin': typeof AcessoAdminRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authed/admin': typeof AuthedAdminRouteWithChildren
+  '/_authed/conta': typeof AuthedContaRouteWithChildren
+  '/_authed/representante': typeof AuthedRepresentanteRouteWithChildren
+  '/_site/carrinho': typeof SiteCarrinhoRoute
+  '/_site/seja-representante': typeof SiteSejaRepresentanteRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/time': typeof ApiTimeRoute
+  '/r/$slug': typeof RSlugRoute
+  '/site/$slug': typeof SiteSlugRoute
+  '/_site/': typeof SiteIndexRoute
+  '/_authed/admin/backup': typeof AuthedAdminBackupRoute
+  '/_authed/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
+  '/_authed/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
+  '/_authed/admin/equipe': typeof AuthedAdminEquipeRoute
+  '/_authed/admin/funil': typeof AuthedAdminFunilRoute
+  '/_authed/admin/integracoes': typeof AuthedAdminIntegracoesRoute
+  '/_authed/admin/leads': typeof AuthedAdminLeadsRoute
+  '/_authed/admin/pagamentos': typeof AuthedAdminPagamentosRoute
+  '/_authed/admin/pedidos': typeof AuthedAdminPedidosRoute
+  '/_authed/admin/placas': typeof AuthedAdminPlacasRoute
+  '/_authed/admin/produtos': typeof AuthedAdminProdutosRoute
+  '/_authed/admin/representantes': typeof AuthedAdminRepresentantesRouteWithChildren
+  '/_authed/admin/servicos': typeof AuthedAdminServicosRoute
+  '/_authed/conta/dados': typeof AuthedContaDadosRoute
+  '/_authed/conta/pedidos': typeof AuthedContaPedidosRoute
+  '/_authed/conta/placas': typeof AuthedContaPlacasRoute
+  '/_authed/conta/servicos': typeof AuthedContaServicosRoute
+  '/_authed/representante/crm': typeof AuthedRepresentanteCrmRoute
+  '/_authed/representante/financeiro': typeof AuthedRepresentanteFinanceiroRoute
+  '/_authed/representante/funil': typeof AuthedRepresentanteFunilRoute
+  '/_authed/representante/pagina': typeof AuthedRepresentantePaginaRoute
+  '/_authed/representante/vendas': typeof AuthedRepresentanteVendasRoute
+  '/_site/loja/$slug': typeof SiteLojaSlugRoute
+  '/_site/pagamento/$codigo': typeof SitePagamentoCodigoRoute
+  '/_site/placa/$code': typeof SitePlacaCodeRoute
+  '/_site/servicos/criacao-site': typeof SiteServicosCriacaoSiteRoute
+  '/_site/servicos/gestao-perfil': typeof SiteServicosGestaoPerfilRoute
+  '/_site/servicos/perfil-google': typeof SiteServicosPerfilGoogleRoute
+  '/_site/servicos/placa-nfc': typeof SiteServicosPlacaNfcRoute
+  '/api/auth/confirm': typeof ApiAuthConfirmRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/auth/google-callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/backups/download': typeof ApiBackupsDownloadRoute
+  '/api/backups/upload': typeof ApiBackupsUploadRoute
+  '/api/payments/infinitepay': typeof ApiPaymentsInfinitepayRoute
+  '/api/payments/mercadopago': typeof ApiPaymentsMercadopagoRoute
+  '/api/representantes/foto': typeof ApiRepresentantesFotoRoute
+  '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
+  '/_authed/admin/': typeof AuthedAdminIndexRoute
+  '/_authed/conta/': typeof AuthedContaIndexRoute
+  '/_authed/representante/': typeof AuthedRepresentanteIndexRoute
+  '/_site/loja/': typeof SiteLojaIndexRoute
+  '/_authed/admin/clientes/$clientId': typeof AuthedAdminClientesClientIdRoute
+  '/_authed/admin/lead/$leadId': typeof AuthedAdminLeadLeadIdRoute
+  '/_authed/admin/representantes/inscricoes': typeof AuthedAdminRepresentantesInscricoesRoute
+  '/_authed/admin/representantes/pagamentos': typeof AuthedAdminRepresentantesPagamentosRoute
+  '/_authed/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
+  '/_authed/admin/representantes_/$repId': typeof AuthedAdminRepresentantesRepIdRoute
+  '/_authed/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/_authed/admin/representantes/': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/$arquivo'
+    | '/'
+    | '/acesso-admin'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/admin'
+    | '/conta'
+    | '/representante'
+    | '/carrinho'
+    | '/seja-representante'
+    | '/api/health'
+    | '/api/time'
+    | '/r/$slug'
+    | '/site/$slug'
+    | '/admin/backup'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/equipe'
+    | '/admin/funil'
+    | '/admin/integracoes'
+    | '/admin/leads'
+    | '/admin/pagamentos'
+    | '/admin/pedidos'
+    | '/admin/placas'
+    | '/admin/produtos'
+    | '/admin/representantes'
+    | '/admin/servicos'
+    | '/conta/dados'
+    | '/conta/pedidos'
+    | '/conta/placas'
+    | '/conta/servicos'
+    | '/representante/crm'
+    | '/representante/financeiro'
+    | '/representante/funil'
+    | '/representante/pagina'
+    | '/representante/vendas'
+    | '/loja/$slug'
+    | '/pagamento/$codigo'
+    | '/placa/$code'
+    | '/servicos/criacao-site'
+    | '/servicos/gestao-perfil'
+    | '/servicos/perfil-google'
+    | '/servicos/placa-nfc'
+    | '/api/auth/confirm'
+    | '/api/auth/google'
+    | '/api/auth/google-callback'
+    | '/api/backups/download'
+    | '/api/backups/upload'
+    | '/api/payments/infinitepay'
+    | '/api/payments/mercadopago'
+    | '/api/representantes/foto'
+    | '/api/whatsapp/webhook'
+    | '/admin/'
+    | '/conta/'
+    | '/representante/'
+    | '/loja/'
+    | '/admin/clientes/$clientId'
+    | '/admin/lead/$leadId'
+    | '/admin/representantes/inscricoes'
+    | '/admin/representantes/pagamentos'
+    | '/admin/representantes/vendas'
+    | '/admin/representantes/$repId'
+    | '/representante/lead/$leadId'
+    | '/admin/representantes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/$arquivo'
+    | '/'
+    | '/acesso-admin'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/carrinho'
+    | '/seja-representante'
+    | '/api/health'
+    | '/api/time'
+    | '/r/$slug'
+    | '/site/$slug'
+    | '/admin/backup'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/equipe'
+    | '/admin/funil'
+    | '/admin/integracoes'
+    | '/admin/leads'
+    | '/admin/pagamentos'
+    | '/admin/pedidos'
+    | '/admin/placas'
+    | '/admin/produtos'
+    | '/admin/servicos'
+    | '/conta/dados'
+    | '/conta/pedidos'
+    | '/conta/placas'
+    | '/conta/servicos'
+    | '/representante/crm'
+    | '/representante/financeiro'
+    | '/representante/funil'
+    | '/representante/pagina'
+    | '/representante/vendas'
+    | '/loja/$slug'
+    | '/pagamento/$codigo'
+    | '/placa/$code'
+    | '/servicos/criacao-site'
+    | '/servicos/gestao-perfil'
+    | '/servicos/perfil-google'
+    | '/servicos/placa-nfc'
+    | '/api/auth/confirm'
+    | '/api/auth/google'
+    | '/api/auth/google-callback'
+    | '/api/backups/download'
+    | '/api/backups/upload'
+    | '/api/payments/infinitepay'
+    | '/api/payments/mercadopago'
+    | '/api/representantes/foto'
+    | '/api/whatsapp/webhook'
+    | '/admin'
+    | '/conta'
+    | '/representante'
+    | '/loja'
+    | '/admin/clientes/$clientId'
+    | '/admin/lead/$leadId'
+    | '/admin/representantes/inscricoes'
+    | '/admin/representantes/pagamentos'
+    | '/admin/representantes/vendas'
+    | '/admin/representantes/$repId'
+    | '/representante/lead/$leadId'
+    | '/admin/representantes'
+  id:
+    | '__root__'
+    | '/$arquivo'
+    | '/_authed'
+    | '/_site'
+    | '/acesso-admin'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/_authed/admin'
+    | '/_authed/conta'
+    | '/_authed/representante'
+    | '/_site/carrinho'
+    | '/_site/seja-representante'
+    | '/api/health'
+    | '/api/time'
+    | '/r/$slug'
+    | '/site/$slug'
+    | '/_site/'
+    | '/_authed/admin/backup'
+    | '/_authed/admin/clientes'
+    | '/_authed/admin/configuracoes'
+    | '/_authed/admin/equipe'
+    | '/_authed/admin/funil'
+    | '/_authed/admin/integracoes'
+    | '/_authed/admin/leads'
+    | '/_authed/admin/pagamentos'
+    | '/_authed/admin/pedidos'
+    | '/_authed/admin/placas'
+    | '/_authed/admin/produtos'
+    | '/_authed/admin/representantes'
+    | '/_authed/admin/servicos'
+    | '/_authed/conta/dados'
+    | '/_authed/conta/pedidos'
+    | '/_authed/conta/placas'
+    | '/_authed/conta/servicos'
+    | '/_authed/representante/crm'
+    | '/_authed/representante/financeiro'
+    | '/_authed/representante/funil'
+    | '/_authed/representante/pagina'
+    | '/_authed/representante/vendas'
+    | '/_site/loja/$slug'
+    | '/_site/pagamento/$codigo'
+    | '/_site/placa/$code'
+    | '/_site/servicos/criacao-site'
+    | '/_site/servicos/gestao-perfil'
+    | '/_site/servicos/perfil-google'
+    | '/_site/servicos/placa-nfc'
+    | '/api/auth/confirm'
+    | '/api/auth/google'
+    | '/api/auth/google-callback'
+    | '/api/backups/download'
+    | '/api/backups/upload'
+    | '/api/payments/infinitepay'
+    | '/api/payments/mercadopago'
+    | '/api/representantes/foto'
+    | '/api/whatsapp/webhook'
+    | '/_authed/admin/'
+    | '/_authed/conta/'
+    | '/_authed/representante/'
+    | '/_site/loja/'
+    | '/_authed/admin/clientes/$clientId'
+    | '/_authed/admin/lead/$leadId'
+    | '/_authed/admin/representantes/inscricoes'
+    | '/_authed/admin/representantes/pagamentos'
+    | '/_authed/admin/representantes/vendas'
+    | '/_authed/admin/representantes_/$repId'
+    | '/_authed/representante/lead/$leadId'
+    | '/_authed/admin/representantes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  ArquivoRoute: typeof ArquivoRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  SiteRoute: typeof SiteRouteWithChildren
+  AcessoAdminRoute: typeof AcessoAdminRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiTimeRoute: typeof ApiTimeRoute
+  RSlugRoute: typeof RSlugRoute
+  SiteSlugRoute: typeof SiteSlugRoute
+  ApiAuthConfirmRoute: typeof ApiAuthConfirmRoute
+  ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
+  ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
+  ApiBackupsDownloadRoute: typeof ApiBackupsDownloadRoute
+  ApiBackupsUploadRoute: typeof ApiBackupsUploadRoute
+  ApiPaymentsInfinitepayRoute: typeof ApiPaymentsInfinitepayRoute
+  ApiPaymentsMercadopagoRoute: typeof ApiPaymentsMercadopagoRoute
+  ApiRepresentantesFotoRoute: typeof ApiRepresentantesFotoRoute
+  ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/$arquivo': {
+      id: '/$arquivo'
+      path: '/$arquivo'
+      fullPath: '/$arquivo'
+      preLoaderRoute: typeof ArquivoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site': {
+      id: '/_site'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof SiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acesso-admin': {
+      id: '/acesso-admin'
+      path: '/acesso-admin'
+      fullPath: '/acesso-admin'
+      preLoaderRoute: typeof AcessoAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/admin': {
+      id: '/_authed/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthedAdminRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/conta': {
+      id: '/_authed/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof AuthedContaRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/representante': {
+      id: '/_authed/representante'
+      path: '/representante'
+      fullPath: '/representante'
+      preLoaderRoute: typeof AuthedRepresentanteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_site/': {
+      id: '/_site/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/carrinho': {
+      id: '/_site/carrinho'
+      path: '/carrinho'
+      fullPath: '/carrinho'
+      preLoaderRoute: typeof SiteCarrinhoRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/seja-representante': {
+      id: '/_site/seja-representante'
+      path: '/seja-representante'
+      fullPath: '/seja-representante'
+      preLoaderRoute: typeof SiteSejaRepresentanteRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/time': {
+      id: '/api/time'
+      path: '/api/time'
+      fullPath: '/api/time'
+      preLoaderRoute: typeof ApiTimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$slug': {
+      id: '/r/$slug'
+      path: '/r/$slug'
+      fullPath: '/r/$slug'
+      preLoaderRoute: typeof RSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/$slug': {
+      id: '/site/$slug'
+      path: '/site/$slug'
+      fullPath: '/site/$slug'
+      preLoaderRoute: typeof SiteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/admin/': {
+      id: '/_authed/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthedAdminIndexRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/backup': {
+      id: '/_authed/admin/backup'
+      path: '/backup'
+      fullPath: '/admin/backup'
+      preLoaderRoute: typeof AuthedAdminBackupRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/clientes': {
+      id: '/_authed/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AuthedAdminClientesRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/configuracoes': {
+      id: '/_authed/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AuthedAdminConfiguracoesRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/equipe': {
+      id: '/_authed/admin/equipe'
+      path: '/equipe'
+      fullPath: '/admin/equipe'
+      preLoaderRoute: typeof AuthedAdminEquipeRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/funil': {
+      id: '/_authed/admin/funil'
+      path: '/funil'
+      fullPath: '/admin/funil'
+      preLoaderRoute: typeof AuthedAdminFunilRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/integracoes': {
+      id: '/_authed/admin/integracoes'
+      path: '/integracoes'
+      fullPath: '/admin/integracoes'
+      preLoaderRoute: typeof AuthedAdminIntegracoesRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/leads': {
+      id: '/_authed/admin/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AuthedAdminLeadsRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/pagamentos': {
+      id: '/_authed/admin/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/admin/pagamentos'
+      preLoaderRoute: typeof AuthedAdminPagamentosRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/pedidos': {
+      id: '/_authed/admin/pedidos'
+      path: '/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AuthedAdminPedidosRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/placas': {
+      id: '/_authed/admin/placas'
+      path: '/placas'
+      fullPath: '/admin/placas'
+      preLoaderRoute: typeof AuthedAdminPlacasRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/produtos': {
+      id: '/_authed/admin/produtos'
+      path: '/produtos'
+      fullPath: '/admin/produtos'
+      preLoaderRoute: typeof AuthedAdminProdutosRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/representantes': {
+      id: '/_authed/admin/representantes'
+      path: '/representantes'
+      fullPath: '/admin/representantes'
+      preLoaderRoute: typeof AuthedAdminRepresentantesRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/servicos': {
+      id: '/_authed/admin/servicos'
+      path: '/servicos'
+      fullPath: '/admin/servicos'
+      preLoaderRoute: typeof AuthedAdminServicosRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/conta/': {
+      id: '/_authed/conta/'
+      path: '/'
+      fullPath: '/conta/'
+      preLoaderRoute: typeof AuthedContaIndexRouteImport
+      parentRoute: typeof AuthedContaRoute
+    }
+    '/_authed/conta/dados': {
+      id: '/_authed/conta/dados'
+      path: '/dados'
+      fullPath: '/conta/dados'
+      preLoaderRoute: typeof AuthedContaDadosRouteImport
+      parentRoute: typeof AuthedContaRoute
+    }
+    '/_authed/conta/pedidos': {
+      id: '/_authed/conta/pedidos'
+      path: '/pedidos'
+      fullPath: '/conta/pedidos'
+      preLoaderRoute: typeof AuthedContaPedidosRouteImport
+      parentRoute: typeof AuthedContaRoute
+    }
+    '/_authed/conta/placas': {
+      id: '/_authed/conta/placas'
+      path: '/placas'
+      fullPath: '/conta/placas'
+      preLoaderRoute: typeof AuthedContaPlacasRouteImport
+      parentRoute: typeof AuthedContaRoute
+    }
+    '/_authed/conta/servicos': {
+      id: '/_authed/conta/servicos'
+      path: '/servicos'
+      fullPath: '/conta/servicos'
+      preLoaderRoute: typeof AuthedContaServicosRouteImport
+      parentRoute: typeof AuthedContaRoute
+    }
+    '/_authed/representante/': {
+      id: '/_authed/representante/'
+      path: '/'
+      fullPath: '/representante/'
+      preLoaderRoute: typeof AuthedRepresentanteIndexRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_authed/representante/crm': {
+      id: '/_authed/representante/crm'
+      path: '/crm'
+      fullPath: '/representante/crm'
+      preLoaderRoute: typeof AuthedRepresentanteCrmRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_authed/representante/financeiro': {
+      id: '/_authed/representante/financeiro'
+      path: '/financeiro'
+      fullPath: '/representante/financeiro'
+      preLoaderRoute: typeof AuthedRepresentanteFinanceiroRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_authed/representante/funil': {
+      id: '/_authed/representante/funil'
+      path: '/funil'
+      fullPath: '/representante/funil'
+      preLoaderRoute: typeof AuthedRepresentanteFunilRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_authed/representante/pagina': {
+      id: '/_authed/representante/pagina'
+      path: '/pagina'
+      fullPath: '/representante/pagina'
+      preLoaderRoute: typeof AuthedRepresentantePaginaRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_authed/representante/vendas': {
+      id: '/_authed/representante/vendas'
+      path: '/vendas'
+      fullPath: '/representante/vendas'
+      preLoaderRoute: typeof AuthedRepresentanteVendasRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
+    }
+    '/_site/loja/': {
+      id: '/_site/loja/'
+      path: '/loja'
+      fullPath: '/loja/'
+      preLoaderRoute: typeof SiteLojaIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/loja/$slug': {
+      id: '/_site/loja/$slug'
+      path: '/loja/$slug'
+      fullPath: '/loja/$slug'
+      preLoaderRoute: typeof SiteLojaSlugRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/pagamento/$codigo': {
+      id: '/_site/pagamento/$codigo'
+      path: '/pagamento/$codigo'
+      fullPath: '/pagamento/$codigo'
+      preLoaderRoute: typeof SitePagamentoCodigoRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/placa/$code': {
+      id: '/_site/placa/$code'
+      path: '/placa/$code'
+      fullPath: '/placa/$code'
+      preLoaderRoute: typeof SitePlacaCodeRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/servicos/criacao-site': {
+      id: '/_site/servicos/criacao-site'
+      path: '/servicos/criacao-site'
+      fullPath: '/servicos/criacao-site'
+      preLoaderRoute: typeof SiteServicosCriacaoSiteRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/servicos/gestao-perfil': {
+      id: '/_site/servicos/gestao-perfil'
+      path: '/servicos/gestao-perfil'
+      fullPath: '/servicos/gestao-perfil'
+      preLoaderRoute: typeof SiteServicosGestaoPerfilRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/servicos/perfil-google': {
+      id: '/_site/servicos/perfil-google'
+      path: '/servicos/perfil-google'
+      fullPath: '/servicos/perfil-google'
+      preLoaderRoute: typeof SiteServicosPerfilGoogleRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/servicos/placa-nfc': {
+      id: '/_site/servicos/placa-nfc'
+      path: '/servicos/placa-nfc'
+      fullPath: '/servicos/placa-nfc'
+      preLoaderRoute: typeof SiteServicosPlacaNfcRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/api/auth/confirm': {
+      id: '/api/auth/confirm'
+      path: '/api/auth/confirm'
+      fullPath: '/api/auth/confirm'
+      preLoaderRoute: typeof ApiAuthConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/google': {
+      id: '/api/auth/google'
+      path: '/api/auth/google'
+      fullPath: '/api/auth/google'
+      preLoaderRoute: typeof ApiAuthGoogleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/google-callback': {
+      id: '/api/auth/google-callback'
+      path: '/api/auth/google-callback'
+      fullPath: '/api/auth/google-callback'
+      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/backups/download': {
+      id: '/api/backups/download'
+      path: '/api/backups/download'
+      fullPath: '/api/backups/download'
+      preLoaderRoute: typeof ApiBackupsDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/backups/upload': {
+      id: '/api/backups/upload'
+      path: '/api/backups/upload'
+      fullPath: '/api/backups/upload'
+      preLoaderRoute: typeof ApiBackupsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/infinitepay': {
+      id: '/api/payments/infinitepay'
+      path: '/api/payments/infinitepay'
+      fullPath: '/api/payments/infinitepay'
+      preLoaderRoute: typeof ApiPaymentsInfinitepayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/mercadopago': {
+      id: '/api/payments/mercadopago'
+      path: '/api/payments/mercadopago'
+      fullPath: '/api/payments/mercadopago'
+      preLoaderRoute: typeof ApiPaymentsMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/representantes/foto': {
+      id: '/api/representantes/foto'
+      path: '/api/representantes/foto'
+      fullPath: '/api/representantes/foto'
+      preLoaderRoute: typeof ApiRepresentantesFotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp/webhook': {
+      id: '/api/whatsapp/webhook'
+      path: '/api/whatsapp/webhook'
+      fullPath: '/api/whatsapp/webhook'
+      preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/admin/clientes/$clientId': {
+      id: '/_authed/admin/clientes/$clientId'
+      path: '/$clientId'
+      fullPath: '/admin/clientes/$clientId'
+      preLoaderRoute: typeof AuthedAdminClientesClientIdRouteImport
+      parentRoute: typeof AuthedAdminClientesRoute
+    }
+    '/_authed/admin/lead/$leadId': {
+      id: '/_authed/admin/lead/$leadId'
+      path: '/lead/$leadId'
+      fullPath: '/admin/lead/$leadId'
+      preLoaderRoute: typeof AuthedAdminLeadLeadIdRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/representantes/': {
+      id: '/_authed/admin/representantes/'
+      path: '/'
+      fullPath: '/admin/representantes/'
+      preLoaderRoute: typeof AuthedAdminRepresentantesIndexRouteImport
+      parentRoute: typeof AuthedAdminRepresentantesRoute
+    }
+    '/_authed/admin/representantes/inscricoes': {
+      id: '/_authed/admin/representantes/inscricoes'
+      path: '/inscricoes'
+      fullPath: '/admin/representantes/inscricoes'
+      preLoaderRoute: typeof AuthedAdminRepresentantesInscricoesRouteImport
+      parentRoute: typeof AuthedAdminRepresentantesRoute
+    }
+    '/_authed/admin/representantes/pagamentos': {
+      id: '/_authed/admin/representantes/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/admin/representantes/pagamentos'
+      preLoaderRoute: typeof AuthedAdminRepresentantesPagamentosRouteImport
+      parentRoute: typeof AuthedAdminRepresentantesRoute
+    }
+    '/_authed/admin/representantes/vendas': {
+      id: '/_authed/admin/representantes/vendas'
+      path: '/vendas'
+      fullPath: '/admin/representantes/vendas'
+      preLoaderRoute: typeof AuthedAdminRepresentantesVendasRouteImport
+      parentRoute: typeof AuthedAdminRepresentantesRoute
+    }
+    '/_authed/admin/representantes_/$repId': {
+      id: '/_authed/admin/representantes_/$repId'
+      path: '/representantes/$repId'
+      fullPath: '/admin/representantes/$repId'
+      preLoaderRoute: typeof AuthedAdminRepresentantesRepIdRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/representante/lead/$leadId': {
+      id: '/_authed/representante/lead/$leadId'
+      path: '/lead/$leadId'
+      fullPath: '/representante/lead/$leadId'
+      preLoaderRoute: typeof AuthedRepresentanteLeadLeadIdRouteImport
+      parentRoute: typeof AuthedRepresentanteRoute
     }
   }
 }
 
+interface AuthedAdminClientesRouteChildren {
+  AuthedAdminClientesClientIdRoute: typeof AuthedAdminClientesClientIdRoute
+}
+
+const AuthedAdminClientesRouteChildren: AuthedAdminClientesRouteChildren = {
+  AuthedAdminClientesClientIdRoute: AuthedAdminClientesClientIdRoute,
+}
+
+const AuthedAdminClientesRouteWithChildren =
+  AuthedAdminClientesRoute._addFileChildren(AuthedAdminClientesRouteChildren)
+
+interface AuthedAdminRepresentantesRouteChildren {
+  AuthedAdminRepresentantesInscricoesRoute: typeof AuthedAdminRepresentantesInscricoesRoute
+  AuthedAdminRepresentantesPagamentosRoute: typeof AuthedAdminRepresentantesPagamentosRoute
+  AuthedAdminRepresentantesVendasRoute: typeof AuthedAdminRepresentantesVendasRoute
+  AuthedAdminRepresentantesIndexRoute: typeof AuthedAdminRepresentantesIndexRoute
+}
+
+const AuthedAdminRepresentantesRouteChildren: AuthedAdminRepresentantesRouteChildren =
+  {
+    AuthedAdminRepresentantesInscricoesRoute:
+      AuthedAdminRepresentantesInscricoesRoute,
+    AuthedAdminRepresentantesPagamentosRoute:
+      AuthedAdminRepresentantesPagamentosRoute,
+    AuthedAdminRepresentantesVendasRoute: AuthedAdminRepresentantesVendasRoute,
+    AuthedAdminRepresentantesIndexRoute: AuthedAdminRepresentantesIndexRoute,
+  }
+
+const AuthedAdminRepresentantesRouteWithChildren =
+  AuthedAdminRepresentantesRoute._addFileChildren(
+    AuthedAdminRepresentantesRouteChildren,
+  )
+
+interface AuthedAdminRouteChildren {
+  AuthedAdminBackupRoute: typeof AuthedAdminBackupRoute
+  AuthedAdminClientesRoute: typeof AuthedAdminClientesRouteWithChildren
+  AuthedAdminConfiguracoesRoute: typeof AuthedAdminConfiguracoesRoute
+  AuthedAdminEquipeRoute: typeof AuthedAdminEquipeRoute
+  AuthedAdminFunilRoute: typeof AuthedAdminFunilRoute
+  AuthedAdminIntegracoesRoute: typeof AuthedAdminIntegracoesRoute
+  AuthedAdminLeadsRoute: typeof AuthedAdminLeadsRoute
+  AuthedAdminPagamentosRoute: typeof AuthedAdminPagamentosRoute
+  AuthedAdminPedidosRoute: typeof AuthedAdminPedidosRoute
+  AuthedAdminPlacasRoute: typeof AuthedAdminPlacasRoute
+  AuthedAdminProdutosRoute: typeof AuthedAdminProdutosRoute
+  AuthedAdminRepresentantesRoute: typeof AuthedAdminRepresentantesRouteWithChildren
+  AuthedAdminServicosRoute: typeof AuthedAdminServicosRoute
+  AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
+  AuthedAdminLeadLeadIdRoute: typeof AuthedAdminLeadLeadIdRoute
+  AuthedAdminRepresentantesRepIdRoute: typeof AuthedAdminRepresentantesRepIdRoute
+}
+
+const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
+  AuthedAdminBackupRoute: AuthedAdminBackupRoute,
+  AuthedAdminClientesRoute: AuthedAdminClientesRouteWithChildren,
+  AuthedAdminConfiguracoesRoute: AuthedAdminConfiguracoesRoute,
+  AuthedAdminEquipeRoute: AuthedAdminEquipeRoute,
+  AuthedAdminFunilRoute: AuthedAdminFunilRoute,
+  AuthedAdminIntegracoesRoute: AuthedAdminIntegracoesRoute,
+  AuthedAdminLeadsRoute: AuthedAdminLeadsRoute,
+  AuthedAdminPagamentosRoute: AuthedAdminPagamentosRoute,
+  AuthedAdminPedidosRoute: AuthedAdminPedidosRoute,
+  AuthedAdminPlacasRoute: AuthedAdminPlacasRoute,
+  AuthedAdminProdutosRoute: AuthedAdminProdutosRoute,
+  AuthedAdminRepresentantesRoute: AuthedAdminRepresentantesRouteWithChildren,
+  AuthedAdminServicosRoute: AuthedAdminServicosRoute,
+  AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+  AuthedAdminLeadLeadIdRoute: AuthedAdminLeadLeadIdRoute,
+  AuthedAdminRepresentantesRepIdRoute: AuthedAdminRepresentantesRepIdRoute,
+}
+
+const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
+  AuthedAdminRouteChildren,
+)
+
+interface AuthedContaRouteChildren {
+  AuthedContaDadosRoute: typeof AuthedContaDadosRoute
+  AuthedContaPedidosRoute: typeof AuthedContaPedidosRoute
+  AuthedContaPlacasRoute: typeof AuthedContaPlacasRoute
+  AuthedContaServicosRoute: typeof AuthedContaServicosRoute
+  AuthedContaIndexRoute: typeof AuthedContaIndexRoute
+}
+
+const AuthedContaRouteChildren: AuthedContaRouteChildren = {
+  AuthedContaDadosRoute: AuthedContaDadosRoute,
+  AuthedContaPedidosRoute: AuthedContaPedidosRoute,
+  AuthedContaPlacasRoute: AuthedContaPlacasRoute,
+  AuthedContaServicosRoute: AuthedContaServicosRoute,
+  AuthedContaIndexRoute: AuthedContaIndexRoute,
+}
+
+const AuthedContaRouteWithChildren = AuthedContaRoute._addFileChildren(
+  AuthedContaRouteChildren,
+)
+
+interface AuthedRepresentanteRouteChildren {
+  AuthedRepresentanteCrmRoute: typeof AuthedRepresentanteCrmRoute
+  AuthedRepresentanteFinanceiroRoute: typeof AuthedRepresentanteFinanceiroRoute
+  AuthedRepresentanteFunilRoute: typeof AuthedRepresentanteFunilRoute
+  AuthedRepresentantePaginaRoute: typeof AuthedRepresentantePaginaRoute
+  AuthedRepresentanteVendasRoute: typeof AuthedRepresentanteVendasRoute
+  AuthedRepresentanteIndexRoute: typeof AuthedRepresentanteIndexRoute
+  AuthedRepresentanteLeadLeadIdRoute: typeof AuthedRepresentanteLeadLeadIdRoute
+}
+
+const AuthedRepresentanteRouteChildren: AuthedRepresentanteRouteChildren = {
+  AuthedRepresentanteCrmRoute: AuthedRepresentanteCrmRoute,
+  AuthedRepresentanteFinanceiroRoute: AuthedRepresentanteFinanceiroRoute,
+  AuthedRepresentanteFunilRoute: AuthedRepresentanteFunilRoute,
+  AuthedRepresentantePaginaRoute: AuthedRepresentantePaginaRoute,
+  AuthedRepresentanteVendasRoute: AuthedRepresentanteVendasRoute,
+  AuthedRepresentanteIndexRoute: AuthedRepresentanteIndexRoute,
+  AuthedRepresentanteLeadLeadIdRoute: AuthedRepresentanteLeadLeadIdRoute,
+}
+
+const AuthedRepresentanteRouteWithChildren =
+  AuthedRepresentanteRoute._addFileChildren(AuthedRepresentanteRouteChildren)
+
+interface AuthedRouteChildren {
+  AuthedAdminRoute: typeof AuthedAdminRouteWithChildren
+  AuthedContaRoute: typeof AuthedContaRouteWithChildren
+  AuthedRepresentanteRoute: typeof AuthedRepresentanteRouteWithChildren
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdminRoute: AuthedAdminRouteWithChildren,
+  AuthedContaRoute: AuthedContaRouteWithChildren,
+  AuthedRepresentanteRoute: AuthedRepresentanteRouteWithChildren,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
+interface SiteRouteChildren {
+  SiteCarrinhoRoute: typeof SiteCarrinhoRoute
+  SiteSejaRepresentanteRoute: typeof SiteSejaRepresentanteRoute
+  SiteIndexRoute: typeof SiteIndexRoute
+  SiteLojaSlugRoute: typeof SiteLojaSlugRoute
+  SitePagamentoCodigoRoute: typeof SitePagamentoCodigoRoute
+  SitePlacaCodeRoute: typeof SitePlacaCodeRoute
+  SiteServicosCriacaoSiteRoute: typeof SiteServicosCriacaoSiteRoute
+  SiteServicosGestaoPerfilRoute: typeof SiteServicosGestaoPerfilRoute
+  SiteServicosPerfilGoogleRoute: typeof SiteServicosPerfilGoogleRoute
+  SiteServicosPlacaNfcRoute: typeof SiteServicosPlacaNfcRoute
+  SiteLojaIndexRoute: typeof SiteLojaIndexRoute
+}
+
+const SiteRouteChildren: SiteRouteChildren = {
+  SiteCarrinhoRoute: SiteCarrinhoRoute,
+  SiteSejaRepresentanteRoute: SiteSejaRepresentanteRoute,
+  SiteIndexRoute: SiteIndexRoute,
+  SiteLojaSlugRoute: SiteLojaSlugRoute,
+  SitePagamentoCodigoRoute: SitePagamentoCodigoRoute,
+  SitePlacaCodeRoute: SitePlacaCodeRoute,
+  SiteServicosCriacaoSiteRoute: SiteServicosCriacaoSiteRoute,
+  SiteServicosGestaoPerfilRoute: SiteServicosGestaoPerfilRoute,
+  SiteServicosPerfilGoogleRoute: SiteServicosPerfilGoogleRoute,
+  SiteServicosPlacaNfcRoute: SiteServicosPlacaNfcRoute,
+  SiteLojaIndexRoute: SiteLojaIndexRoute,
+}
+
+const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  ArquivoRoute: ArquivoRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  SiteRoute: SiteRouteWithChildren,
+  AcessoAdminRoute: AcessoAdminRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiTimeRoute: ApiTimeRoute,
+  RSlugRoute: RSlugRoute,
+  SiteSlugRoute: SiteSlugRoute,
+  ApiAuthConfirmRoute: ApiAuthConfirmRoute,
+  ApiAuthGoogleRoute: ApiAuthGoogleRoute,
+  ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
+  ApiBackupsDownloadRoute: ApiBackupsDownloadRoute,
+  ApiBackupsUploadRoute: ApiBackupsUploadRoute,
+  ApiPaymentsInfinitepayRoute: ApiPaymentsInfinitepayRoute,
+  ApiPaymentsMercadopagoRoute: ApiPaymentsMercadopagoRoute,
+  ApiRepresentantesFotoRoute: ApiRepresentantesFotoRoute,
+  ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
+import type { getRouter } from './router.jsx'
+import type { startInstance } from './start.js'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
