@@ -5,7 +5,7 @@ module.exports = {
   apps: [
     {
       name: "google-nfc-connect",
-      script: "server.mjs",
+      script: "start.mjs",
       instances: 1,
       exec_mode: "fork",
       env: { NODE_ENV: "production", PORT: 3000 },

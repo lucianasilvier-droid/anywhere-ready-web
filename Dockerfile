@@ -26,7 +26,7 @@ ENV NODE_ENV=production \
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=build /app/dist ./dist
-COPY server.mjs ./
+COPY start.mjs ./
 COPY scripts ./scripts
 COPY db/migrations ./db/migrations
 RUN mkdir -p /app/storage && chown -R node:node /app/storage
@@ -35,4 +35,4 @@ EXPOSE 3000
 VOLUME ["/app/storage"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget -qO- "http://127.0.0.1:${PORT}/healthz" >/dev/null || exit 1
-CMD ["sh", "-c", "if [ \"$RUN_MIGRATIONS\" != \"false\" ]; then node scripts/migrate.mjs || exit 1; fi; exec node server.mjs"]
+CMD ["sh", "-c", "if [ \"$RUN_MIGRATIONS\" != \"false\" ]; then node scripts/migrate.mjs || exit 1; fi; exec node start.mjs"]

@@ -13,7 +13,7 @@ WorkingDirectory=/var/www/google-nfc-connect
 EnvironmentFile=/var/www/google-nfc-connect/.env
 Environment=NODE_ENV=production
 ExecStartPre=/usr/bin/node scripts/migrate.mjs
-ExecStart=/usr/bin/node server.mjs
+ExecStart=/usr/bin/node start.mjs
 Restart=always
 RestartSec=3
 
