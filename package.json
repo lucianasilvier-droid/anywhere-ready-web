@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:dev": "vite build --mode development",
     "start": "node server.mjs",
     "preview": "npm run build && npm start",
     "db:migrate": "node scripts/migrate.mjs",
