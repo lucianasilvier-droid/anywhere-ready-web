@@ -21,6 +21,23 @@ const wantsNitro = !!(process.env.NITRO_PRESET || process.env.VERCEL);
 
 export default defineConfig({
   plugins: [codigoFonte()],
+  vite: {
+    optimizeDeps: {
+      // The dependency scanner does not run Vite plugins: tell it the virtual
+      // module is not a package, so pre-bundling is not skipped.
+      rolldownOptions: {
+        plugins: [
+          {
+            name: "codigo-fonte-scan",
+            resolveId(id: string) {
+              if (id === "virtual:codigo-fonte") return { id, external: true };
+              return null;
+            },
+          },
+        ],
+      },
+    },
+  },
   tanstackStart: {
     // src/server.js: the server entry (logs loader errors).
     server: { entry: "server" },
