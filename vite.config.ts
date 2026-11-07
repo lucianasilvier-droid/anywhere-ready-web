@@ -11,13 +11,13 @@ import codigoFonte from "./vite-plugin-codigo-fonte.js";
 
 // Make .env available to server code as process.env in `npm run dev`
 // (real environment variables always win).
-const mode = process.env.NODE_ENV === "production" ? "production" : "development";
+const mode = process.env["NODE_ENV"] === "production" ? "production" : "development";
 for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), ""))) {
   if (process.env[key] === undefined) process.env[key] = value;
 }
 
-const insideLovable = process.env.LOVABLE_SANDBOX === "1" || !!process.env.DEV_SERVER__PROJECT_PATH;
-const wantsNitro = !!(process.env.NITRO_PRESET || process.env.VERCEL);
+const insideLovable = process.env["LOVABLE_SANDBOX"] === "1" || !!process.env["DEV_SERVER__PROJECT_PATH"];
+const wantsNitro = !!(process.env["NITRO_PRESET"] || process.env["VERCEL"]);
 
 export default defineConfig({
   plugins: [codigoFonte()],
