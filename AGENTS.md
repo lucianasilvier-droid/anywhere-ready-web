@@ -28,3 +28,11 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- The app is self-hosted first: own login (scrypt + `sid` cookie), PostgreSQL via `DATABASE_URL`, files on disk or S3, `npm start` runs `server.mjs`. Why: it must run on any host without a provider lock-in.
+- `vite.config.ts` uses the Lovable config wrapper but disables Nitro outside Lovable unless `NITRO_PRESET`/`VERCEL` is set, so `npm run build` outputs `dist/client` + `dist/server/server.js` for `server.mjs`. Why: one config serves both the Lovable preview and self-hosting.
+- Styling is Tailwind v4 loading the legacy `tailwind.config.js` through `@config` in `src/index.css`. Why: the Lovable wrapper always adds the Tailwind v4 plugin.
+- Server-only modules are named `*.server.js`; the client dependency scan skips them (see `optimizeDeps` in `vite.config.ts`). Why: `pg`/`nodemailer` cannot be pre-bundled for the browser and broke page loading.
+- Keep `@tanstack/react-query` on the same `@tanstack/query-core` version `@tanstack/react-router-ssr-query` needs. Why: a mismatch breaks dependency pre-bundling and the preview hangs.

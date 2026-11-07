@@ -19,6 +19,8 @@ export const Route = createRootRoute({
           "Criamos e administramos o Perfil da Empresa no Google e vendemos placas NFC para avaliações. Mais visibilidade e mais clientes para o seu negócio.",
       },
       { name: "theme-color", content: "#070d1c" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       // Fonts are self-hosted (src/fonts.css) — no Google Fonts request.

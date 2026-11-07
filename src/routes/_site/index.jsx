@@ -14,6 +14,12 @@ export const Route = createFileRoute("/_site/")({
         content:
           "Criação e gestão do Perfil da Empresa no Google Maps e placas NFC para avaliações. Atendimento em todo o Brasil.",
       },
+      { property: "og:title", content: "Google NFC Connect — Seja encontrado no Google e receba mais avaliações" },
+      {
+        property: "og:description",
+        content:
+          "Criação e gestão do Perfil da Empresa no Google Maps e placas NFC para avaliações. Atendimento em todo o Brasil.",
+      },
     ],
   }),
   component: HomePage,
