@@ -23,14 +23,18 @@ export default defineConfig({
   plugins: [codigoFonte()],
   vite: {
     optimizeDeps: {
-      // The dependency scanner does not run Vite plugins: tell it the virtual
-      // module is not a package, so pre-bundling is not skipped.
+      // The browser dependency scan must skip server-only code (*.server.js and the
+      // virtual source-code module): pg, nodemailer… cannot be bundled for the browser,
+      // and the bundler strips these imports from client code anyway.
+      exclude: ["pg", "nodemailer", "@anthropic-ai/sdk"],
       rolldownOptions: {
         plugins: [
           {
-            name: "codigo-fonte-scan",
+            name: "skip-server-only-in-scan",
             resolveId(id: string) {
-              if (id === "virtual:codigo-fonte") return { id, external: true };
+              if (id === "virtual:codigo-fonte" || /\.server(\.[cm]?[jt]sx?)?$/.test(id)) {
+                return { id, external: true };
+              }
               return null;
             },
           },
