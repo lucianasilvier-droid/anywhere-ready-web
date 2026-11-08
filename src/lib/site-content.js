@@ -108,12 +108,12 @@ export const NFC_BENEFITS = [
 
 export const NFC_STEPS = [
   {
-    title: "Você recebe a placa",
-    text: "Placa física personalizada com o nome da sua empresa, pronta para usar.",
+    title: "Criação do Perfil no Google Maps ou WebSite",
+    text: "Cadastramos o Perfil no Google Maps ou WebSite e configuramos os links do seu negócio.",
   },
   {
-    title: "Configuramos os links",
-    text: "Cadastramos o link de avaliação do Google e o perfil do Instagram.",
+    title: "Você recebe a placa",
+    text: "Placa física já ativada, pronta para usar.",
   },
   {
     title: "O cliente aproxima",
