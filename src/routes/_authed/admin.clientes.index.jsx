@@ -11,7 +11,7 @@ import Modal from "@/components/admin/Modal";
 import AdminField from "@/components/admin/AdminField";
 import EmptyState from "@/components/admin/EmptyState";
 
-export const Route = createFileRoute("/_authed/admin/clientes")({
+export const Route = createFileRoute("/_authed/admin/clientes/")({
   head: () => ({ meta: [{ title: "Clientes — Painel" }] }),
   component: ClientesPage,
 });
