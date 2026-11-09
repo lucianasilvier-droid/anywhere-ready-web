@@ -32,9 +32,12 @@ export const entityOpFn = createServerFn({ method: "POST" })
 /** The signed-in visitor, or null. */
 export const meFn = createServerFn({ method: "GET" }).handler(async ({ context }) => {
   try {
-    return { user: await context.getBase44().auth.me() };
+    const base44 = context.getBase44();
+    const user = await base44.auth.me();
+    const representante = user?.role === "admin" ? null : await base44.representante();
+    return { user, isRepresentative: !!representante };
   } catch (error) {
-    if (error?.status === 401) return { user: null };
+    if (error?.status === 401) return { user: null, isRepresentative: false };
     throw error;
   }
 });
