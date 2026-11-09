@@ -314,11 +314,15 @@ export const decidirCandidatoFn = createServerFn({ method: "POST" })
       autor_email: admin,
     });
 
-    let convite = "Convite de acesso enviado por e-mail.";
+    let convite = "";
     try {
-      await base44.users.inviteUser(email, "user");
+      const envio = await base44.users.inviteUser(email, "user");
+      convite = envio?.delivered
+        ? "Representante aprovado. O convite para criar a senha foi enviado por e-mail."
+        : "Representante aprovado, mas o e-mail NÃO foi enviado: o SMTP da Vercel não está configurado. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM para que o convite chegue à caixa de entrada.";
     } catch (e) {
-      convite = `Representante criado, mas o convite não pôde ser enviado: ${e?.message || "erro no envio"}. Envie pela página Equipe e acessos.`;
+      console.error("[representantes] Falha ao enviar convite:", e);
+      convite = `Representante aprovado, mas o convite NÃO foi enviado: ${e?.message || "falha no serviço de e-mail"}. Verifique a configuração SMTP da Vercel e reenvie o convite.`;
     }
     return { ok: true, representante: rep, convite };
   });
