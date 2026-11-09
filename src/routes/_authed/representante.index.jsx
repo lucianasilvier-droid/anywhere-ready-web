@@ -110,6 +110,12 @@ function DashboardRepresentante() {
             </div>
           ))}
         </div>
+        <p className="mt-3 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.05] px-3 py-2 text-[11.5px] leading-relaxed text-white/60">
+          Na administração mensal do perfil Google, o cliente paga R$ 150,00: você recebe R$ 50,00
+          recorrentes e o sistema fica com R$ 100,00. A administração, manutenção e operação técnica
+          são realizadas pelo sistema — não pelo representante. Sua comissão continua enquanto o cliente
+          mantiver o plano ativo e os pagamentos em dia.
+        </p>
       </section>
 
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
