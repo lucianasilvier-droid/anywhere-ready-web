@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Camera, Copy, ExternalLink, Loader2, Save, Trash2, Users, ShoppingBag } from "lucide-react";
 import { minhaPaginaFn, salvarMinhaPaginaFn } from "@/lib/landing-representante-fns";
 import SemVinculo, { PainelCarregando } from "@/components/representante/SemVinculo";
-import { brl, dataHora } from "@/lib/format";
+import { brl, dataHora, telefoneWhatsApp } from "@/lib/format";
 
 export const Route = createFileRoute("/_authed/representante/pagina")({
   head: () => ({ meta: [{ title: "Minha página — Representante" }] }),
@@ -212,8 +212,9 @@ function MinhaPagina() {
             <input className={input} value={form.pagina_cidade} onChange={set("pagina_cidade")} placeholder="São Paulo - SP" />
           </label>
           <label>
-            <span className={rotulo}>WhatsApp</span>
-            <input className={input} value={form.pagina_whatsapp} onChange={set("pagina_whatsapp")} placeholder="(11) 90000-0000" />
+            <span className={rotulo}>WhatsApp internacional</span>
+            <input className={input} value={form.pagina_whatsapp} onChange={set("pagina_whatsapp")} placeholder="+34 612 345 678 ou +55 11 90000-0000" />
+            <p className="mt-1 text-[10.5px] text-white/35">Inclua + e o código do país. Ex.: +34 Espanha, +351 Portugal, +55 Brasil.</p>
           </label>
           <label>
             <span className={rotulo}>Instagram</span>
@@ -259,7 +260,7 @@ function MinhaPagina() {
                 <div className="flex items-center gap-3">
                   {c.telefone && (
                     <a
-                      href={`https://wa.me/${c.telefone.replace(/\D/g, "").replace(/^(?!55)/, "55")}`}
+                      href={`https://wa.me/${telefoneWhatsApp(c.telefone)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[11.5px] font-semibold text-emerald-300 hover:underline"
