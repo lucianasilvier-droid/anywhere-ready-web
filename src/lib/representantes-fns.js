@@ -73,6 +73,7 @@ export const adminRepresentantesFn = createServerFn({ method: "GET" })
         const validas = minhas.filter((v) => v.status_comissao !== "cancelada");
         return {
           ...rep,
+          comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
           metricas: {
             vendas: minhas.filter((v) => v.status !== "cancelada").length,
             valor_vendido:
@@ -140,7 +141,7 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       telefone: data.telefone || "",
       status: data.status || "ativo",
       comissao_perfil: Number(data.comissao_perfil) || 100,
-      comissao_mensalidade: Number(data.comissao_mensalidade) || 100,
+      comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
       comissao_placa: Number(data.comissao_placa) || 20,
       observacoes: data.observacoes || "",
     };
