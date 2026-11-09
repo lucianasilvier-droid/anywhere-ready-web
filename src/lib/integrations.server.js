@@ -276,8 +276,8 @@ export async function searchPlaces(args, values = {}) {
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 /** Modelo principal da IA e modelos reserva (usados se o principal estiver sobrecarregado). */
-export const GROQ_MODELO = "llama-3.3-70b-versatile";
-const GROQ_MODELOS_RESERVA = ["llama-3.1-8b-instant"];
+export const GROQ_MODELO = "openai/gpt-oss-120b";
+const GROQ_MODELOS_RESERVA = ["openai/gpt-oss-20b"];
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
