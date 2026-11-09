@@ -166,6 +166,7 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     z.object({
       leadId: z.string().min(1),
       tipo: z.enum(["autorizacao", "proposta", "followup", "resposta_avaliacao"]),
+      previewSiteUrl: z.string().url().max(500).optional().default(""),
     }),
   )
   .handler(async ({ data, context }) => {
@@ -174,18 +175,20 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const lead = await base44.entities.Lead.get(data.leadId);
 
     const instrucoes = {
-      autorizacao: `Escreva uma PRIMEIRA mensagem de WhatsApp pedindo AUTORIZAÇÃO para enviar informações comerciais.
-Deve ser curta (máx. 60 palavras), educada, dizer quem somos, por que estamos entrando em contato e pedir um "sim" para seguir.
-Não inclua oferta, preço nem material promocional: apenas o pedido de autorização.`,
-      proposta: `Escreva uma proposta comercial curta para WhatsApp (máx. 120 palavras), apenas se houver autorização.
-Foque em um dos quatro serviços, com benefícios concretos e um próximo passo claro. Não invente preços.`,
-      followup: `Escreva uma mensagem de acompanhamento (máx. 60 palavras) para um contato que já autorizou o recebimento de informações,
-retomando a conversa sem pressão e oferecendo ajuda.`,
-      resposta_avaliacao: `Escreva uma sugestão de resposta pública a uma avaliação de cliente no Google (máx. 80 palavras),
-agradecendo, sendo cordial e convidando o cliente a continuar o contato. Não prometa nada em nome da empresa.`,
+      autorizacao: `Escreva a PRIMEIRA mensagem de WhatsApp (máx. 90 palavras). Abra com um elogio verdadeiro e específico, usando apenas dados reais do estabelecimento: categoria, bairro, nota/quantidade de avaliações ou algum detalhe disponível. Apresente as placas NFC para facilitar o acesso dos clientes à avaliação no Google. Se a empresa NÃO tem site e existe uma URL de prévia informada adiante, diga que preparamos uma prévia de um site moderno e bonito para valorizar o negócio e pergunte se podemos enviar. Peça resposta SIM. Não envie preços, links, vídeo nem material promocional nesta primeira mensagem. Não afirme que o site está pronto se não houver URL de prévia.`,
+      proposta: `Escreva a abertura de uma apresentação comercial curta para WhatsApp (máx. 90 palavras), somente após autorização. Valorize o estabelecimento, apresente benefícios concretos e convide a conhecer a prévia do site, o vídeo e o catálogo que serão anexados automaticamente depois do texto. Não invente preços, produtos, links ou recursos.`,
+      followup: `Escreva uma mensagem de acompanhamento (máx. 60 palavras) para um contato que já autorizou o recebimento de informações, retomando a conversa sem pressão e oferecendo ajuda.`,
+      resposta_avaliacao: `Escreva uma sugestão de resposta pública a uma avaliação de cliente no Google (máx. 80 palavras), agradecendo, sendo cordial e convidando o cliente a continuar o contato. Não prometa nada em nome da empresa.`,
     }[data.tipo];
 
     const remetente = await senderIdentity(context);
+    const previewSiteUrl = String(data.previewSiteUrl || "").trim();
+    const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
+    const catalogo = [
+      { nome: "Placa Google NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", descricao: "Acesso direto à página de avaliação do Google." },
+      { nome: "Placa Instagram NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", descricao: "Acesso direto ao Instagram do estabelecimento." },
+      { nome: "Kit Google + Instagram", preco: "R$ 95,00", url: "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram", descricao: "Duas placas para divulgar os dois canais." },
+    ];
 
     const result = await iaJSON(
       `${CONTEXT_TOOL}
@@ -201,6 +204,14 @@ Regras obrigatórias:
 - Personalize de verdade para este estabelecimento: cite o nome dele e pelo menos um detalhe concreto dos dados abaixo
   (bairro/cidade, categoria, nota e avaliações no Google, ausência de site ou observações). Evite texto genérico que serviria para qualquer empresa.
 - A mensagem deve estar pronta para enviar, sem nenhuma edição.
+- Na primeira mensagem, nunca inclua catálogo, preços, vídeo ou links; apenas peça autorização.
+- Nunca diga que criou um site quando não houver URL de prévia disponível.
+- Se quem envia for representante comercial, assine com o primeiro nome dele; caso contrário, identifique apenas a empresa.
+
+Contexto de materiais disponíveis:
+- Prévia real do site: ${previewSiteUrl || "não disponível"}
+- Vídeo demonstrativo: ${videoDemoUrl || "ainda não configurado no servidor"}
+- Catálogo de produtos e preços: ${JSON.stringify(catalogo)}
 
 Dados do estabelecimento que vai receber a mensagem:
 ${leadBrief(lead)}
@@ -216,7 +227,16 @@ Devolva {"mensagem": string}.`,
       setResponseStatus(400);
       throw Object.assign(new Error(result.error), { status: 400 });
     }
-    return { ok: true, mensagem: preencherPlaceholders(result.data?.mensagem, remetente, lead) };
+    let mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
+    if (data.tipo === "proposta") {
+      const materiais = [];
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
+      if (videoDemoUrl) materiais.push("🎥 Veja como funcionam as placas NFC:\n" + videoDemoUrl);
+      materiais.push("🛍️ CATÁLOGO NFC");
+      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
+      mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
+    }
+    return { ok: true, mensagem: mensagemFinal };
   });
 
 export const summarizeHistoryFn = createServerFn({ method: "POST" })
