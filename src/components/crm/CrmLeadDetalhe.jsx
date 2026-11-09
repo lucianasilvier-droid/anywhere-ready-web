@@ -18,7 +18,7 @@ import SiteDoLead from "@/components/admin/SiteDoLead";
 import SiteDoLeadRepresentante from "@/components/crm/SiteDoLeadRepresentante";
 import { gerarSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import RepresentanteDoLead from "@/components/crm/RepresentanteDoLead";
-import { STATUS_CONSENT, dataHora } from "@/lib/format";
+import { STATUS_CONSENT, dataHora, telefoneWhatsApp } from "@/lib/format";
 
 /** Ficha do lead no CRM. No painel do representante, só abre clientes do próprio representante. */
 export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
@@ -338,7 +338,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
                 <Copy className="h-3 w-3" /> Copiar
               </button>
               <a
-                href={`https://wa.me/55${(lead.telefone || "").replace(/\D/g, "").replace(/^55/, "")}?text=${encodeURIComponent(mensagem)}`}
+                href={`https://wa.me/${telefoneWhatsApp(lead.telefone)}?text=${encodeURIComponent(mensagem)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70"
