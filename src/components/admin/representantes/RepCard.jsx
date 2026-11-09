@@ -2,16 +2,35 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, ExternalLink, Globe, Pencil } from "lucide-react";
+import { ArrowRight, ExternalLink, Globe, Pencil, Mail, Loader2 } from "lucide-react";
 import { adminPaginaRepresentanteFn } from "@/lib/landing-representante-fns";
+import { reenviarConviteRepresentanteFn } from "@/lib/representantes-fns";
 import { brl } from "@/lib/format";
 import { STATUS_REPRESENTANTE } from "@/lib/representante-ui";
 
 export default function RepCard({ rep, onEditar, onAtualizado }) {
   const alternarPagina = useServerFn(adminPaginaRepresentanteFn);
+  const reenviarConvite = useServerFn(reenviarConviteRepresentanteFn);
   const [processando, setProcessando] = useState(false);
+  const [enviandoConvite, setEnviandoConvite] = useState(false);
   const paginaAtiva = rep.pagina_ativa !== false;
   const endereco = rep.pagina_slug || rep.codigo;
+
+  async function enviarConvite() {
+    setEnviandoConvite(true);
+    try {
+      const resultado = await reenviarConvite({ data: { id: rep.id } });
+      if (resultado?.delivered === false) {
+        toast.error(resultado.mensagem || "O sistema não confirmou o envio do e-mail.");
+      } else {
+        toast.success(resultado?.mensagem || "Convite solicitado para envio por e-mail.");
+      }
+    } catch (e) {
+      toast.error(e?.message || "Não foi possível reenviar o convite.");
+    } finally {
+      setEnviandoConvite(false);
+    }
+  }
 
   async function mudarPagina() {
     setProcessando(true);
@@ -84,7 +103,15 @@ export default function RepCard({ rep, onEditar, onAtualizado }) {
         </p>
         <div className="flex shrink-0 items-center gap-1.5">
           <button
-            onClick={() => onEditar(rep)}
+            onClick={enviarConvite}
+            disabled={enviandoConvite}
+            className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/25 px-2 py-1 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
+          >
+            {enviandoConvite ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+            Enviar convite
+          </button>
+          <button
+            onClick={() => onEditar(rep)
             className="inline-flex items-center gap-1 rounded-lg border border-white/12 px-2 py-1 text-[11px] font-semibold text-white/60 hover:text-white"
           >
             <Pencil className="h-3 w-3" /> Editar
