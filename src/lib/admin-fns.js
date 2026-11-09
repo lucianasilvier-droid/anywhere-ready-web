@@ -247,19 +247,23 @@ Devolva {"mensagem": string}.`,
 
     if (!result.ok) {
       setResponseStatus(400);
-       if (data.tipo === "proposta") {
+      throw Object.assign(new Error(result.error), { status: 400 });
+    }
+    let mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
+    if (data.tipo === "proposta") {
       const materiais = [
         "🌐 Conheça o Google NFC CONNECT:",
         "https://google-nfc-connect.vercel.app",
       ];
-      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
-      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\n" + videoDemoUrl);
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\\n" + previewSiteUrl);
+      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\\n" + videoDemoUrl);
       materiais.push("🛍️ CATÁLOGO NFC");
-      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
-      mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
+      for (const item of catalogo) materiais.push("\\n" + item.nome + " — " + item.preco + "\\n" + item.descricao + "\\n" + item.url);
+      mensagemFinal = (mensagemFinal + "\\n\\n" + materiais.join("\\n")).slice(0, 1450);
     }
     return { ok: true, mensagem: mensagemFinal };
   });
+
 
 export const summarizeHistoryFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
