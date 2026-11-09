@@ -1,3 +1,21 @@
+/**
+ * Normaliza telefones para links wa.me sem sobrescrever códigos internacionais.
+ * + e 00 indicam explicitamente um número internacional.
+ * Números locais brasileiros (10/11 dígitos) mantêm compatibilidade com +55.
+ * Outros números são preservados sem adicionar o código brasileiro.
+ */
+export function telefoneWhatsApp(value) {
+  const original = String(value || "").trim();
+  if (!original) return "";
+  const digits = original.replace(/\D/g, "");
+  if (!digits) return "";
+  if (original.startsWith("00")) return digits.replace(/^00/, "");
+  if (original.startsWith("+")) return digits;
+  if (/^55\d{10,11}$/.test(digits)) return digits;
+  if (/^\d{10,11}$/.test(digits)) return `55${digits}`;
+  return digits;
+}
+
 export function brl(value) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
     Number(value) || 0,
