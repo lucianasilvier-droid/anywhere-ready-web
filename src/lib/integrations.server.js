@@ -322,7 +322,7 @@ async function chamarGroq(modelo, key, prompt, schemaHint) {
       status: res.status,
       error:
         payload?.error?.message ||
-        `O Groq respondeu ${res.status}. Verifique se a chave está correta e ativa em console.groq.com.`,
+        `A API Roq respondeu ${res.status}. Verifique se a chave está correta e ativa.`,
     };
   }
   const text = (payload.choices?.[0]?.message?.content || "").trim();
@@ -362,7 +362,7 @@ export async function iaJSON(prompt, schemaHint, values = {}) {
   const key = values.groq_api_key || readSecret("GROQ_API_KEY");
   let ultimoErro = key
     ? ""
-    : "A chave do Groq não está configurada. Cole a chave em Integrações e APIs no painel para usar os recursos de IA.";
+    : "A chave da API Roq não está configurada. Cadastre a chave em Integrações e APIs no painel para usar os recursos de IA.";
   let usado = GROQ_MODELO;
   let texto = "";
 
@@ -377,7 +377,7 @@ export async function iaJSON(prompt, schemaHint, values = {}) {
           usado = modelo;
           break busca;
         }
-        ultimoErro = r.error || "O Groq não retornou conteúdo.";
+        ultimoErro = r.error || "A API Roq não retornou conteúdo.";
         const sobrecarga = [429, 500, 503].includes(r.status);
         if (sobrecarga && tentativa === 0) {
           await esperar(1500);
@@ -464,7 +464,7 @@ export async function testIntegration(tipo, values = {}) {
     if (!result.ok) return { status: "erro", mensagem: result.error };
     return {
       status: "conectado",
-      mensagem: `Conexão bem-sucedida com a API do Groq (modelo ${result.modelo}${result.modelo === result.modelo_solicitado ? "" : ` — solicitado: ${result.modelo_solicitado}`}).`,
+      mensagem: `Conexão bem-sucedida com a API Roq (modelo ${result.modelo}${result.modelo === result.modelo_solicitado ? "" : ` — solicitado: ${result.modelo_solicitado}`}).`,
     };
   }
 
