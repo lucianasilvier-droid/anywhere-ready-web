@@ -71,9 +71,13 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
         const atual = await buscarSite({ data: { leadId } });
         let site = atual?.site || null;
         if (!site && tipo === "autorizacao") {
-          const criado = await gerarSite({ data: { leadId, orientacoes: "Criar uma prévia comercial visualmente atraente, moderna e fiel às informações públicas verificáveis deste estabelecimento. Manter como demonstração, sem afirmar que o cliente já contratou." } });
-          site = criado?.site || null;
-          if (site) toast.success("Prévia do site criada para acompanhar a abordagem.");
+          try {
+            const criado = await gerarSite({ data: { leadId, orientacoes: "Criar uma prévia comercial visualmente atraente, moderna e fiel às informações públicas verificáveis deste estabelecimento. Manter como demonstração, sem afirmar que o cliente já contratou." } });
+            site = criado?.site || null;
+            if (site) toast.success("Prévia do site criada para acompanhar a abordagem.");
+          } catch (e) {
+            toast.error("Não foi possível gerar a prévia do site. A mensagem será preparada sem prometer um site pronto: " + (e?.message || "verifique a chave Claude."));
+          }
         }
         if (site?.slug && typeof window !== "undefined") previewSiteUrl = `${window.location.origin}/site/${site.slug}`;
       }
