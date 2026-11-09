@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { useRef } from "react";
 import {
   LayoutDashboard, Users, Target, LayoutGrid, Briefcase, ShoppingBag, CreditCard, Package,
   Plug, Settings, LogOut, ShieldAlert, Home, Wallet, HardDriveDownload, KeyRound,
@@ -29,6 +30,7 @@ const NAV = [
 
 function AdminLayout() {
   const { user, isLoadingAuth } = useAuth();
+  const menuMobileRef = useRef(null);
 
   // Logout real: invalida a sessão e leva para a tela de login. As páginas do
   // painel ficam atrás do AuthGate, então o botão "voltar" não reabre o painel.
