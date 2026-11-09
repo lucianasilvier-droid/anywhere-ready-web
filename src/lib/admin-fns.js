@@ -179,7 +179,7 @@ export const draftMessageFn = createServerFn({ method: "POST" })
 
     const instrucoes = {
       autorizacao: `Escreva a PRIMEIRA mensagem de WhatsApp (máx. 90 palavras). Abra com um elogio verdadeiro e específico, usando apenas dados reais do estabelecimento: categoria, bairro, nota/quantidade de avaliações ou algum detalhe disponível. Apresente as placas NFC para facilitar o acesso dos clientes à avaliação no Google. Se a empresa NÃO tem site e existe uma URL de prévia informada adiante, diga que preparamos uma prévia de um site moderno e bonito para valorizar o negócio e pergunte se podemos enviar. Peça resposta SIM. Não envie preços, links, vídeo nem material promocional nesta primeira mensagem. Não afirme que o site está pronto se não houver URL de prévia.`,
-      proposta: `Escreva a abertura de uma apresentação comercial curta para WhatsApp (máx. 90 palavras), somente após autorização. Valorize o estabelecimento, apresente benefícios concretos e convide a conhecer a prévia do site, o vídeo e o catálogo que serão anexados automaticamente depois do texto. Não invente preços, produtos, links ou recursos.`,
+      proposta: `Escreva a abertura de uma apresentação comercial curta para WhatsApp (máx. 90 palavras). IMPORTANTE: o cliente JÁ AUTORIZOU receber a proposta. Não peça autorização novamente, não pergunte se pode enviar materiais, não use frases como “posso enviar”, “gostaria de enviar” ou “aguardo sua autorização”. Fale como continuação natural da conversa, apresente os benefícios e convide o cliente a abrir os links e assistir ao vídeo que seguem abaixo. Não invente preços, produtos, links ou recursos.`,
       followup: `Escreva uma mensagem de acompanhamento (máx. 60 palavras) para um contato que já autorizou o recebimento de informações, retomando a conversa sem pressão e oferecendo ajuda.`,
       resposta_avaliacao: `Escreva uma sugestão de resposta pública a uma avaliação de cliente no Google (máx. 80 palavras), agradecendo, sendo cordial e convidando o cliente a continuar o contato. Não prometa nada em nome da empresa.`,
     }[data.tipo];
@@ -247,16 +247,16 @@ Devolva {"mensagem": string}.`,
 
     if (!result.ok) {
       setResponseStatus(400);
-      throw Object.assign(new Error(result.error), { status: 400 });
-    }
-    let mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
-    if (data.tipo === "proposta") {
-      const materiais = [];
-      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
-      if (videoDemoUrl) materiais.push("🎥 Veja como funcionam as placas NFC:\n" + videoDemoUrl);
+       if (data.tipo === "proposta") {
+      const materiais = [
+        "🌐 Conheça o Google NFC CONNECT:",
+        "https://google-nfc-connect.vercel.app",
+      ];
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\\n" + previewSiteUrl);
+      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\\n" + videoDemoUrl);
       materiais.push("🛍️ CATÁLOGO NFC");
-      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
-      mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
+      for (const item of catalogo) materiais.push("\\n" + item.nome + " — " + item.preco + "\\n" + item.descricao + "\\n" + item.url);
+      mensagemFinal = (mensagemFinal + "\\n\\n" + materiais.join("\\n")).slice(0, 1450);
     }
     return { ok: true, mensagem: mensagemFinal };
   });
