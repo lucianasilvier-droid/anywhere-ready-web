@@ -18,17 +18,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Instalar dependências
-        run: npm install --no-package-lock
+      - name: Configurar Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Instalar dependências travadas
+        run: bun install --frozen-lockfile
       - name: Executar testes
-        run: npm test
+        run: bun run test
       - name: Validar build de produção
-        run: npm run build
+        run: bun run build
       - name: Criar ZIP do código-fonte
         run: |
           zip -r anywhere-ready-web.zip . \
             -x '.git/*' 'node_modules/*' 'dist/*' '.output/*' '.vinxi/*' '.tanstack/*' \
-               '.env' '.env.*' '**/.env' '**/.env.*' '*.log'
+               '.env' '.env.*' '**/.env' '**/.env.*' '*.log' '*.zip'
       - name: Publicar ZIP e resultado da verificação
         uses: actions/upload-artifact@v4
         with:
