@@ -31,7 +31,7 @@ export default function NovaVendaForm({ open, onOpenChange, representantes, repr
     form.tipo === "placa"
       ? (Number(rep?.comissao_placa) || 20) * (Number(form.quantidade) || 1)
       : form.tipo === "mensalidade"
-        ? Number(rep?.comissao_mensalidade) || 100
+        ? TABELA_COMISSAO.mensalidade.comissao
         : form.tipo === "site"
           ? Math.round((Number(form.valor_venda) || 0) * TABELA_COMISSAO.site.percentual * 100) / 100
           : form.tipo === "mensalidade_site"
@@ -97,7 +97,7 @@ export default function NovaVendaForm({ open, onOpenChange, representantes, repr
             }}
             options={[
               { value: "perfil_google", label: "Criação de perfil no Google — R$ 150,00" },
-              { value: "mensalidade", label: "Mensalidade do perfil — R$ 150,00" },
+              { value: "mensalidade", label: "Administração mensal do perfil — R$ 150,00 (R$ 50,00 de comissão)" },
               { value: "placa", label: "Placa NFC" },
               { value: "site", label: "Criação de site — 50% de comissão" },
               { value: "mensalidade_site", label: `Mensalidade do site — ${brl(TABELA_COMISSAO.mensalidade_site.valor)} (${brl(TABELA_COMISSAO.mensalidade_site.comissao)} de comissão)` },
@@ -151,8 +151,9 @@ export default function NovaVendaForm({ open, onOpenChange, representantes, repr
 
         <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-2.5 text-[11.5px] leading-relaxed text-white/70">
           Comissão calculada pelo sistema: <strong className="text-primary">{brl(comissaoPrevista)}</strong>{" "}
-          para o representante. A empresa fica com o restante. A comissão é liberada para saque
-          somente após a confirmação do pagamento do cliente.
+          para o representante. Na administração mensal do perfil, o cliente paga R$ 150,00: R$ 50,00
+          são do representante e R$ 100,00 ficam com o sistema, que executa a administração e manutenção.
+          O representante não precisa realizar o serviço técnico. A comissão é liberada após a confirmação do pagamento do cliente.
         </div>
 
         <AdminField label="Observações" textarea value={form.observacoes} onChange={set("observacoes")} />
