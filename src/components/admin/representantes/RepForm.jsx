@@ -87,7 +87,7 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
       <form onSubmit={submit} className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <AdminField label="Nome" value={form.nome} onChange={set("nome")} placeholder="Nome completo" />
-          <AdminField label="Telefone" value={form.telefone} onChange={set("telefone")} placeholder="(11) 99999-9999" />
+          <AdminField label="Telefone / WhatsApp internacional" value={form.telefone} onChange={set("telefone")} placeholder="+34 612 345 678 ou +55 11 99999-9999" hint="Informe o código do país. Ex.: +34 Espanha, +351 Portugal, +55 Brasil. O sistema não acrescenta +55 aos números internacionais." />
           <AdminField
             label="E-mail de contato"
             type="email"
