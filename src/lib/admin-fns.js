@@ -153,7 +153,7 @@ Devolva:
       empresa: lead.empresa,
       tipo: "ia",
       mensagem: d.resumo || "Análise de IA concluída.",
-      autor: "IA (Groq)",
+      autor: "IA Roq",
       detalhe: `Prioridade sugerida: ${d.prioridade || "não informada"}`,
     });
 
@@ -261,7 +261,7 @@ ${historico || "sem interações registradas"}`,
       empresa: lead.empresa,
       tipo: "ia",
       mensagem: result.data?.resumo || "",
-      autor: "IA (Groq)",
+      autor: "IA Roq",
       detalhe: `Próxima ação sugerida: ${result.data?.proxima_acao || ""}`,
     });
 
@@ -389,7 +389,7 @@ export const integrationStatusFn = createServerFn({ method: "GET" })
 
     const defs = [
       { tipo: "google_places", nome: "Google Maps / Places", campos: ["GOOGLE_MAPS_API_KEY"] },
-      { tipo: "groq", nome: "Groq (IA)", campos: ["GROQ_API_KEY"] },
+      { tipo: "groq", nome: "API Roq", campos: ["GROQ_API_KEY"] },
       {
         tipo: "whatsapp",
         nome: "WhatsApp Business",
@@ -461,7 +461,7 @@ export const saveIntegrationKeysFn = createServerFn({ method: "POST" })
         data.tipo === "google_places"
           ? "Google Maps / Places"
           : data.tipo === "groq"
-            ? "Groq (IA)"
+            ? "API Roq"
             : "WhatsApp Business",
       config,
       status: "aguardando_configuracao",
@@ -511,7 +511,7 @@ export const testIntegrationFn = createServerFn({ method: "POST" })
           data.tipo === "google_places"
             ? "Google Maps / Places"
             : data.tipo === "groq"
-              ? "Groq (IA)"
+              ? "API Roq"
               : "WhatsApp Business",
       });
 
