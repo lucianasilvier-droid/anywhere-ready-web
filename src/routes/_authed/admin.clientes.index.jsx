@@ -145,8 +145,14 @@ function ClientesPage() {
                   <td className="px-4 py-2.5">
                     <button
                       onClick={async () => {
-                        await base44.entities.Cliente.update(c.id, { status: c.status === "ativo" ? "inativo" : "ativo" });
-                        reload();
+                        const novo = c.status === "ativo" ? "inativo" : "ativo";
+                        try {
+                          await base44.entities.Cliente.update(c.id, { status: novo });
+                          toast.success(novo === "ativo" ? "Cliente ativado." : "Cliente desativado.");
+                          reload();
+                        } catch (e) {
+                          toast.error(e?.message || "Não foi possível atualizar o cliente.");
+                        }
                       }}
                       className={`rounded-full border px-2.5 py-1 text-[10.5px] font-semibold ${
                         c.status === "ativo"
