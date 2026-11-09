@@ -111,7 +111,7 @@ export default function RepCard({ rep, onEditar, onAtualizado }) {
             Enviar convite
           </button>
           <button
-            onClick={() => onEditar(rep)
+            onClick={() => onEditar(rep)}
             className="inline-flex items-center gap-1 rounded-lg border border-white/12 px-2 py-1 text-[11px] font-semibold text-white/60 hover:text-white"
           >
             <Pencil className="h-3 w-3" /> Editar
