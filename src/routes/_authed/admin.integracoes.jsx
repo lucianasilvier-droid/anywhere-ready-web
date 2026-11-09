@@ -23,10 +23,10 @@ const DESCRICOES = {
     ],
   },
   groq: {
-    titulo: "Groq (IA)",
+    titulo: "API Roq",
     texto:
-      "Usada para analisar leads, sugerir abordagens, escrever mensagens e resumir históricos. Modelo: llama-3.3-70b-versatile (reserva: llama-3.1-8b-instant).",
-    passos: ["Gere uma chave em console.groq.com/keys", "Cole a chave no campo acima e salve"],
+      "Usada pela IA Roq para analisar leads, sugerir abordagens, escrever mensagens e resumir históricos.",
+    passos: ["Configure a chave da API Roq no painel de integrações", "Cole a chave no campo acima e salve"],
   },
   whatsapp: {
     titulo: "WhatsApp Business",
