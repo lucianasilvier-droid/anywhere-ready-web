@@ -331,6 +331,12 @@ async function chamarGroq(modelo, key, prompt, schemaHint) {
 
 /** Reserva: Claude (mesma ligação já usada pelo sistema na criação de sites). */
 async function chamarClaude(prompt, schemaHint) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return {
+      ok: false,
+      error: "Claude indisponível: defina ANTHROPIC_API_KEY nas variáveis de ambiente do servidor.",
+    };
+  }
   try {
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const anthropic = new Anthropic();
