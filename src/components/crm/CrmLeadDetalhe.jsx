@@ -16,6 +16,7 @@ import { FUNIL_STAGES } from "@/lib/site-content";
 import StatusPill from "@/components/admin/StatusPill";
 import SiteDoLead from "@/components/admin/SiteDoLead";
 import SiteDoLeadRepresentante from "@/components/crm/SiteDoLeadRepresentante";
+import { gerarSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import RepresentanteDoLead from "@/components/crm/RepresentanteDoLead";
 import { STATUS_CONSENT, dataHora } from "@/lib/format";
 
@@ -34,6 +35,8 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const resumir = useServerFn(summarizeHistoryFn);
   const enviar = useServerFn(sendWhatsappFn);
   const consentimento = useServerFn(registerConsentFn);
+  const buscarSite = useServerFn(siteDoLeadFn);
+  const gerarSite = useServerFn(gerarSiteFn);
 
   async function carregar() {
     setCarregando(true);
@@ -62,7 +65,20 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   });
 
   const mRascunho = useMutation({
-    mutationFn: (tipo) => rascunho({ data: { leadId, tipo } }),
+    mutationFn: async (tipo) => {
+      let previewSiteUrl = "";
+      if (!lead.site && ["autorizacao", "proposta"].includes(tipo)) {
+        const atual = await buscarSite({ data: { leadId } });
+        let site = atual?.site || null;
+        if (!site && tipo === "autorizacao") {
+          const criado = await gerarSite({ data: { leadId, orientacoes: "Criar uma prévia comercial visualmente atraente, moderna e fiel às informações públicas verificáveis deste estabelecimento. Manter como demonstração, sem afirmar que o cliente já contratou." } });
+          site = criado?.site || null;
+          if (site) toast.success("Prévia do site criada para acompanhar a abordagem.");
+        }
+        if (site?.slug && typeof window !== "undefined") previewSiteUrl = `${window.location.origin}/site/${site.slug}`;
+      }
+      return rascunho({ data: { leadId, tipo, previewSiteUrl } });
+    },
     onSuccess: (r) => {
       setMensagem(r?.mensagem || "");
       toast.success("Mensagem gerada. Revise antes de enviar.");
