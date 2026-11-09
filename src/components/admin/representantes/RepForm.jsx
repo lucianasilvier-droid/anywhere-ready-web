@@ -13,7 +13,7 @@ const VAZIO = {
   telefone: "",
   status: "ativo",
   comissao_perfil: 100,
-  comissao_mensalidade: 100,
+  comissao_mensalidade: 50,
   comissao_placa: 20,
   observacoes: "",
   convidar: true,
@@ -32,7 +32,7 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
             ...VAZIO,
             ...representante,
             comissao_perfil: Number(representante.comissao_perfil) || 100,
-            comissao_mensalidade: Number(representante.comissao_mensalidade) || 100,
+            comissao_mensalidade: 50,
             comissao_placa: Number(representante.comissao_placa) || 20,
             convidar: false,
           }
@@ -127,7 +127,7 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
             step="0.01"
             value={form.comissao_mensalidade}
             onChange={set("comissao_mensalidade")}
-            hint="Gerada a cada mensalidade paga, uma vez por competência."
+            hint="R$ 50,00 por mês pago. O sistema executa a administração do perfil e fica com R$ 100,00."
           />
           <AdminField
             label="Comissão por placa NFC (R$)"
