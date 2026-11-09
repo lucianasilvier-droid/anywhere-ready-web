@@ -67,8 +67,9 @@ export const base44 = {
     async homeAfterLogin(returnTo) {
       if (returnTo && returnTo !== "/") return returnTo;
       try {
-        const { user } = await meFn();
+        const { user, isRepresentative } = await meFn();
         if (user?.role === "admin") return "/admin";
+        if (isRepresentative) return "/representante";
         return user ? "/conta" : "/";
       } catch {
         return "/";
