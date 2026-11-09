@@ -81,7 +81,9 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
         }
         if (site?.slug && typeof window !== "undefined") previewSiteUrl = `${window.location.origin}/site/${site.slug}`;
       }
-      return rascunho({ data: { leadId, tipo, previewSiteUrl } });
+      const payload = { leadId, tipo };
+      if (previewSiteUrl) payload.previewSiteUrl = previewSiteUrl;
+      return rascunho({ data: payload });
     },
     onSuccess: (r) => {
       setMensagem(r?.mensagem || "");
