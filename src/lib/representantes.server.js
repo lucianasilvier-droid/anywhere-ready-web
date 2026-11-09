@@ -106,7 +106,7 @@ export function calcularVenda(rep, payload) {
       throw erro("Informe a competência da mensalidade no formato AAAA-MM.");
     }
     valor_venda = TABELA_COMISSAO.mensalidade.valor;
-    comissao_valor = Number(rep.comissao_mensalidade) || TABELA_COMISSAO.mensalidade.comissao;
+    comissao_valor = TABELA_COMISSAO.mensalidade.comissao;
     chave = `mensalidade|${rep.id}|${cliente}|${competencia}`;
   } else if (tipo === "site") {
     valor_venda = round(Number(payload.valor_venda) || 0);
@@ -272,7 +272,7 @@ export async function resumoRepresentante(base44, rep) {
       codigo: rep.codigo || "",
       status: rep.status || "ativo",
       comissao_perfil: Number(rep.comissao_perfil) || TABELA_COMISSAO.perfil_google.comissao,
-      comissao_mensalidade: Number(rep.comissao_mensalidade) || TABELA_COMISSAO.mensalidade.comissao,
+      comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
       comissao_placa: Number(rep.comissao_placa) || TABELA_COMISSAO.placa.comissaoUnidade,
       observacoes: rep.observacoes || "",
     },
