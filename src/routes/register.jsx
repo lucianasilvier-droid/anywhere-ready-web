@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RegisterPage } from "@/components/auth/RegisterPage";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/register")({ ssr: false, component: RegisterPage });
+// Cadastro público desativado: esta aplicação tem um único administrador.
+export const Route = createFileRoute("/register")({
+  component: () => <Navigate to="/login" replace />,
+});
