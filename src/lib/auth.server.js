@@ -48,7 +48,7 @@ export function googleConfigured() {
 export function authSettings() {
   return {
     providers: { email: true, google: googleConfigured() },
-    signupDisabled: envFlag("AUTH_DISABLE_SIGNUP", false),
+    signupDisabled: envFlag("AUTH_DISABLE_SIGNUP", true),
     confirmationRequired: confirmationRequired(),
   };
 }
@@ -276,7 +276,7 @@ async function sendLink(email, kind, raw) {
 /* -------------------------------- Public API -------------------------------- */
 
 export async function signup({ email, password, fullName = "" }) {
-  if (envFlag("AUTH_DISABLE_SIGNUP", false)) throw authError("Cadastros estão fechados. Peça um convite à equipe.", 403);
+  if (envFlag("AUTH_DISABLE_SIGNUP", true)) throw authError("Cadastros públicos estão desativados.", 403);
   const address = checkEmail(email);
   checkPassword(password);
   const existing = await findByEmail(address);
