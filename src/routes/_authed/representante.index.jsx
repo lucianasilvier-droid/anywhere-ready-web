@@ -98,7 +98,7 @@ function DashboardRepresentante() {
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { titulo: "Criação do perfil no Google", cliente: `Cliente paga ${brl(TABELA_COMISSAO.perfil_google.valor)}`, ganho: representante.comissao_perfil, sufixo: "por perfil" },
-            { titulo: "Administração do perfil", cliente: `Cliente paga ${brl(TABELA_COMISSAO.mensalidade.valor)}/mês`, ganho: representante.comissao_mensalidade, sufixo: "por mês, por cliente" },
+            { titulo: "Administração mensal do perfil", cliente: `Cliente paga ${brl(TABELA_COMISSAO.mensalidade.valor)}/mês · serviço executado pelo sistema`, ganho: TABELA_COMISSAO.mensalidade.comissao, sufixo: "por mês, por cliente" },
             { titulo: "Somente placa NFC", cliente: `A partir de ${brl(TABELA_COMISSAO.placa.valorUnidade)}`, ganho: representante.comissao_placa, sufixo: "por placa" },
             { titulo: "Criação de site", cliente: `Sites de ${brl(PRECO_SITE.minimo)} a ${brl(PRECO_SITE.maximo)}`, ganhoTexto: `${Math.round(TABELA_COMISSAO.site.percentual * 100)}%`, sufixo: "do valor do site" },
             { titulo: "Administração do site", cliente: `Cliente paga ${brl(TABELA_COMISSAO.mensalidade_site.valor)}/mês`, ganho: TABELA_COMISSAO.mensalidade_site.comissao, sufixo: "por mês, por site" },
