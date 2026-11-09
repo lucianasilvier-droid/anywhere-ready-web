@@ -287,7 +287,7 @@ export const decidirCandidatoFn = createServerFn({ method: "POST" })
       telefone: candidato.telefone || "",
       status: "ativo",
       comissao_perfil: 100,
-      comissao_mensalidade: 100,
+      comissao_mensalidade: 50,
       comissao_placa: 20,
       observacoes: data.observacoes || `Aprovado a partir da inscrição pelo site (${candidato.cidade || ""}).`,
       codigo: novoCodigo("REP-", 6),
