@@ -5,104 +5,47 @@ import { base44 } from "@/api/base44Client";
 import ProductCard from "@/components/store/ProductCard";
 
 export const Route = createFileRoute("/_site/loja/")({
-  head: () => ({
-    meta: [
-      { title: "Loja de placas NFC — Google NFC Connect" },
-      {
-        name: "description",
-        content:
-          "Placas NFC para avaliação no Google e Instagram. Personalizadas, testadas e a partir de R$ 55,00.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Catálogo NFC — Google NFC Connect" }] }),
   component: LojaPage,
 });
+
+const CATALOGO_INICIAL = [
+  { id: "placa-google-instagram", slug: "placa-google-instagram", nome: "Kit Google + Instagram", descricao_curta: "Placa NFC para facilitar avaliações no Google e visitas ao Instagram.", preco: 0, modelo: "acrilico", imagens: ["/images/site/placa-nfc-avaliacao-google.webp"], ativo: true, checkout_url: "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram", checkout_label: "Comprar pela InfinitePay" },
+  { id: "placa-instagram", slug: "placa-instagram", nome: "Placa NFC Instagram", descricao_curta: "Aproxime o celular e leve o cliente diretamente ao seu Instagram.", preco: 0, modelo: "acrilico", imagens: ["/images/site/display-instagram-acrilico-neon.webp"], ativo: true, checkout_url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", checkout_label: "Comprar pela InfinitePay" },
+  { id: "placa-google", slug: "placa-google", nome: "Placa Google NFC", descricao_curta: "Facilite o acesso dos clientes à avaliação do seu estabelecimento no Google.", preco: 0, modelo: "acrilico", imagens: ["/images/site/placa-nfc-avaliacao-google.webp"], ativo: true, checkout_url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", checkout_label: "Comprar pela InfinitePay" },
+  { id: "perfil-google-maps", slug: "perfil-google-maps", nome: "Empresa no Google Maps", descricao_curta: "Serviço de criação e configuração do Perfil da Empresa no Google.", preco: 0, modelo: "servico", imagens: ["/images/site/servico-google-maps.webp"], ativo: true, checkout_url: "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google", checkout_label: "Consultar pelo WhatsApp" },
+];
 
 function LojaPage() {
   const [produtos, setProdutos] = useState([]);
   const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-
   useEffect(() => {
     let ativo = true;
     base44.entities.Produto.filter({ ativo: true }, { sort: "-destaque", limit: 50 })
       .then((page) => {
         if (!ativo) return;
-        setProdutos(Array.isArray(page) ? page : page?.items || []);
+        const lista = Array.isArray(page) ? page : page?.items || [];
+        setProdutos(lista.length ? lista : CATALOGO_INICIAL);
       })
-      .catch(() => ativo && setErro("Não foi possível carregar os produtos agora."))
+      .catch(() => ativo && setProdutos(CATALOGO_INICIAL))
       .finally(() => ativo && setCarregando(false));
-    return () => {
-      ativo = false;
-    };
+    return () => { ativo = false; };
   }, []);
 
-  return (
-    <div>
-      <section className="relative overflow-hidden border-b border-white/[0.06]">
-        <div className="aurora absolute inset-0" />
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">Loja</p>
-          <h1 className="mt-3 max-w-2xl font-heading text-[2.1rem] font-extrabold leading-tight text-white sm:text-[2.8rem]">
-            Placas NFC de avaliação <span className="text-gradient-gold">personalizadas</span>
-          </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">
-            Escolha o modelo, informe os links do Google e do Instagram no checkout e receba a
-            placa pronta para usar. Cada placa tem um endereço exclusivo, com os links testados
-            antes da entrega.
-          </p>
-
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {[
-              { icon: Nfc, t: "NFC por aproximação", d: "Compatível com celulares Android e iPhone." },
-              { icon: Zap, t: "Aproximação instantânea", d: "O cliente encosta o celular e o link abre na hora." },
-              { icon: ShieldCheck, t: "Links testados", d: "Conferimos cada link antes de enviar." },
-            ].map((b) => (
-              <div key={b.t} className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-                <b.icon className="mt-0.5 h-4.5 w-4.5 text-primary" />
-                <div>
-                  <p className="text-[13px] font-semibold text-white">{b.t}</p>
-                  <p className="text-[11.5px] leading-relaxed text-white/45">{b.d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-white">
-            <ShoppingBag className="h-4.5 w-4.5 text-primary" /> Catálogo
-          </h2>
-          <Link to="/carrinho" className="text-[12.5px] font-semibold text-primary hover:underline">
-            Ver carrinho
-          </Link>
-        </div>
-
-        {carregando ? (
-          <div className="flex items-center justify-center gap-2 py-20 text-sm text-white/50">
-            <Loader2 className="h-4 w-4 animate-spin" /> Carregando produtos...
-          </div>
-        ) : erro ? (
-          <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {erro}
-          </p>
-        ) : produtos.length === 0 ? (
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-10 text-center">
-            <p className="text-sm font-semibold text-white">Nenhum produto disponível no momento.</p>
-            <p className="mt-1 text-[13px] text-white/50">
-              Fale com a equipe pelo WhatsApp para encomendar a sua placa.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {produtos.map((p) => (
-              <ProductCard key={p.id} produto={p} />
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  );
+  return <div>
+    <section className="relative overflow-hidden border-b border-white/[0.06]"><div className="aurora absolute inset-0" /><div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
+      <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">Loja</p>
+      <h1 className="mt-3 max-w-2xl font-heading text-[2.1rem] font-extrabold leading-tight text-white sm:text-[2.8rem]">Placas NFC de avaliação <span className="text-gradient-gold">personalizadas</span></h1>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">Escolha seu modelo e compre com segurança. As placas são personalizadas após a compra e entregues prontas para usar.</p>
+      <div className="mt-7 grid gap-3 sm:grid-cols-3">{[
+        { icon: Nfc, t: "NFC por aproximação", d: "Compatível com celulares Android e iPhone." },
+        { icon: Zap, t: "Acesso rápido", d: "O cliente aproxima o celular e abre seu link." },
+        { icon: ShieldCheck, t: "Personalização", d: "Configuramos os dados do estabelecimento após a compra." },
+      ].map((b) => <div key={b.t} className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><b.icon className="mt-0.5 h-4.5 w-4.5 text-primary" /><div><p className="text-[13px] font-semibold text-white">{b.t}</p><p className="text-[11.5px] leading-relaxed text-white/45">{b.d}</p></div></div>)}</div>
+    </div></section>
+    <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
+      <div className="mb-6 flex items-center justify-between"><h2 className="flex items-center gap-2 font-heading text-lg font-bold text-white"><ShoppingBag className="h-4.5 w-4.5 text-primary" /> Catálogo</h2><Link to="/carrinho" className="text-[12.5px] font-semibold text-primary hover:underline">Ver carrinho</Link></div>
+      {carregando ? <div className="flex items-center justify-center gap-2 py-20 text-sm text-white/50"><Loader2 className="h-4 w-4 animate-spin" /> Carregando produtos...</div> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{produtos.map((p) => <ProductCard key={p.id} produto={p} />)}</div>}
+    </section>
+  </div>;
 }
