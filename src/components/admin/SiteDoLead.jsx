@@ -66,8 +66,6 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const semSite = !lead.site;
   const url = site && typeof window !== "undefined" ? `${window.location.origin}/site/${site.slug}` : "";
 
-  // Empresas que já têm site só veem o cartão quando já existe uma demonstração.
-  if (!semSite && !site && !carregando) return null;
 
   return (
     <section className={`rounded-2xl border p-4 ${semSite ? "border-primary/30 bg-primary/[0.05]" : "border-white/[0.08] bg-white/[0.025]"}`}>
@@ -87,9 +85,12 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
       ) : !site ? (
         <div className="mt-2.5 space-y-3">
           <p className="text-[12.5px] leading-relaxed text-white/65">
-            <strong className="text-white">Esta empresa não tem site.</strong> O agente Claude cria um site de uma página
-            com os serviços do ramo, mapa do Google Maps e agendamento pelo WhatsApp. Você mostra a demonstração ao
-            cliente e oferece o serviço.
+            {semSite ? (
+              <><strong className="text-white">Esta empresa ainda não tem site.</strong> </>
+            ) : (
+              <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
+            )}
+            O Claude prepara uma página de demonstração com os serviços da empresa, mapa e contato pelo WhatsApp.
           </p>
           <textarea
             value={orientacoes}
@@ -105,7 +106,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
             {mGerar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerar.isPending ? "Criando o site... (até 1 minuto)" : "Criar site com o agente Claude"}
+            {mGerar.isPending ? "Criando o site... (até 1 minuto)" : "Criar site com Claude"}
           </button>
         </div>
       ) : (
