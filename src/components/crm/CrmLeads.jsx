@@ -56,7 +56,7 @@ export default function CrmLeads({ base = "/admin" }) {
   );
 
   const mutation = useMutation({
-    mutationFn: (textQuery) => buscar({ data: { textQuery, max: 12 } }),
+    mutationFn: (textQuery) => buscar({ data: { textQuery, max: 20 } }),
     onSuccess: (r) => {
       setResultados(r?.places || []);
       setErroBusca(r?.ok ? r?.aviso || "" : r?.error || "Não foi possível pesquisar agora.");
