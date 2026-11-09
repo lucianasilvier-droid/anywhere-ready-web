@@ -184,11 +184,30 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const remetente = await senderIdentity(context);
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
-    const catalogo = [
+    const catalogoFallback = [
       { nome: "Placa Google NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", descricao: "Acesso direto à página de avaliação do Google." },
       { nome: "Placa Instagram NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", descricao: "Acesso direto ao Instagram do estabelecimento." },
       { nome: "Kit Google + Instagram", preco: "R$ 95,00", url: "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram", descricao: "Duas placas para divulgar os dois canais." },
     ];
+    let catalogo = catalogoFallback;
+    try {
+      const svc = base44.asServiceRole || base44;
+      const page = await svc.entities.Produto.filter({ ativo: true }, { limit: 30 });
+      const produtos = (Array.isArray(page) ? page : page?.items || [])
+        .filter((p) => Number(p.preco) > 0)
+        .filter((p) => /nfc|placa|google|instagram/i.test(p.nome || ""));
+      if (produtos.length) {
+        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://anywhere-ready-web-lucianasilvier-droid.vercel.app").replace(/\\/$/, "");
+        catalogo = produtos.slice(0, 6).map((p) => ({
+          nome: p.nome,
+          preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(p.preco)),
+          url: p.checkout_url || p.link_pagamento || (p.slug ? appUrl + "/loja/" + p.slug : appUrl + "/loja"),
+          descricao: p.descricao_curta || p.descricao || "Produto NFC personalizado.",
+        }));
+      }
+    } catch {
+      // Mantém o catálogo público de contingência caso a listagem do banco falhe.
+    }
 
     const result = await iaJSON(
       `${CONTEXT_TOOL}
