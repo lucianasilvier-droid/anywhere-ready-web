@@ -42,13 +42,13 @@ export function confirmationRequired() {
 }
 
 export function googleConfigured() {
-  return !!(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET"));
+  return false; // Login Google desativado: o sistema usa somente a conta administrativa autorizada.
 }
 
 export function authSettings() {
   return {
     providers: { email: true, google: googleConfigured() },
-    signupDisabled: envFlag("AUTH_DISABLE_SIGNUP", true),
+    signupDisabled: true,
     confirmationRequired: confirmationRequired(),
   };
 }
@@ -276,7 +276,7 @@ async function sendLink(email, kind, raw) {
 /* -------------------------------- Public API -------------------------------- */
 
 export async function signup({ email, password, fullName = "" }) {
-  if (envFlag("AUTH_DISABLE_SIGNUP", true)) throw authError("Cadastros públicos estão desativados.", 403);
+  throw authError("Cadastros públicos estão desativados. O acesso é exclusivo do administrador.", 403);
   const address = checkEmail(email);
   checkPassword(password);
   const existing = await findByEmail(address);
