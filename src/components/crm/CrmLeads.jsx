@@ -44,6 +44,7 @@ export default function CrmLeads({ base = "/admin" }) {
   const [resultados, setResultados] = useState([]);
   const [erroBusca, setErroBusca] = useState("");
   const [salvando, setSalvando] = useState("");
+  const [salvandoTodos, setSalvandoTodos] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [filtroRep, setFiltroRep] = useState("");
   const [buscaLocal, setBuscaLocal] = useState("");
@@ -56,7 +57,7 @@ export default function CrmLeads({ base = "/admin" }) {
   );
 
   const mutation = useMutation({
-    mutationFn: (textQuery) => buscar({ data: { textQuery, max: 12 } }),
+    mutationFn: (textQuery) => buscar({ data: { textQuery, max: 20 } }),
     onSuccess: (r) => {
       setResultados(r?.places || []);
       setErroBusca(r?.ok ? r?.aviso || "" : r?.error || "Não foi possível pesquisar agora.");
@@ -94,6 +95,42 @@ export default function CrmLeads({ base = "/admin" }) {
       atualizarLimite();
     } finally {
       setSalvando("");
+    }
+  }
+
+  async function salvarTodosResultados() {
+    const pendentes = resultados.filter((place) => place.place_id && !existentes.has(place.place_id));
+    if (!pendentes.length) return toast.info("Todos os resultados já estão no CRM.");
+    const permitidos = representante && limite
+      ? pendentes.slice(0, Math.max(0, limite.restantes))
+      : pendentes;
+    if (!permitidos.length) return toast.error("Você já atingiu o limite diário de clientes.");
+    setSalvandoTodos(true);
+    let adicionados = 0;
+    let falhas = 0;
+    try {
+      for (const place of permitidos) {
+        try {
+          await base44.entities.Lead.create({
+            ...place,
+            origem: place.fonte === "openstreetmap" ? "openstreetmap" : "google_places",
+            etapa: "novo_lead",
+            responsavel: user?.full_name || user?.email || "",
+            responsavel_email: user?.email || "",
+            consentimento: "nao_solicitado",
+          });
+          adicionados += 1;
+        } catch (error) {
+          falhas += 1;
+          if (error?.status === 429 || /limite diário/i.test(error?.message || "")) break;
+        }
+      }
+      await reload();
+      atualizarLimite();
+      if (adicionados) toast.success(`${adicionados} cliente(s) adicionado(s) ao CRM.`);
+      if (falhas) toast.error(`${falhas} resultado(s) não puderam ser adicionados.`);
+    } finally {
+      setSalvandoTodos(false);
     }
   }
 
@@ -232,6 +269,18 @@ export default function CrmLeads({ base = "/admin" }) {
 
         {resultados.length > 0 && (
           <div className="mt-4 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] text-white/40">{resultados.length} resultado(s) encontrados · até 20 por busca</p>
+              <button
+                type="button"
+                disabled={salvandoTodos || esgotado || resultados.every((place) => existentes.has(place.place_id))}
+                onClick={salvarTodosResultados}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[11.5px] font-bold text-[#0a1128] disabled:opacity-50"
+              >
+                {salvandoTodos ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                {salvandoTodos ? "Adicionando..." : "Adicionar todos os novos ao CRM"}
+              </button>
+            </div>
             {resultados.map((place) => {
               const jaSalvo = existentes.has(place.place_id);
               return (

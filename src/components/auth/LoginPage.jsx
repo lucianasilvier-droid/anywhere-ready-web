@@ -39,13 +39,13 @@ export function LoginPage() {
     }
   }
 
-  return <AuthLayout icon={LogIn} title="Acesso do administrador" subtitle="Entre com seu e-mail e senha cadastrados">
+  return <AuthLayout icon={LogIn} title="Acesso ao sistema" subtitle="Entre com seu e-mail e senha cadastrados">
     <AuthError>{error}</AuthError>
     <form onSubmit={submit} className="space-y-4">
-      <div className="space-y-2"><Label htmlFor="login-email">E-mail</Label><div className="relative"><Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input id="login-email" type="email" autoComplete="username" autoFocus placeholder="E-mail do administrador" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required /></div></div>
+      <div className="space-y-2"><Label htmlFor="login-email">E-mail</Label><div className="relative"><Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input id="login-email" type="email" autoComplete="username" autoFocus placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required /></div></div>
       <div className="space-y-2"><div className="flex items-center justify-between"><Label htmlFor="login-password">Senha</Label><AuthLink to="/forgot-password" returnTo={returnTo} className="text-xs text-primary hover:underline">Esqueceu a senha?</AuthLink></div><div className="relative"><Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input id="login-password" type="password" autoComplete="current-password" placeholder="Sua senha" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 pl-10" required /></div></div>
       <SubmitButton busy={busy} busyLabel="Entrando...">Entrar no painel</SubmitButton>
     </form>
-    <p className="mt-6 text-center text-xs text-muted-foreground">Acesso restrito ao administrador autorizado.</p>
+    <p className="mt-6 text-center text-xs text-muted-foreground">Acesso para administradores e representantes comerciais autorizados.</p>
   </AuthLayout>;
 }
