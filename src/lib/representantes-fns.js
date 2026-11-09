@@ -116,6 +116,40 @@ export const adminRepresentantesFn = createServerFn({ method: "GET" })
     };
   });
 
+export const reenviarConviteRepresentanteFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({ id: z.string().min(1) }))
+  .handler(async ({ data, context }) => {
+    requireAdmin(context);
+    const base44 = context.getBase44().asServiceRole;
+    const rep = await base44.entities.Representante.get(data.id).catch(() => null);
+    if (!rep) {
+      setResponseStatus(404);
+      throw Object.assign(new Error("Representante não encontrado."), { status: 404 });
+    }
+    const email = String(rep.user_email || rep.email || "").trim().toLowerCase();
+    if (!email) {
+      setResponseStatus(422);
+      throw Object.assign(new Error("Este representante não possui e-mail de acesso cadastrado."), { status: 422 });
+    }
+    const envio = await base44.users.inviteUser(email, "user");
+    const delivered = envio?.delivered !== false;
+    await base44.entities.AtividadeLog.create({
+      acao: "Convite de acesso reenviado",
+      entidade: "Representante",
+      registro_id: rep.id,
+      detalhe: email,
+      autor_email: context.user.email,
+    });
+    return {
+      ok: true,
+      delivered,
+      mensagem: delivered
+        ? `Convite solicitado para ${email}.`
+        : "O sistema não confirmou o envio do e-mail. Verifique o SMTP e tente novamente.",
+    };
+  });
+
 export const salvarRepresentanteFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(repInput)
