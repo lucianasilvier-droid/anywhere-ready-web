@@ -166,7 +166,10 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     z.object({
       leadId: z.string().min(1),
       tipo: z.enum(["autorizacao", "proposta", "followup", "resposta_avaliacao"]),
-      previewSiteUrl: z.string().url().max(500).optional().default(""),
+      previewSiteUrl: z.preprocess(
+        (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+        z.string().url().max(500).optional(),
+      ),
     }),
   )
   .handler(async ({ data, context }) => {
