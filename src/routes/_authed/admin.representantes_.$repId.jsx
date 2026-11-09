@@ -159,8 +159,8 @@ function RepresentanteDetalhe() {
             {" · "}criado em {dataCurta(dados.criado_em)}
           </p>
           <p className="mt-1 text-[11px] text-white/35">
-            Comissões: perfil {brl(representante.comissao_perfil)} · mensalidade{" "}
-            {brl(representante.comissao_mensalidade)} · placa {brl(representante.comissao_placa)}
+            Comissões: perfil {brl(representante.comissao_perfil)} · administração mensal do perfil{" "}
+            {brl(50)} · placa {brl(representante.comissao_placa)}
           </p>
         </div>
 
