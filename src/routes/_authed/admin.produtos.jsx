@@ -87,7 +87,13 @@ function ProdutosPage() {
 
   async function alternar(p, campo) {
     try {
-      await base44.entities.Produto.update(p.id, { [campo]: !p[campo] });
+      const novo = !p[campo];
+      await base44.entities.Produto.update(p.id, { [campo]: novo });
+      toast.success(
+        campo === "ativo"
+          ? novo ? "Produto ativado na loja." : "Produto retirado da loja."
+          : novo ? "Produto marcado como destaque." : "Destaque removido.",
+      );
       await reload();
     } catch (e) {
       toast.error(e?.message || "Não foi possível atualizar.");

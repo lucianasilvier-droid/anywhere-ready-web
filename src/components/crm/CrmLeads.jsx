@@ -337,7 +337,13 @@ export default function CrmLeads({ base = "/admin" }) {
                   return (
                     <tr key={lead.id} className="text-[12.5px] hover:bg-white/[0.02]">
                       <td className="max-w-[220px] px-4 py-2.5">
-                        <p className="truncate font-semibold text-white">{lead.empresa}</p>
+                        <Link
+                          to={`${base}/lead/$leadId`}
+                          params={{ leadId: lead.id }}
+                          className="block truncate font-semibold text-white hover:text-primary hover:underline"
+                        >
+                          {lead.empresa}
+                        </Link>
                         <p className="truncate text-[11px] text-white/35">
                           {lead.categoria || "—"}
                           {!lead.site && (

@@ -145,7 +145,7 @@ function AdminLayout() {
 
         <div className="min-w-0 flex-1">
           <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-white/[0.07] bg-[#070d1c]/95 px-3 py-2 backdrop-blur lg:hidden">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
+            <div ref={menuMobileRef} className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
               {NAV.map((item) => (
                 <Link
                   key={item.to}

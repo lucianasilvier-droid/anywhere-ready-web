@@ -29,7 +29,6 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as SiteSlugRouteImport } from './routes/site.$slug'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin.index'
 import { Route as AuthedAdminBackupRouteImport } from './routes/_authed/admin.backup'
-import { Route as AuthedAdminClientesRouteImport } from './routes/_authed/admin.clientes'
 import { Route as AuthedAdminConfiguracoesRouteImport } from './routes/_authed/admin.configuracoes'
 import { Route as AuthedAdminEquipeRouteImport } from './routes/_authed/admin.equipe'
 import { Route as AuthedAdminFunilRouteImport } from './routes/_authed/admin.funil'
@@ -69,6 +68,7 @@ import { Route as ApiPaymentsInfinitepayRouteImport } from './routes/api/payment
 import { Route as ApiPaymentsMercadopagoRouteImport } from './routes/api/payments/mercadopago'
 import { Route as ApiRepresentantesFotoRouteImport } from './routes/api/representantes/foto'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp.webhook'
+import { Route as AuthedAdminClientesIndexRouteImport } from './routes/_authed/admin.clientes.index'
 import { Route as AuthedAdminClientesClientIdRouteImport } from './routes/_authed/admin.clientes.$clientId'
 import { Route as AuthedAdminLeadLeadIdRouteImport } from './routes/_authed/admin.lead.$leadId'
 import { Route as AuthedAdminRepresentantesIndexRouteImport } from './routes/_authed/admin.representantes.index'
@@ -174,11 +174,6 @@ const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
 const AuthedAdminBackupRoute = AuthedAdminBackupRouteImport.update({
   id: '/backup',
   path: '/backup',
-  getParentRoute: () => AuthedAdminRoute,
-} as any)
-const AuthedAdminClientesRoute = AuthedAdminClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
   getParentRoute: () => AuthedAdminRoute,
 } as any)
 const AuthedAdminConfiguracoesRoute =
@@ -385,11 +380,17 @@ const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   path: '/api/whatsapp/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedAdminClientesIndexRoute =
+  AuthedAdminClientesIndexRouteImport.update({
+    id: '/clientes/',
+    path: '/clientes/',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
 const AuthedAdminClientesClientIdRoute =
   AuthedAdminClientesClientIdRouteImport.update({
-    id: '/$clientId',
-    path: '/$clientId',
-    getParentRoute: () => AuthedAdminClientesRoute,
+    id: '/clientes/$clientId',
+    path: '/clientes/$clientId',
+    getParentRoute: () => AuthedAdminRoute,
   } as any)
 const AuthedAdminLeadLeadIdRoute = AuthedAdminLeadLeadIdRouteImport.update({
   id: '/lead/$leadId',
@@ -451,7 +452,6 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/site/$slug': typeof SiteSlugRoute
   '/admin/backup': typeof AuthedAdminBackupRoute
-  '/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
   '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/admin/equipe': typeof AuthedAdminEquipeRoute
   '/admin/funil': typeof AuthedAdminFunilRoute
@@ -499,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
   '/admin/representantes/$repId': typeof AuthedAdminRepresentantesRepIdRoute
   '/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/admin/clientes/': typeof AuthedAdminClientesIndexRoute
   '/admin/representantes/': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -516,7 +517,6 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/site/$slug': typeof SiteSlugRoute
   '/admin/backup': typeof AuthedAdminBackupRoute
-  '/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
   '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/admin/equipe': typeof AuthedAdminEquipeRoute
   '/admin/funil': typeof AuthedAdminFunilRoute
@@ -563,6 +563,7 @@ export interface FileRoutesByTo {
   '/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
   '/admin/representantes/$repId': typeof AuthedAdminRepresentantesRepIdRoute
   '/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/admin/clientes': typeof AuthedAdminClientesIndexRoute
   '/admin/representantes': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRoutesById {
@@ -586,7 +587,6 @@ export interface FileRoutesById {
   '/site/$slug': typeof SiteSlugRoute
   '/_site/': typeof SiteIndexRoute
   '/_authed/admin/backup': typeof AuthedAdminBackupRoute
-  '/_authed/admin/clientes': typeof AuthedAdminClientesRouteWithChildren
   '/_authed/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/_authed/admin/equipe': typeof AuthedAdminEquipeRoute
   '/_authed/admin/funil': typeof AuthedAdminFunilRoute
@@ -634,6 +634,7 @@ export interface FileRoutesById {
   '/_authed/admin/representantes/vendas': typeof AuthedAdminRepresentantesVendasRoute
   '/_authed/admin/representantes_/$repId': typeof AuthedAdminRepresentantesRepIdRoute
   '/_authed/representante/lead/$leadId': typeof AuthedRepresentanteLeadLeadIdRoute
+  '/_authed/admin/clientes/': typeof AuthedAdminClientesIndexRoute
   '/_authed/admin/representantes/': typeof AuthedAdminRepresentantesIndexRoute
 }
 export interface FileRouteTypes {
@@ -656,7 +657,6 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/site/$slug'
     | '/admin/backup'
-    | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/equipe'
     | '/admin/funil'
@@ -704,6 +704,7 @@ export interface FileRouteTypes {
     | '/admin/representantes/vendas'
     | '/admin/representantes/$repId'
     | '/representante/lead/$leadId'
+    | '/admin/clientes/'
     | '/admin/representantes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -721,7 +722,6 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/site/$slug'
     | '/admin/backup'
-    | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/equipe'
     | '/admin/funil'
@@ -768,6 +768,7 @@ export interface FileRouteTypes {
     | '/admin/representantes/vendas'
     | '/admin/representantes/$repId'
     | '/representante/lead/$leadId'
+    | '/admin/clientes'
     | '/admin/representantes'
   id:
     | '__root__'
@@ -790,7 +791,6 @@ export interface FileRouteTypes {
     | '/site/$slug'
     | '/_site/'
     | '/_authed/admin/backup'
-    | '/_authed/admin/clientes'
     | '/_authed/admin/configuracoes'
     | '/_authed/admin/equipe'
     | '/_authed/admin/funil'
@@ -838,6 +838,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/representantes/vendas'
     | '/_authed/admin/representantes_/$repId'
     | '/_authed/representante/lead/$leadId'
+    | '/_authed/admin/clientes/'
     | '/_authed/admin/representantes/'
   fileRoutesById: FileRoutesById
 }
@@ -1005,13 +1006,6 @@ declare module '@tanstack/react-router' {
       path: '/backup'
       fullPath: '/admin/backup'
       preLoaderRoute: typeof AuthedAdminBackupRouteImport
-      parentRoute: typeof AuthedAdminRoute
-    }
-    '/_authed/admin/clientes': {
-      id: '/_authed/admin/clientes'
-      path: '/clientes'
-      fullPath: '/admin/clientes'
-      preLoaderRoute: typeof AuthedAdminClientesRouteImport
       parentRoute: typeof AuthedAdminRoute
     }
     '/_authed/admin/configuracoes': {
@@ -1287,12 +1281,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/admin/clientes/': {
+      id: '/_authed/admin/clientes/'
+      path: '/clientes'
+      fullPath: '/admin/clientes/'
+      preLoaderRoute: typeof AuthedAdminClientesIndexRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
     '/_authed/admin/clientes/$clientId': {
       id: '/_authed/admin/clientes/$clientId'
-      path: '/$clientId'
+      path: '/clientes/$clientId'
       fullPath: '/admin/clientes/$clientId'
       preLoaderRoute: typeof AuthedAdminClientesClientIdRouteImport
-      parentRoute: typeof AuthedAdminClientesRoute
+      parentRoute: typeof AuthedAdminRoute
     }
     '/_authed/admin/lead/$leadId': {
       id: '/_authed/admin/lead/$leadId'
@@ -1346,17 +1347,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthedAdminClientesRouteChildren {
-  AuthedAdminClientesClientIdRoute: typeof AuthedAdminClientesClientIdRoute
-}
-
-const AuthedAdminClientesRouteChildren: AuthedAdminClientesRouteChildren = {
-  AuthedAdminClientesClientIdRoute: AuthedAdminClientesClientIdRoute,
-}
-
-const AuthedAdminClientesRouteWithChildren =
-  AuthedAdminClientesRoute._addFileChildren(AuthedAdminClientesRouteChildren)
-
 interface AuthedAdminRepresentantesRouteChildren {
   AuthedAdminRepresentantesInscricoesRoute: typeof AuthedAdminRepresentantesInscricoesRoute
   AuthedAdminRepresentantesPagamentosRoute: typeof AuthedAdminRepresentantesPagamentosRoute
@@ -1381,7 +1371,6 @@ const AuthedAdminRepresentantesRouteWithChildren =
 
 interface AuthedAdminRouteChildren {
   AuthedAdminBackupRoute: typeof AuthedAdminBackupRoute
-  AuthedAdminClientesRoute: typeof AuthedAdminClientesRouteWithChildren
   AuthedAdminConfiguracoesRoute: typeof AuthedAdminConfiguracoesRoute
   AuthedAdminEquipeRoute: typeof AuthedAdminEquipeRoute
   AuthedAdminFunilRoute: typeof AuthedAdminFunilRoute
@@ -1394,13 +1383,14 @@ interface AuthedAdminRouteChildren {
   AuthedAdminRepresentantesRoute: typeof AuthedAdminRepresentantesRouteWithChildren
   AuthedAdminServicosRoute: typeof AuthedAdminServicosRoute
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
+  AuthedAdminClientesClientIdRoute: typeof AuthedAdminClientesClientIdRoute
   AuthedAdminLeadLeadIdRoute: typeof AuthedAdminLeadLeadIdRoute
   AuthedAdminRepresentantesRepIdRoute: typeof AuthedAdminRepresentantesRepIdRoute
+  AuthedAdminClientesIndexRoute: typeof AuthedAdminClientesIndexRoute
 }
 
 const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminBackupRoute: AuthedAdminBackupRoute,
-  AuthedAdminClientesRoute: AuthedAdminClientesRouteWithChildren,
   AuthedAdminConfiguracoesRoute: AuthedAdminConfiguracoesRoute,
   AuthedAdminEquipeRoute: AuthedAdminEquipeRoute,
   AuthedAdminFunilRoute: AuthedAdminFunilRoute,
@@ -1413,8 +1403,10 @@ const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminRepresentantesRoute: AuthedAdminRepresentantesRouteWithChildren,
   AuthedAdminServicosRoute: AuthedAdminServicosRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+  AuthedAdminClientesClientIdRoute: AuthedAdminClientesClientIdRoute,
   AuthedAdminLeadLeadIdRoute: AuthedAdminLeadLeadIdRoute,
   AuthedAdminRepresentantesRepIdRoute: AuthedAdminRepresentantesRepIdRoute,
+  AuthedAdminClientesIndexRoute: AuthedAdminClientesIndexRoute,
 }
 
 const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
