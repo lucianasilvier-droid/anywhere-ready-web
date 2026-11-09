@@ -85,9 +85,10 @@ function VendasPage() {
 
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-[11px] leading-relaxed text-white/45">
         <ReceiptText className="mr-1 inline h-3.5 w-3.5 text-primary/70" />
-        Regras aplicadas no servidor: perfil no Google R$ 150,00 → R$ 100,00 de comissão; mensalidade
-        R$ 150,00 → R$ 100,00 por competência paga; placa NFC R$ 20,00 por unidade. A comissão é
-        liberada para saque somente após confirmar o pagamento do cliente.
+        Regras aplicadas no servidor: perfil no Google R$ 150,00 → R$ 100,00 de comissão; administração mensal do perfil R$ 150,00 → R$ 50,00
+        para o representante e R$ 100,00 para o sistema por competência paga; placa NFC R$ 20,00 por unidade.
+        A administração técnica do perfil é feita pelo sistema, não pelo representante. A comissão é liberada
+        para saque somente após confirmar o pagamento do cliente.
       </div>
 
       {carregando ? (
