@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, Instagram, Loader2, MapPin, MessageCircle, Se
 import { contatoRepresentanteFn, paginaRepresentanteFn } from "@/lib/landing-representante-fns";
 import { indicacao } from "@/lib/indicacao";
 import { SERVICES, BRAND_NAME } from "@/lib/site-content";
+import { telefoneWhatsApp } from "@/lib/format";
 
 export const Route = createFileRoute("/r/$slug")({
   loader: ({ params }) => paginaRepresentanteFn({ data: { slug: params.slug } }),
@@ -28,7 +29,8 @@ export const Route = createFileRoute("/r/$slug")({
 });
 
 function waLink(numero, texto) {
-  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+  const destino = telefoneWhatsApp(numero);
+  return destino ? `https://wa.me/${destino}?text=${encodeURIComponent(texto)}` : "#contato";
 }
 
 function PaginaRepresentante() {
