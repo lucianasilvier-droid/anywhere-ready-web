@@ -497,20 +497,26 @@ export async function testIntegration(tipo, values = {}) {
     const key = values.openai_api_key || readSecret("OPENAI_API_KEY");
     if (!key) return { status: "aguardando_configuracao", mensagem: "Cadastre a chave OpenAI em Integrações e APIs." };
     try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: "Responda somente: OK" }],
-          max_tokens: 16,
+          model: "gpt-5.5",
+          reasoning: { effort: "none" },
+          max_output_tokens: 24,
+          input: "Responda somente: OK",
         }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) return { status: "erro", mensagem: payload?.error?.message || `OpenAI respondeu ${res.status}.` };
-      const answer = payload.choices?.[0]?.message?.content?.trim();
+      const answer = (payload.output || [])
+        .flatMap((item) => item.content || [])
+        .filter((part) => part.type === "output_text")
+        .map((part) => part.text || "")
+        .join("")
+        .trim();
       return answer
-        ? { status: "conectado", mensagem: "Conexão com ChatGPT confirmada. O modelo gpt-4.1-mini respondeu ao teste." }
+        ? { status: "conectado", mensagem: "Conexão com ChatGPT confirmada. O modelo GPT-5.5 respondeu ao teste." }
         : { status: "erro", mensagem: "OpenAI respondeu sem conteúdo." };
     } catch (e) {
       return { status: "erro", mensagem: e?.message || "Falha ao testar a conexão com OpenAI." };
