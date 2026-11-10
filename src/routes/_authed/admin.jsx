@@ -167,7 +167,6 @@ function AdminLayout() {
               ))}
             </div>
             <WhatsAppReplyNotifications />
-            <WhatsAppReplyNotifications />
             <button
               onClick={sair}
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/12 px-3 py-1.5 text-[11px] font-bold text-white/60 hover:border-red-400/40 hover:text-red-300"
