@@ -21,10 +21,10 @@ const FERRAMENTA = {
 };
 
 /** Avalia o site e devolve o preço. Se a IA falhar, usa o valor calculado (nunca bloqueia a criação). */
-export async function avaliarPrecoSite(lead, conteudo, extras = {}) {
+export async function avaliarPrecoSite(lead, conteudo, extras = {}, options = {}) {
   const base = calcularPrecoBase(lead, extras);
   let ia = { ajuste: 0, complexidade: "simples", justificativa: "", argumento_cliente: "", fonte: "tabela" };
-  try {
+  if (options.usarIA !== false) try {
     const r = await new Anthropic().messages.create({
       model: MODELO_CLAUDE,
       max_tokens: 800,
