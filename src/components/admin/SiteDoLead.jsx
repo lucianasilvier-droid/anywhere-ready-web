@@ -109,7 +109,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Prepare as instruções no sistema, gere o conteúdo no Claude gratuito pelo navegador e salve a resposta aqui. Não precisa de chave de API.
+            Crie a demonstração com o Claude AI gratuito, sem chave de API: o sistema prepara as instruções da empresa e abre o Claude. Depois, traga a resposta para salvar o site no CRM.
           </p>
           <textarea
             value={orientacoes}
@@ -125,12 +125,26 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
             {mPrepararGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mPrepararGratis.isPending ? "Preparando instruções..." : "Preparar no Claude gratuito"}
+            {mPrepararGratis.isPending ? "Preparando instruções..." : "Criar site com Claude AI (gratuito)"}
           </button>
           {promptClaude && (
             <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
               <p className="text-[11.5px] leading-relaxed text-white/65">As instruções foram copiadas. No Claude gratuito, cole o texto, envie e depois copie a resposta JSON completa para o campo abaixo.</p>
               <textarea readOnly value={promptClaude} rows={4} className={inputCls} />
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(promptClaude);
+                    toast.success("Instruções copiadas. Cole no Claude e envie.");
+                  } catch {
+                    toast.error("Não foi possível copiar automaticamente. Selecione e copie o texto acima.");
+                  }
+                }}
+                className={btnCls}
+              >
+                <Copy className="h-3 w-3" /> Copiar instruções novamente
+              </button>
               <label className="block text-[11px] font-semibold text-white/60">Cole aqui a resposta JSON do Claude</label>
               <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={6} maxLength={30000} placeholder='{"slogan":"...","titulo":"...","servicos":[...]}' className={inputCls} />
               <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
@@ -227,7 +241,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             />
             <button onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }} disabled={mPrepararGratis.isPending} className={`${btnCls} mt-2`}>
               {mPrepararGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              Preparar atualização no Claude gratuito
+              Atualizar com Claude AI (gratuito)
             </button>
             {promptClaude && (
               <div className="mt-2 space-y-2">
