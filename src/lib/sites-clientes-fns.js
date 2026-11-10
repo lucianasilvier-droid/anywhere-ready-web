@@ -135,7 +135,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         const credenciaisClaude = await resolveCredentials(base44.asServiceRole || base44, "claude");
         conteudo = await gerarConteudoComClaude(lead, data.orientacoes, credenciaisClaude.values.anthropic_api_key);
       }
-      const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
+      const preco = await avaliarPrecoSite(lead, conteudo, data.extras, { usarIA: !data.conteudoManual });
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
 
