@@ -284,7 +284,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
           <PrecoDoSite site={site} salvando={mAtualizar.isPending} onSalvar={(patch) => mAtualizar.mutate(patch)} />
 
           <details className="rounded-xl border border-white/[0.07] p-3">
-            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Recriar com o agente Claude AI AI</summary>
+            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Recriar ou atualizar com Claude gratuito</summary>
             <textarea
               value={orientacoes}
               onChange={(e) => setOrientacoes(e.target.value)}
@@ -293,11 +293,50 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
               placeholder="O que mudar? (ex.: incluir delivery, cores mais sóbrias...)"
               className={`${inputCls} mt-2`}
             />
-            <button onClick={() => mGerar.mutate()} disabled={mGerar.isPending} className={`${btnCls} mt-2`}>
-              {mGerar.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              {mGerar.isPending ? "Recriando... (até 1 minuto)" : "Recriar conteúdo"}
+            <button
+              onClick={async () => {
+                const prompt = promptClaudeSite(lead, orientacoes);
+                window.open("https://claude.ai/new", "_blank", "noopener,noreferrer");
+                try {
+                  await navigator.clipboard.writeText(prompt);
+                  toast.success("Pedido copiado. Cole no Claude que foi aberto.");
+                } catch {
+                  toast.error("Não consegui copiar o pedido automaticamente.");
+                }
+              }}
+              className={`${btnCls} mt-2`}
+            >
+              <Wand2 className="h-3 w-3" /> Preparar atualização no Claude gratuito
+            </button>
+            <textarea
+              value={conteudoClaude}
+              onChange={(e) => setConteudoClaude(e.target.value)}
+              rows={6}
+              placeholder="Cole aqui o JSON completo que o Claude retornar."
+              className={`${inputCls} mt-2`}
+            />
+            <button
+              onClick={() => {
+                try {
+                  const limpo = conteudoClaude.trim().replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, "");
+                  mGerar.mutate({ conteudoManual: JSON.parse(limpo) });
+                } catch {
+                  toast.error("A resposta não parece ser um JSON válido. Copie o objeto completo e tente novamente.");
+                }
+              }}
+              disabled={mGerar.isPending || !conteudoClaude.trim()}
+              className={`${btnCls} mt-2 border-emerald-400/40 text-emerald-300`}
+            >
+              {mGerar.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+              {mGerar.isPending ? "Salvando..." : "Salvar nova versão do site"}
             </button>
             <p className="mt-1.5 text-[10.5px] text-white/30">O endereço, o WhatsApp e o status continuam os mesmos.</p>
+            <details className="mt-3 border-t border-white/[0.06] pt-2">
+              <summary className="cursor-pointer text-[10.5px] text-white/35">Usar API Anthropic configurada</summary>
+              <button onClick={() => mGerar.mutate()} disabled={mGerar.isPending} className={`${btnCls} mt-2`}>
+                <RefreshCw className="h-3 w-3" /> Recriar automaticamente por API
+              </button>
+            </details>
           </details>
         </div>
       )}
