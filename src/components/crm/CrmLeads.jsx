@@ -49,7 +49,7 @@ export default function CrmLeads({ base = "/admin" }) {
   const [filtroRep, setFiltroRep] = useState("");
   const [buscaLocal, setBuscaLocal] = useState("");
   const [manual, setManual] = useState(false);
-  const [novo, setNovo] = useState({ empresa: "", telefone: "", cidade: "", categoria: "" });
+  const [novo, setNovo] = useState({ empresa: "", telefone: "", email: "", cidade: "", categoria: "" });
 
   const existentes = useMemo(
     () => new Set(leads.map((l) => l.place_id).filter(Boolean)),
@@ -147,7 +147,7 @@ export default function CrmLeads({ base = "/admin" }) {
         consentimento: "nao_solicitado",
       });
       toast.success("Lead criado.");
-      setNovo({ empresa: "", telefone: "", cidade: "", categoria: "" });
+      setNovo({ empresa: "", telefone: "", email: "", cidade: "", categoria: "" });
       setManual(false);
       await reload();
       atualizarLimite();
@@ -222,6 +222,7 @@ export default function CrmLeads({ base = "/admin" }) {
         <form onSubmit={criarManual} className="grid gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:grid-cols-5">
           <input value={novo.empresa} onChange={(e) => setNovo({ ...novo, empresa: e.target.value })} placeholder="Empresa *" className={inputCls} />
           <input value={novo.telefone} onChange={(e) => setNovo({ ...novo, telefone: e.target.value })} placeholder="Telefone" className={inputCls} />
+          <input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} placeholder="E-mail (opcional)" className={inputCls} />
           <input value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} placeholder="Cidade" className={inputCls} />
           <input value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} placeholder="Categoria" className={inputCls} />
           <button type="submit" className="rounded-lg bg-primary px-3 py-2 text-[12.5px] font-bold text-[#0a1128]">
@@ -298,6 +299,7 @@ export default function CrmLeads({ base = "/admin" }) {
                       )}
                       {place.categoria && <span>· {place.categoria}</span>}
                       {!place.site && <span className="rounded-full bg-primary/15 px-1.5 py-0.5 font-semibold text-primary">Sem site · oferecer site</span>}
+                      <a href={urlGoogleMaps(place)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#8ab4f8] hover:underline"><MapPin className="h-3 w-3" /> Abrir Google Maps</a>
                     </p>
                   </div>
                   <button
@@ -393,6 +395,7 @@ export default function CrmLeads({ base = "/admin" }) {
                         >
                           {lead.empresa}
                         </Link>
+                        <a href={urlGoogleMaps(lead)} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#8ab4f8] hover:underline"><MapPin className="h-3 w-3" /> Abrir Google Maps</a>
                         <p className="truncate text-[11px] text-white/35">
                           {lead.categoria || "—"}
                           {!lead.site && (
@@ -453,3 +456,12 @@ export default function CrmLeads({ base = "/admin" }) {
 
 const inputCls =
   "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12.5px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none";
+
+function urlGoogleMaps(place) {
+  const nome = place?.empresa || place?.name || "";
+  const endereco = place?.endereco || [place?.bairro, place?.cidade, place?.estado].filter(Boolean).join(", ");
+  const rawPlaceId = String(place?.place_id || "");
+  const placeId = rawPlaceId.startsWith("osm:") ? "" : rawPlaceId.replace(/^places\//, "");
+  const query = encodeURIComponent([nome, endereco].filter(Boolean).join(" "));
+  return placeId ? "https://www.google.com/maps/search/?api=1&query=" + query + "&query_place_id=" + encodeURIComponent(placeId) : "https://www.google.com/maps/search/?api=1&query=" + query;
+}
