@@ -98,8 +98,10 @@ function briefing(lead, orientacoes) {
 }
 
 /** Pede ao Claude o conteúdo do site e devolve o objeto já validado. */
-export async function gerarConteudoComClaude(lead, orientacoes = "") {
-  const anthropic = new Anthropic();
+export async function gerarConteudoComClaude(lead, orientacoes = "", apiKey) {
+  const key = apiKey || process.env.ANTHROPIC_API_KEY;
+  if (!key) throw erro("Claude AI ainda não está configurado. Cadastre a chave Anthropic em Painel > Integrações e APIs.", 503);
+  const anthropic = new Anthropic({ apiKey: key });
   let resposta;
   try {
     resposta = await anthropic.messages.create({
