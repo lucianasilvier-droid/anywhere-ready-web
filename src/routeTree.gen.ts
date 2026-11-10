@@ -608,6 +608,7 @@ export interface FileRoutesById {
   '/_authed/admin/funil': typeof AuthedAdminFunilRoute
   '/_authed/admin/inativos': typeof AuthedAdminInativosRoute
   '/_authed/admin/integracoes': typeof AuthedAdminIntegracoesRoute
+  '/_authed/admin/assistente': typeof AuthedAdminAssistenteRoute
   '/_authed/admin/leads': typeof AuthedAdminLeadsRoute
   '/_authed/admin/pagamentos': typeof AuthedAdminPagamentosRoute
   '/_authed/admin/pedidos': typeof AuthedAdminPedidosRoute
