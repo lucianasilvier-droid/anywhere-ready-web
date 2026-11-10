@@ -13,6 +13,7 @@
     "db:status": "node scripts/migrate.mjs --status",
     "db:generate": "drizzle-kit generate",
     "admin:create": "node scripts/create-admin.mjs",
+    "inativos:arquivar": "node scripts/arquivar-inativos.mjs",
     "lint": "eslint .",
     "test": "vitest run"
   },

@@ -14,7 +14,7 @@ export default function CrmFunil({ base = "/admin" }) {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    base44.entities.Lead.list({ sort: "-updated_date", limit: 300 })
+    base44.entities.Lead.filter({ arquivado: { $ne: true } }, { sort: "-updated_date", limit: 300 })
       .then((page) => setLeads(Array.isArray(page) ? page : page?.items || []))
       .catch((e) => setErro(e?.message || "Não foi possível carregar o funil."))
       .finally(() => setLoading(false));

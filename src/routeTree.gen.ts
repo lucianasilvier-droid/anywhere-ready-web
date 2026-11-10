@@ -32,6 +32,7 @@ import { Route as AuthedAdminBackupRouteImport } from './routes/_authed/admin.ba
 import { Route as AuthedAdminConfiguracoesRouteImport } from './routes/_authed/admin.configuracoes'
 import { Route as AuthedAdminEquipeRouteImport } from './routes/_authed/admin.equipe'
 import { Route as AuthedAdminFunilRouteImport } from './routes/_authed/admin.funil'
+import { Route as AuthedAdminInativosRouteImport } from './routes/_authed/admin.inativos'
 import { Route as AuthedAdminIntegracoesRouteImport } from './routes/_authed/admin.integracoes'
 import { Route as AuthedAdminLeadsRouteImport } from './routes/_authed/admin.leads'
 import { Route as AuthedAdminPagamentosRouteImport } from './routes/_authed/admin.pagamentos'
@@ -190,6 +191,11 @@ const AuthedAdminEquipeRoute = AuthedAdminEquipeRouteImport.update({
 const AuthedAdminFunilRoute = AuthedAdminFunilRouteImport.update({
   id: '/funil',
   path: '/funil',
+  getParentRoute: () => AuthedAdminRoute,
+} as any)
+const AuthedAdminInativosRoute = AuthedAdminInativosRouteImport.update({
+  id: '/inativos',
+  path: '/inativos',
   getParentRoute: () => AuthedAdminRoute,
 } as any)
 const AuthedAdminIntegracoesRoute = AuthedAdminIntegracoesRouteImport.update({
@@ -455,6 +461,7 @@ export interface FileRoutesByFullPath {
   '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/admin/equipe': typeof AuthedAdminEquipeRoute
   '/admin/funil': typeof AuthedAdminFunilRoute
+  '/admin/inativos': typeof AuthedAdminInativosRoute
   '/admin/integracoes': typeof AuthedAdminIntegracoesRoute
   '/admin/leads': typeof AuthedAdminLeadsRoute
   '/admin/pagamentos': typeof AuthedAdminPagamentosRoute
@@ -520,6 +527,7 @@ export interface FileRoutesByTo {
   '/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/admin/equipe': typeof AuthedAdminEquipeRoute
   '/admin/funil': typeof AuthedAdminFunilRoute
+  '/admin/inativos': typeof AuthedAdminInativosRoute
   '/admin/integracoes': typeof AuthedAdminIntegracoesRoute
   '/admin/leads': typeof AuthedAdminLeadsRoute
   '/admin/pagamentos': typeof AuthedAdminPagamentosRoute
@@ -590,6 +598,7 @@ export interface FileRoutesById {
   '/_authed/admin/configuracoes': typeof AuthedAdminConfiguracoesRoute
   '/_authed/admin/equipe': typeof AuthedAdminEquipeRoute
   '/_authed/admin/funil': typeof AuthedAdminFunilRoute
+  '/_authed/admin/inativos': typeof AuthedAdminInativosRoute
   '/_authed/admin/integracoes': typeof AuthedAdminIntegracoesRoute
   '/_authed/admin/leads': typeof AuthedAdminLeadsRoute
   '/_authed/admin/pagamentos': typeof AuthedAdminPagamentosRoute
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/equipe'
     | '/admin/funil'
+    | '/admin/inativos'
     | '/admin/integracoes'
     | '/admin/leads'
     | '/admin/pagamentos'
@@ -725,6 +735,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/equipe'
     | '/admin/funil'
+    | '/admin/inativos'
     | '/admin/integracoes'
     | '/admin/leads'
     | '/admin/pagamentos'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/configuracoes'
     | '/_authed/admin/equipe'
     | '/_authed/admin/funil'
+    | '/_authed/admin/inativos'
     | '/_authed/admin/integracoes'
     | '/_authed/admin/leads'
     | '/_authed/admin/pagamentos'
@@ -1027,6 +1039,13 @@ declare module '@tanstack/react-router' {
       path: '/funil'
       fullPath: '/admin/funil'
       preLoaderRoute: typeof AuthedAdminFunilRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
+    '/_authed/admin/inativos': {
+      id: '/_authed/admin/inativos'
+      path: '/inativos'
+      fullPath: '/admin/inativos'
+      preLoaderRoute: typeof AuthedAdminInativosRouteImport
       parentRoute: typeof AuthedAdminRoute
     }
     '/_authed/admin/integracoes': {
@@ -1374,6 +1393,7 @@ interface AuthedAdminRouteChildren {
   AuthedAdminConfiguracoesRoute: typeof AuthedAdminConfiguracoesRoute
   AuthedAdminEquipeRoute: typeof AuthedAdminEquipeRoute
   AuthedAdminFunilRoute: typeof AuthedAdminFunilRoute
+  AuthedAdminInativosRoute: typeof AuthedAdminInativosRoute
   AuthedAdminIntegracoesRoute: typeof AuthedAdminIntegracoesRoute
   AuthedAdminLeadsRoute: typeof AuthedAdminLeadsRoute
   AuthedAdminPagamentosRoute: typeof AuthedAdminPagamentosRoute
@@ -1394,6 +1414,7 @@ const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminConfiguracoesRoute: AuthedAdminConfiguracoesRoute,
   AuthedAdminEquipeRoute: AuthedAdminEquipeRoute,
   AuthedAdminFunilRoute: AuthedAdminFunilRoute,
+  AuthedAdminInativosRoute: AuthedAdminInativosRoute,
   AuthedAdminIntegracoesRoute: AuthedAdminIntegracoesRoute,
   AuthedAdminLeadsRoute: AuthedAdminLeadsRoute,
   AuthedAdminPagamentosRoute: AuthedAdminPagamentosRoute,

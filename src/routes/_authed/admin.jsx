@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useRef } from "react";
 import {
   LayoutDashboard, Users, Target, LayoutGrid, Briefcase, ShoppingBag, CreditCard, Package,
-  Plug, Settings, LogOut, ShieldAlert, Home, Wallet, HardDriveDownload, KeyRound,
+  Plug, Settings, LogOut, ShieldAlert, Home, Wallet, HardDriveDownload, KeyRound, Archive,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/admin", label: "Visão geral", icon: LayoutDashboard, exact: true },
   { to: "/admin/leads", label: "CRM · Leads", icon: Target },
   { to: "/admin/funil", label: "Funil de vendas", icon: LayoutGrid },
+  { to: "/admin/inativos", label: "Clientes inativos", icon: Archive },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/servicos", label: "Serviços e assinaturas", icon: Briefcase },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
