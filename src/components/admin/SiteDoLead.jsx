@@ -8,6 +8,59 @@ import { competenciaAtual } from "@/lib/representante-ui";
 import { MENSALIDADE_SITE, PRECO_SITE, custosDoSite, resumoFinanceiro } from "@/lib/preco-site";
 import { brl } from "@/lib/format";
 
+function promptClaudeSite(lead, orientacoes) {
+  const dados = {
+    empresa: lead.empresa || "",
+    categoria: lead.categoria || "",
+    endereco: lead.endereco || "",
+    bairro: lead.bairro || "",
+    cidade: lead.cidade || "",
+    estado: lead.estado || "",
+    telefone: lead.telefone || "",
+    nota_google: lead.nota_google ?? null,
+    total_avaliacoes: lead.total_avaliacoes ?? null,
+    orientacoes_adicionais: orientacoes || "",
+  };
+  const formato = {
+    slogan: "Frase curta de destaque",
+    titulo: "Título principal",
+    subtitulo: "Frase de apoio",
+    sobre: "Dois parágrafos curtos separados por uma linha em branco",
+    servicos: [
+      { nome: "Nome do serviço", descricao: "Descrição breve", icone: "tesoura" },
+      { nome: "Outro serviço", descricao: "Descrição breve", icone: "estrela" },
+      { nome: "Mais um serviço", descricao: "Descrição breve", icone: "check" },
+    ],
+    diferenciais: [
+      { titulo: "Diferencial 1", texto: "Explicação curta" },
+      { titulo: "Diferencial 2", texto: "Explicação curta" },
+      { titulo: "Diferencial 3", texto: "Explicação curta" },
+    ],
+    perguntas: [
+      { pergunta: "Pergunta frequente 1", resposta: "Resposta objetiva" },
+      { pergunta: "Pergunta frequente 2", resposta: "Resposta objetiva" },
+      { pergunta: "Pergunta frequente 3", resposta: "Resposta objetiva" },
+    ],
+    chamada_agendamento: "Convite para agendar pelo WhatsApp",
+    tema: "esmeralda",
+    seo_descricao: "Descrição para o Google com até 155 caracteres",
+  };
+  return `Crie o conteúdo de um site profissional de uma página para esta empresa brasileira.
+Use somente informações fornecidas; não invente preços, horários, prêmios, certificações ou depoimentos.
+Escreva em português do Brasil, com texto claro e convincente. O site terá mapa e botão de agendamento pelo WhatsApp.
+Retorne SOMENTE um objeto JSON válido, sem Markdown, sem cercas de código e sem explicações.
+Respeite exatamente os nomes das propriedades e os tipos do modelo abaixo.
+Inclua de 3 a 6 serviços, de 3 a 4 diferenciais e de 3 a 5 perguntas frequentes.
+O campo tema deve ser um destes valores: esmeralda, oceano, terracota, vinho, grafite, solar, lavanda, floresta.
+O campo icone de cada serviço deve ser um destes valores: estrela, coracao, tesoura, dente, carro, comida, cafe, casa, ferramenta, saude, beleza, pet, escudo, relogio, folha, presente, livro, musica, raio, check.
+
+DADOS DA EMPRESA:
+${JSON.stringify(dados, null, 2)}
+
+MODELO JSON OBRIGATÓRIO:
+${JSON.stringify(formato, null, 2)}`;
+}
+
 const STATUS = {
   demonstracao: { label: "Demonstração", cls: "border-amber-500/30 bg-amber-500/10 text-amber-200" },
   publicado: { label: "Publicado", cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" },
@@ -25,6 +78,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const [site, setSite] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [orientacoes, setOrientacoes] = useState("");
+  const [conteudoClaude, setConteudoClaude] = useState("");
   const [ajustes, setAjustes] = useState({ whatsapp: "", instagram: "", horario: "", slug: "" });
 
   useEffect(() => {
@@ -45,7 +99,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   }, [site]);
 
   const mGerar = useMutation({
-    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
+    mutationFn: (payload = {}) => gerar({ data: { leadId: lead.id, orientacoes, ...payload } }),
     onSuccess: (r) => {
       setSite(r?.site || null);
       toast.success("Site criado pelo agente Claude AI.");
@@ -100,14 +154,59 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             placeholder="Orientações opcionais para o agente (ex.: destacar corte infantil, tom mais jovem...)"
             className={inputCls}
           />
-          <button
-            onClick={() => mGerar.mutate()}
-            disabled={mGerar.isPending}
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
-          >
-            {mGerar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerar.isPending ? "Criando o site... (até 1 minuto)" : "Criar site com Claude AI"}
-          </button>
+          <div className="space-y-2 rounded-xl border border-white/[0.08] bg-white/[0.025] p-3">
+            <p className="text-[11.5px] font-semibold text-white">1. Criar conteúdo com o Claude gratuito</p>
+            <p className="text-[11px] leading-relaxed text-white/45">
+              O sistema prepara o pedido, copia e abre o Claude. Lá, entre na sua conta gratuita e cole o pedido.
+            </p>
+            <button
+              onClick={async () => {
+                const prompt = promptClaudeSite(lead, orientacoes);
+                const aba = window.open("https://claude.ai/new", "_blank", "noopener,noreferrer");
+                try {
+                  await navigator.clipboard.writeText(prompt);
+                  toast.success("Pedido copiado. Cole no Claude que foi aberto.");
+                } catch {
+                  toast.error("Não consegui copiar automaticamente. Tente novamente ou copie o pedido por outro meio.");
+                  if (aba) aba.close();
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128]"
+            >
+              <Wand2 className="h-3.5 w-3.5" /> Preparar no Claude gratuito
+            </button>
+            <p className="pt-2 text-[11.5px] font-semibold text-white">2. Colar aqui a resposta JSON do Claude</p>
+            <textarea
+              value={conteudoClaude}
+              onChange={(e) => setConteudoClaude(e.target.value)}
+              rows={7}
+              placeholder="Depois que o Claude responder, copie o objeto JSON completo e cole aqui."
+              className={inputCls}
+            />
+            <button
+              onClick={() => {
+                try {
+                  const limpo = conteudoClaude.trim().replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, "");
+                  const conteudoManual = JSON.parse(limpo);
+                  mGerar.mutate({ conteudoManual });
+                } catch {
+                  toast.error("A resposta não parece ser um JSON válido. Copie o objeto completo do Claude e tente novamente.");
+                }
+              }}
+              disabled={mGerar.isPending || !conteudoClaude.trim()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 px-4 py-2 text-[12px] font-bold text-emerald-300 disabled:opacity-50"
+            >
+              {mGerar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {mGerar.isPending ? "Salvando site..." : "Salvar site no sistema"}
+            </button>
+          </div>
+          <details className="rounded-xl border border-white/[0.07] p-3">
+            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/45">Usar geração automática por API (se já estiver configurada)</summary>
+            <p className="mt-2 text-[10.5px] leading-relaxed text-white/35">Esta opção usa a chave Anthropic cadastrada no servidor ou no painel e pode gerar cobrança. O modo gratuito acima não usa API.</p>
+            <button onClick={() => mGerar.mutate()} disabled={mGerar.isPending} className={`mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-2 text-[11px] font-semibold text-white/60 disabled:opacity-50`}>
+              <Wand2 className="h-3.5 w-3.5" /> Gerar automaticamente
+            </button>
+          </details>
         </div>
       ) : (
         <div className="mt-3 space-y-3">
