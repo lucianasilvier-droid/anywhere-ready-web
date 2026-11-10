@@ -34,7 +34,7 @@ export default function WhatsAppReplyNotifications() {
           { sort: "-created_date", limit: 50 },
         );
         if (!ativo) return;
-        const recebidas = Array.isArray(result) ? result : result?.items || [];
+        const recebidasBrutas = Array.isArray(result) ? result : result?.items || [];\n        // Interações antigas não tinham campo de leitura: exibi-las como lidas evita alertas retroativos.\n        const recebidas = recebidasBrutas.map((item) => ({ ...item, notificacao_lida: item.notificacao_lida === false ? false : true }));
         const novas = recebidas.filter((item) => item.id && !knownIds.current.has(item.id));
         if (!initialLoad.current && novas.length) {
           novas.forEach((item) => {
