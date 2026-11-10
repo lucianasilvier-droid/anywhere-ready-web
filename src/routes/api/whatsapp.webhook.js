@@ -4,7 +4,7 @@ const STOP_WORDS = [
   "parar", "sair", "descadastrar", "remover", "nao quero", "nao tenho interesse",
   "nao autorizo", "prefiro nao", "bloquear", "nao aceito",
 ];
-const YES_WORDS = ["sim", "s", "autorizo", "autorizado", "pode enviar", "pode mandar", "aceito", "concordo", "ok", "claro"];
+const YES_WORDS = ["sim", "autorizo", "autorizado", "pode", "pode enviar", "pode mandar", "aceito", "concordo", "ok", "claro"];
 
 function digits(value) {
   return String(value || "").replace(/\D/g, "");
