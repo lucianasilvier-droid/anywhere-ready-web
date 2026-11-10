@@ -13,6 +13,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
+import { resolveCredentials } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -103,7 +104,8 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const conteudo = await gerarConteudoComClaude(lead, data.orientacoes);
+      const credenciaisClaude = await resolveCredentials(base44.asServiceRole || base44, "claude");
+      const conteudo = await gerarConteudoComClaude(lead, data.orientacoes, credenciaisClaude.values.anthropic_api_key);
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
