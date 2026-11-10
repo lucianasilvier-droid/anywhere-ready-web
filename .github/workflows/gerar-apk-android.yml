@@ -1,6 +1,9 @@
 name: Gerar APK Android
 
 on:
+  push:
+    branches:
+      - preparar-apk-android-2026-11-10
   workflow_dispatch:
     inputs:
       app_url:
