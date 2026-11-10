@@ -3,7 +3,9 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import {
+  ICONES,
   MODELO_CLAUDE,
+  TEMAS,
   erro,
   gerarConteudoComClaude,
   sitePorLead,
@@ -82,7 +84,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         servicos: z.array(z.object({
           nome: z.string().min(1).max(60),
           descricao: z.string().max(220),
-          icone: z.string().max(30),
+          icone: z.enum(ICONES),
         })).min(3).max(6),
         diferenciais: z.array(z.object({
           titulo: z.string().max(60),
@@ -93,7 +95,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           resposta: z.string().max(320),
         })).min(3).max(5),
         chamada_agendamento: z.string().max(180),
-        tema: z.string().max(30),
+        tema: z.enum(TEMAS),
         seo_descricao: z.string().max(160),
       }).optional(),
       extras: z
