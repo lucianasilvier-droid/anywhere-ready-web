@@ -8,7 +8,6 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { iniciais } from "@/lib/format";
 import WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
-import WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
 
 export const Route = createFileRoute("/_authed/admin")({
   component: AdminLayout,
