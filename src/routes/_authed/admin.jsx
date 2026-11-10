@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { iniciais } from "@/lib/format";
+import { iniciais } from "@/lib/format";\nimport WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
 
 export const Route = createFileRoute("/_authed/admin")({
   component: AdminLayout,
@@ -83,7 +83,7 @@ function AdminLayout() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex w-full max-w-[1600px]">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/[0.07] bg-[#070d1c] px-3 py-5 lg:flex">
-          <Link to="/admin" className="mb-6 flex items-center gap-2.5 px-2">
+          <div className="mb-6 flex items-center justify-between gap-2 px-2">\n          <Link to="/admin" className="flex min-w-0 items-center gap-2.5">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#ffd97a] to-[#e0a12c] font-heading text-[13px] font-extrabold text-[#0a1128]">
               N
             </span>
