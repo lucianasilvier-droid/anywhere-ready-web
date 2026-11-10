@@ -12,6 +12,8 @@ export function readSecret(name) {
 export const SECRET_NAMES = {
   google_places: ["GOOGLE_MAPS_API_KEY"],
   groq: ["GROQ_API_KEY"],
+  claude: ["ANTHROPIC_API_KEY"],
+  openai: ["OPENAI_API_KEY"],
   whatsapp: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"],
 };
 
@@ -24,6 +26,8 @@ export function integrationConfigured(tipo) {
 export const CREDENTIAL_KEYS = {
   google_places: { GOOGLE_MAPS_API_KEY: "google_maps_api_key" },
   groq: { GROQ_API_KEY: "groq_api_key" },
+  claude: { ANTHROPIC_API_KEY: "anthropic_api_key" },
+  openai: { OPENAI_API_KEY: "openai_api_key" },
   whatsapp: {
     WHATSAPP_ACCESS_TOKEN: "whatsapp_access_token",
     WHATSAPP_PHONE_NUMBER_ID: "whatsapp_phone_number_id",
@@ -330,16 +334,17 @@ async function chamarGroq(modelo, key, prompt, schemaHint) {
 }
 
 /** Reserva: Claude (mesma ligação já usada pelo sistema na criação de sites). */
-async function chamarClaude(prompt, schemaHint) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+async function chamarClaude(prompt, schemaHint, apiKey) {
+  const key = apiKey || readSecret("ANTHROPIC_API_KEY");
+  if (!key) {
     return {
       ok: false,
-      error: "Claude indisponível: defina ANTHROPIC_API_KEY nas variáveis de ambiente do servidor.",
+      error: "Claude indisponível: cadastre a chave Anthropic em Integrações e APIs no painel.",
     };
   }
   try {
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const anthropic = new Anthropic();
+    const anthropic = new Anthropic({ apiKey: key });
     const resp = await anthropic.messages.create({
       model: "claude-sonnet-5-5",
       max_tokens: 2048,
@@ -389,7 +394,7 @@ export async function iaJSON(prompt, schemaHint, values = {}) {
   }
 
   if (!texto) {
-    const r = await chamarClaude(prompt, schemaHint);
+    const r = await chamarClaude(prompt, schemaHint, values.anthropic_api_key);
     if (r.ok) {
       texto = r.text;
       usado = "claude-sonnet-5-5";
@@ -466,6 +471,50 @@ export async function testIntegration(tipo, values = {}) {
       status: "conectado",
       mensagem: `Conexão bem-sucedida com a API Roq (modelo ${result.modelo}${result.modelo === result.modelo_solicitado ? "" : ` — solicitado: ${result.modelo_solicitado}`}).`,
     };
+  }
+
+  if (tipo === "claude") {
+    const key = values.anthropic_api_key || readSecret("ANTHROPIC_API_KEY");
+    if (!key) return { status: "aguardando_configuracao", mensagem: "Cadastre a chave Anthropic em Integrações e APIs." };
+    try {
+      const { default: Anthropic } = await import("@anthropic-ai/sdk");
+      const anthropic = new Anthropic({ apiKey: key });
+      const response = await anthropic.messages.create({
+        model: "claude-sonnet-5-5",
+        max_tokens: 24,
+        messages: [{ role: "user", content: "Responda somente: OK" }],
+      });
+      const answer = (response.content || []).filter((part) => part.type === "text").map((part) => part.text).join("").trim();
+      return answer
+        ? { status: "conectado", mensagem: "Conexão com Claude AI confirmada. Modelo claude-sonnet-5-5 respondeu ao teste." }
+        : { status: "erro", mensagem: "Claude respondeu sem conteúdo de texto." };
+    } catch (e) {
+      return { status: "erro", mensagem: e?.message || "Falha ao testar a conexão com Claude AI." };
+    }
+  }
+
+  if (tipo === "openai") {
+    const key = values.openai_api_key || readSecret("OPENAI_API_KEY");
+    if (!key) return { status: "aguardando_configuracao", mensagem: "Cadastre a chave OpenAI em Integrações e APIs." };
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          messages: [{ role: "user", content: "Responda somente: OK" }],
+          max_tokens: 16,
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) return { status: "erro", mensagem: payload?.error?.message || `OpenAI respondeu ${res.status}.` };
+      const answer = payload.choices?.[0]?.message?.content?.trim();
+      return answer
+        ? { status: "conectado", mensagem: "Conexão com ChatGPT confirmada. O modelo gpt-4.1-mini respondeu ao teste." }
+        : { status: "erro", mensagem: "OpenAI respondeu sem conteúdo." };
+    } catch (e) {
+      return { status: "erro", mensagem: e?.message || "Falha ao testar a conexão com OpenAI." };
+    }
   }
 
   if (tipo === "whatsapp") {
