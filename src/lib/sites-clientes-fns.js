@@ -74,6 +74,28 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
     z.object({
       leadId: z.string().min(1),
       orientacoes: z.string().trim().max(600).optional().default(""),
+      conteudoManual: z.object({
+        slogan: z.string().max(90),
+        titulo: z.string().min(1).max(120),
+        subtitulo: z.string().max(260),
+        sobre: z.string().max(1400),
+        servicos: z.array(z.object({
+          nome: z.string().min(1).max(60),
+          descricao: z.string().max(220),
+          icone: z.string().max(30),
+        })).min(3).max(6),
+        diferenciais: z.array(z.object({
+          titulo: z.string().max(60),
+          texto: z.string().max(180),
+        })).min(3).max(4),
+        perguntas: z.array(z.object({
+          pergunta: z.string().max(140),
+          resposta: z.string().max(320),
+        })).min(3).max(5),
+        chamada_agendamento: z.string().max(180),
+        tema: z.string().max(30),
+        seo_descricao: z.string().max(160),
+      }).optional(),
       extras: z
         .object({
           logo: z.boolean().optional(),
@@ -104,8 +126,13 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const credenciaisClaude = await resolveCredentials(base44.asServiceRole || base44, "claude");
-      const conteudo = await gerarConteudoComClaude(lead, data.orientacoes, credenciaisClaude.values.anthropic_api_key);
+      // O conteúdo pode vir do Claude gratuito no navegador, colado pelo operador.
+      // Se não vier, preservamos a geração automática por API para quem já a configurou.
+      let conteudo = data.conteudoManual;
+      if (!conteudo) {
+        const credenciaisClaude = await resolveCredentials(base44.asServiceRole || base44, "claude");
+        conteudo = await gerarConteudoComClaude(lead, data.orientacoes, credenciaisClaude.values.anthropic_api_key);
+      }
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
@@ -125,7 +152,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         whatsapp: existente?.whatsapp || lead.telefone || "",
         conteudo,
         orientacoes: data.orientacoes || "",
-        modelo: MODELO_CLAUDE,
+        modelo: data.conteudoManual ? "claude-web-manual" : MODELO_CLAUDE,
         gerado_em: agora,
         gerado_por: context.user?.email || "",
         valor_calculado: preco.valor_calculado,
@@ -170,9 +197,9 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         empresa: lead.empresa,
         tipo: "ia",
         mensagem: existente
-          ? "Site de demonstração recriado pelo agente Claude."
-          : "Site de demonstração criado pelo agente Claude (Google Maps + agendamento por WhatsApp).",
-        autor: "Claude",
+          ? (data.conteudoManual ? "Site de demonstração atualizado com conteúdo do Claude gratuito." : "Site de demonstração recriado pelo agente Claude.")
+          : (data.conteudoManual ? "Site de demonstração criado com conteúdo do Claude gratuito." : "Site de demonstração criado pelo agente Claude (Google Maps + agendamento por WhatsApp)."),
+        autor: data.conteudoManual ? "Claude (navegador)" : "Claude",
         detalhe: `Endereço: /site/${site.slug}${rep ? ` · criado pelo representante ${rep.nome || ""}` : ""}`,
       });
 
