@@ -1,10 +1,7 @@
-// Sites criados pelo agente Claude para empresas prospectadas no CRM que ainda não
-// têm site. O conteúdo é gerado pela Anthropic (ANTHROPIC_API_KEY) e guardado na
-// entidade SiteCliente; a página pública fica em /site/<endereço>.
+// Sites de demonstração para empresas prospectadas no CRM. O conteúdo é preparado
+// no Claude gratuito pelo navegador, validado no servidor e guardado em SiteCliente.
 import { listar } from "@/lib/representantes.server";
 import { slugify } from "@/lib/landing-representante.server";
-
-export const MODELO_CLAUDE = "claude-web-gratuito";
 
 export const TEMAS = ["esmeralda", "oceano", "terracota", "vinho", "grafite", "solar", "lavanda", "floresta"];
 export const ICONES = [
@@ -24,91 +21,6 @@ export function whatsappDe(telefone) {
   if (!n) return "";
   if (n.length <= 11) n = `55${n}`;
   return n;
-}
-
-const FERRAMENTA = {
-  name: "publicar_site",
-  description: "Entrega o conteúdo completo do site da empresa, pronto para ser exibido.",
-  input_schema: {
-    type: "object",
-    properties: {
-      slogan: { type: "string", description: "Frase curta de destaque (até 8 palavras)." },
-      titulo: { type: "string", description: "Título principal do topo do site (até 10 palavras)." },
-      subtitulo: { type: "string", description: "Frase de apoio do topo (até 30 palavras)." },
-      sobre: { type: "string", description: "Texto 'Sobre nós' com 2 parágrafos curtos separados por \\n\\n." },
-      servicos: {
-        type: "array",
-        minItems: 3,
-        maxItems: 6,
-        items: {
-          type: "object",
-          properties: {
-            nome: { type: "string" },
-            descricao: { type: "string", description: "Até 25 palavras." },
-            icone: { type: "string", enum: ICONES },
-          },
-          required: ["nome", "descricao", "icone"],
-        },
-      },
-      diferenciais: {
-        type: "array",
-        minItems: 3,
-        maxItems: 4,
-        items: {
-          type: "object",
-          properties: { titulo: { type: "string" }, texto: { type: "string", description: "Até 18 palavras." } },
-          required: ["titulo", "texto"],
-        },
-      },
-      perguntas: {
-        type: "array",
-        minItems: 3,
-        maxItems: 5,
-        items: {
-          type: "object",
-          properties: { pergunta: { type: "string" }, resposta: { type: "string", description: "Até 35 palavras." } },
-          required: ["pergunta", "resposta"],
-        },
-      },
-      chamada_agendamento: { type: "string", description: "Convite curto para agendar pelo WhatsApp (até 20 palavras)." },
-      tema: { type: "string", enum: TEMAS, description: "Paleta de cores que combina com o ramo." },
-      seo_descricao: { type: "string", description: "Descrição para o Google, até 155 caracteres." },
-    },
-    required: [
-      "slogan", "titulo", "subtitulo", "sobre", "servicos", "diferenciais", "perguntas",
-      "chamada_agendamento", "tema", "seo_descricao",
-    ],
-  },
-};
-
-export function promptParaClaudeGratuito(lead, orientacoes = "") {
-  return `Crie o conteúdo completo de um site de demonstração profissional para esta empresa. Não use API, não tente executar ferramentas e não publique nada. Responda somente com um objeto JSON válido, sem Markdown e sem blocos de código.
-
-DADOS DA EMPRESA:
-${briefing(lead, orientacoes)}
-
-REGRAS:
-- Escreva em português do Brasil, com linguagem clara, acolhedora e comercial, adequada ao ramo.
-- Não invente preços, prêmios, anos de experiência, clientes, certificações, depoimentos ou horários.
-- Use os dados reais da empresa. Não invente telefone, endereço ou redes sociais.
-- Crie de 3 a 6 serviços, 3 a 4 diferenciais e 3 a 5 perguntas frequentes.
-- O campo tema deve ser exatamente um destes: esmeralda, oceano, terracota, vinho, grafite, solar, lavanda, floresta.
-- Cada ícone de serviço deve ser exatamente um destes: estrela, coracao, tesoura, dente, carro, comida, cafe, casa, ferramenta, saude, beleza, pet, escudo, relogio, folha, presente, livro, musica, raio, check.
-- Respeite os limites de tamanho: slogan 90 caracteres; titulo 120; subtitulo 260; sobre 1400; nome de serviço 60; descrição de serviço 220; chamada_agendamento 180; seo_descricao 160.
-- O JSON deve conter exatamente esta estrutura:
-{
-  "slogan": "frase curta",
-  "titulo": "título principal",
-  "subtitulo": "frase de apoio",
-  "sobre": "apresentação da empresa em dois parágrafos",
-  "servicos": [{"nome":"Serviço","descricao":"Descrição objetiva","icone":"check"}],
-  "diferenciais": [{"titulo":"Diferencial","texto":"Explicação breve"}],
-  "perguntas": [{"pergunta":"Pergunta frequente?","resposta":"Resposta objetiva"}],
-  "chamada_agendamento": "Convite para contato pelo WhatsApp",
-  "tema": "oceano",
-  "seo_descricao": "Descrição para mecanismos de busca"
-}
-Entregue apenas o JSON, sem comentários antes ou depois.`;
 }
 
 function briefing(lead, orientacoes) {
