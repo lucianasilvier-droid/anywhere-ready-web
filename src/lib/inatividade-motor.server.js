@@ -17,6 +17,7 @@ import {
   prazoDaConfig,
   validarPrazo,
 } from "./inatividade.js";
+import { FUSO_CRM } from "./crm-limites.js";
 
 const novoId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 24);
 
@@ -329,7 +330,7 @@ export async function restaurarCliente(query, { leadId, autorEmail }) {
     empresa: d.empresa || "",
     tipo: "restauracao",
     mensagem: "Cliente restaurado do arquivo",
-    detalhe: `Arquivado em ${d.arquivado_em ? new Date(d.arquivado_em).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "data não registrada"}. Motivo: ${d.arquivado_motivo || "não registrado"}`,
+    detalhe: `Arquivado em ${d.arquivado_em ? new Date(d.arquivado_em).toLocaleDateString("pt-BR", { timeZone: FUSO_CRM }) : "data não registrada"}. Motivo: ${d.arquivado_motivo || "não registrado"}`,
     autor: `Administrador (${autorEmail || "painel"})`,
     representante_id: d.representante_id || null,
     representante_nome: d.representante_nome || null,

@@ -165,7 +165,13 @@ const OWNER_CREATE = new Set(["ServicoAtualizacao"]);
 // the leads they added themselves (`representante_id` on the Lead).
 const REP_SCOPED = new Set(["Lead", "LeadInteraction"]);
 // Fields a representative can never set or change on a lead.
-const REP_PROTECTED_LEAD_FIELDS = ["representante_id", "representante_nome", "representante_email"];
+// The archive fields (inactive-client control) are changed only by administrators.
+const REP_PROTECTED_LEAD_FIELDS = [
+  "representante_id", "representante_nome", "representante_email",
+  "arquivado", "arquivado_em", "arquivado_motivo", "arquivado_origem", "arquivado_por",
+  "arquivado_prazo_dias", "arquivado_ultima_atividade_em", "arquivado_etapa",
+  "restaurado_em", "restaurado_por", "ultimo_arquivamento",
+];
 
 function repCondition(entity, repId, params) {
   params.push(String(repId));
