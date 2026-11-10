@@ -607,25 +607,22 @@ export const chatgptAdminFn = createServerFn({ method: "POST" })
       throw Object.assign(new Error("ChatGPT ainda não está configurado. Cadastre a chave OpenAI em Painel > Integrações e APIs."), { status: 503 });
     }
 
-    const historico = data.historico.slice(-10).map((item) => ({
-      role: item.role,
-      content: item.content,
-    }));
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const historico = data.historico.slice(-10).map((item) =>
+      `${item.role === "assistant" ? "Assistente" : "Administrador"}: ${item.content}`,
+    );
+    const contexto = [
+      ...historico,
+      `Administrador: ${data.mensagem}`,
+    ].join("\n\n");
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        temperature: 0.3,
-        max_tokens: 1200,
-        messages: [
-          {
-            role: "system",
-            content: `Você é o assistente administrativo interno do sistema Google NFC Connect. Ajude o administrador a entender e operar o CRM, representantes, funil, sites de demonstração, integrações e configurações. Responda em português do Brasil, com instruções claras e simples. Não afirme que executou alterações, publicou sites, enviou mensagens ou acessou serviços externos: você apenas orienta e analisa informações fornecidas nesta conversa. Não peça nem revele chaves, senhas, tokens ou dados pessoais desnecessários. Quando uma tarefa exigir alteração técnica, explique o que deve ser verificado no GitHub/Vercel e deixe claro que este chat interno não executa deploys nem altera código por conta própria.`,
-          },
-          ...historico,
-          { role: "user", content: data.mensagem },
-        ],
+        model: "gpt-5.5",
+        reasoning: { effort: "none" },
+        max_output_tokens: 1200,
+        instructions: `Você é o assistente administrativo interno do sistema Google NFC Connect. Ajude o administrador a entender e operar o CRM, representantes, funil, sites de demonstração, integrações e configurações. Responda em português do Brasil, com instruções claras e simples. Não afirme que executou alterações, publicou sites, enviou mensagens ou acessou serviços externos: você apenas orienta e analisa informações fornecidas nesta conversa. Não peça nem revele chaves, senhas, tokens ou dados pessoais desnecessários. Quando uma tarefa exigir alteração técnica, explique o que deve ser verificado no GitHub/Vercel e deixe claro que este chat interno não executa deploys nem altera código por conta própria.`,
+        input: contexto,
       }),
     });
     const payload = await response.json().catch(() => ({}));
@@ -633,12 +630,17 @@ export const chatgptAdminFn = createServerFn({ method: "POST" })
       setResponseStatus(response.status === 401 ? 502 : response.status);
       throw Object.assign(new Error(payload?.error?.message || `A API OpenAI respondeu ${response.status}.`), { status: response.status === 401 ? 502 : response.status });
     }
-    const resposta = payload.choices?.[0]?.message?.content?.trim();
+    const resposta = (payload.output || [])
+      .flatMap((item) => item.content || [])
+      .filter((part) => part.type === "output_text")
+      .map((part) => part.text || "")
+      .join("")
+      .trim();
     if (!resposta) {
       setResponseStatus(502);
       throw Object.assign(new Error("O ChatGPT não retornou uma resposta de texto."), { status: 502 });
     }
-    return { resposta, modelo: "gpt-4.1-mini" };
+    return { resposta, modelo: "gpt-5.5" };
   });
 
 /* ------------------------------ Administração ---------------------------- */
