@@ -38,7 +38,7 @@ export default function CrmLeads({ base = "/admin" }) {
 
   const { user } = useAuth();
   const buscar = useServerFn(searchPlacesFn);
-  const { items: leads, loading, reload } = useEntityList("Lead", {}, { limit: 300 });
+  const { items: leads, loading, reload } = useEntityList("Lead", { arquivado: { $ne: true } }, { limit: 300 });
   const [termo, setTermo] = useState("");
   const [local, setLocal] = useState("");
   const [resultados, setResultados] = useState([]);
