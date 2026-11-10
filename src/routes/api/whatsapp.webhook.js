@@ -1,17 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const STOP_WORDS = ["parar", "sair", "descadastrar", "remover", "nao quero", "não quero", "bloquear"];
-const YES_WORDS = ["sim", "autorizo", "pode enviar", "pode mandar", "aceito", "concordo", "ok"];
+const STOP_WORDS = [
+  "parar", "sair", "descadastrar", "remover", "nao quero", "nao tenho interesse",
+  "nao autorizo", "prefiro nao", "bloquear", "nao aceito",
+];
+const YES_WORDS = ["sim", "s", "autorizo", "autorizado", "pode enviar", "pode mandar", "aceito", "concordo", "ok", "claro"];
 
 function digits(value) {
-  return String(value || "").replace(/\D/g, "");
+  return String(value || "").replace(/\\D/g, "");
 }
 
 function normalize(text) {
   return String(text || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[^a-z0-9\\s]/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim();
+}
+
+function classifyReply(text) {
+  const normalized = normalize(text);
+  if (!normalized) return "indefinida";
+  if (STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
+  if (normalized === "nao" || normalized === "negativo") return "nao";
+  if (YES_WORDS.includes(normalized)) return "sim";
+  return "indefinida";
 }
 
 export const Route = createFileRoute("/api/whatsapp/webhook")({
@@ -60,8 +75,18 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
             message?.text?.body ||
             message?.button?.text ||
             message?.interactive?.button_reply?.title ||
+            message?.interactive?.list_reply?.title ||
             "";
           if (!from || !text) continue;
+
+          // Meta may retry webhook deliveries. The message ID makes recording idempotent.
+          if (message.id) {
+            const duplicada = await base44.entities.LeadInteraction.filter(
+              { whatsapp_message_id: message.id },
+              { limit: 1 },
+            );
+            if (duplicada?.length) continue;
+          }
 
           const page = await base44.entities.Lead.list({ sort: "-created_date", limit: 300 });
           const leads = Array.isArray(page) ? page : page?.items || [];
@@ -71,23 +96,23 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
           });
           if (!lead) continue;
 
-          const normalizado = normalize(text);
-          const recusou = STOP_WORDS.some((w) => normalizado.includes(normalize(w)));
-          const autorizou =
-            !recusou && YES_WORDS.some((w) => normalizado.includes(normalize(w))) && text.length <= 120;
+          const respostaTipo = classifyReply(text);
           const agora = new Date().toISOString();
-
           const patch = { consent_resposta: text, ultimo_contato_em: agora };
-          if (recusou) {
+
+          if (respostaTipo === "nao") {
             patch.consentimento = "recusado";
             patch.consent_revogado_em = agora;
             patch.bloqueado = true;
             patch.etapa = "bloqueado";
-          } else if (autorizou) {
-            patch.consentimento = "autorizado";
-            patch.consent_autorizado_em = agora;
-            patch.consent_origem = "Resposta do estabelecimento via WhatsApp";
-            patch.etapa = "contato_autorizado";
+          } else if (respostaTipo === "sim") {
+            // A refusal is never overwritten by a later affirmative reply.
+            if (!["recusado", "revogado"].includes(lead.consentimento) && !lead.bloqueado) {
+              patch.consentimento = "autorizado";
+              patch.consent_autorizado_em = agora;
+              patch.consent_origem = "Resposta do estabelecimento via WhatsApp";
+              patch.etapa = "contato_autorizado";
+            }
           }
 
           await base44.entities.Lead.update(lead.id, patch);
@@ -97,11 +122,20 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
             tipo: "whatsapp_recebido",
             mensagem: text,
             autor: lead.empresa,
-            detalhe: recusou
-              ? "Resposta interpretada como recusa/opt-out. Contato bloqueado."
-              : autorizou
-                ? "Resposta interpretada como autorização."
-                : "Resposta registrada sem alteração de autorização.",
+            detalhe:
+              respostaTipo === "nao"
+                ? "Resposta identificada como NÃO. Contato bloqueado e abordagem interrompida."
+                : respostaTipo === "sim"
+                  ? patch.consentimento === "autorizado"
+                    ? "Resposta identificada como SIM. Autorização registrada."
+                    : "Resposta SIM recebida, mas o bloqueio anterior foi preservado."
+                  : "Resposta recebida, mas não foi possível classificar como SIM ou NÃO. Revisar manualmente.",
+            resposta_tipo: respostaTipo,
+            notificacao_lida: false,
+            recebido_em: message.timestamp
+              ? new Date(Number(message.timestamp) * 1000).toISOString()
+              : agora,
+            whatsapp_message_id: message.id || "",
           });
         }
 
