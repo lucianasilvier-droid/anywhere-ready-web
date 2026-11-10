@@ -702,6 +702,8 @@ export const secretsOverviewFn = createServerFn({ method: "GET" }).handler(async
   return {
     google_places: !!readSecret("GOOGLE_MAPS_API_KEY"),
     groq: !!readSecret("GROQ_API_KEY"),
+    claude: !!readSecret("ANTHROPIC_API_KEY"),
+    openai: !!readSecret("OPENAI_API_KEY"),
     whatsapp: !!readSecret("WHATSAPP_ACCESS_TOKEN") && !!readSecret("WHATSAPP_PHONE_NUMBER_ID"),
   };
 });
