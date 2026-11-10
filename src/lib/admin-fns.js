@@ -14,7 +14,12 @@ import {
 } from "@/lib/integrations.server";
 
 async function iaValues(base44) {
-  return (await resolveCredentials(base44.asServiceRole || base44, "groq")).values;
+  const cliente = base44.asServiceRole || base44;
+  const [groq, claude] = await Promise.all([
+    resolveCredentials(cliente, "groq"),
+    resolveCredentials(cliente, "claude"),
+  ]);
+  return { ...groq.values, ...claude.values };
 }
 
 function requireAdmin(context) {
