@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowLeft, Loader2, Sparkles, MessageCircle, Copy, ExternalLink, ShieldCheck, ShieldX,
-  Send, History, Phone, Globe, MapPin, Star, Bot,
+  Send, History, Phone, Globe, MapPin, Star, Bot, Mail,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
@@ -185,6 +185,26 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
 
   const bloqueado = lead.bloqueado || ["recusado", "revogado"].includes(lead.consentimento);
   const autorizado = lead.consentimento === "autorizado";
+  const emailLead = String(lead.email || lead.email_contato || lead.email_publico || "").trim();
+  const mapsQuery = encodeURIComponent([lead.empresa, lead.endereco || [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ")].filter(Boolean).join(" "));
+  const mapsPlaceId = String(lead.place_id || "").replace(/^places\\//, "");
+  const mapsUrl = mapsPlaceId
+    ? "https://www.google.com/maps/search/?api=1&query=" + mapsQuery + "&query_place_id=" + encodeURIComponent(mapsPlaceId)
+    : "https://www.google.com/maps/search/?api=1&query=" + mapsQuery;
+  const emailAssunto = "Uma ideia para valorizar " + (lead.empresa || "seu estabelecimento") + " no Google";
+  const emailCorpo = [
+    "Olá, equipe " + (lead.empresa || "do estabelecimento") + "!",
+    "",
+    "Encontrei o perfil de vocês" + (lead.categoria ? " na categoria " + lead.categoria : "") + ((lead.bairro || lead.cidade) ? " em " + [lead.bairro, lead.cidade].filter(Boolean).join(", ") : "") + " e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações no Google por meio de uma placa NFC.",
+    "",
+    "Se fizer sentido para vocês, posso enviar uma apresentação breve com os detalhes. Se não quiserem receber esse tipo de contato, basta me avisar.",
+    "",
+    "Atenciosamente,",
+    "Equipe Google NFC Connect",
+  ].join("\\n");
+  const emailHref = emailLead
+    ? "mailto:" + encodeURIComponent(emailLead) + "?subject=" + encodeURIComponent(emailAssunto) + "&body=" + encodeURIComponent(emailCorpo)
+    : "";
 
   return (
     <div className="space-y-5">
@@ -199,6 +219,8 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
             {lead.categoria && <span>{lead.categoria}</span>}
             {lead.cidade && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{lead.cidade}{lead.bairro ? ` · ${lead.bairro}` : ""}</span>}
             {lead.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{lead.telefone}</span>}
+            {emailLead && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{emailLead}</span>}
+            <a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#8ab4f8] hover:underline"><MapPin className="h-3 w-3" />Abrir Google Maps</a>
             {!lead.site && <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary">Sem site</span>}
             {lead.site && <a href={lead.site} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#8ab4f8] hover:underline"><Globe className="h-3 w-3" />site</a>}
             {lead.nota_google != null && <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{lead.nota_google} ({lead.total_avaliacoes || 0})</span>}
@@ -345,6 +367,15 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
               </a>
+              {emailLead ? (
+                <a href={emailHref} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
+                  <Mail className="h-3 w-3" /> Abrir e-mail
+                </a>
+              ) : (
+                <span title="Cadastre um e-mail para este estabelecimento para habilitar o envio." className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-[11.5px] font-semibold text-white/30">
+                  <Mail className="h-3 w-3" /> E-mail não disponível
+                </span>
+              )}
               <button
                 onClick={registrarEnvioManual}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/55 hover:text-white"
