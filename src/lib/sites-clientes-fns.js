@@ -3,7 +3,6 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import {
-  MODELO_CLAUDE,
   erro,
   promptParaClaudeGratuito,
   validarConteudoSite,
@@ -14,7 +13,6 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
-import { resolveCredentials } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
