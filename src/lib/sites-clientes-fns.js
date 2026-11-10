@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth-middleware";
 import {
   MODELO_CLAUDE,
   erro,
-  gerarConteudoComClaude,
+  promptParaClaudeGratuito,
+  validarConteudoSite,
   sitePorLead,
   sitePublico,
   slugUnico,
@@ -68,12 +69,31 @@ export const siteDoLeadFn = createServerFn({ method: "POST" })
     return { site: siteParaRepresentante(site), limite: await limiteSitesHoje(rep.id) };
   });
 
+export const prepararSiteGratuitoFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({
+    leadId: z.string().min(1),
+    orientacoes: z.string().trim().max(600).optional().default(""),
+  }))
+  .handler(async ({ data, context }) => {
+    const { rep, lead: leadDoRep } = await acessoAoSite(context, data.leadId);
+    const base44 = rep ? context.getBase44().asServiceRole : context.getBase44();
+    const lead = leadDoRep || await base44.entities.Lead.get(data.leadId);
+    if (rep) {
+      if (await sitePorLead(base44, lead.id)) throw erro("Este cliente já tem um site. Para ajustar, fale com o administrador.", 409);
+      const limite = await limiteSitesHoje(rep.id);
+      if (limite.restantes <= 0) throw erro(`Você já criou ${limite.limite} sites hoje. Amanhã poderá criar mais.`, 429);
+    }
+    return { prompt: promptParaClaudeGratuito(lead, data.orientacoes) };
+  });
+
 export const gerarSiteFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(
     z.object({
       leadId: z.string().min(1),
       orientacoes: z.string().trim().max(600).optional().default(""),
+      conteudoManual: z.string().trim().min(2).max(30000),
       extras: z
         .object({
           logo: z.boolean().optional(),
@@ -104,8 +124,14 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const credenciaisClaude = await resolveCredentials(base44.asServiceRole || base44, "claude");
-      const conteudo = await gerarConteudoComClaude(lead, data.orientacoes, credenciaisClaude.values.anthropic_api_key);
+      let objetoManual;
+      try {
+        const texto = data.conteudoManual.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+        objetoManual = JSON.parse(texto);
+      } catch {
+        throw erro("Não consegui ler o JSON. Cole a resposta completa do Claude, sem alterar o conteúdo.", 422);
+      }
+      const conteudo = validarConteudoSite(objetoManual);
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
@@ -125,7 +151,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         whatsapp: existente?.whatsapp || lead.telefone || "",
         conteudo,
         orientacoes: data.orientacoes || "",
-        modelo: MODELO_CLAUDE,
+        modelo: "claude-web-gratuito",
         gerado_em: agora,
         gerado_por: context.user?.email || "",
         valor_calculado: preco.valor_calculado,
@@ -170,9 +196,9 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         empresa: lead.empresa,
         tipo: "ia",
         mensagem: existente
-          ? "Site de demonstração recriado pelo agente Claude."
-          : "Site de demonstração criado pelo agente Claude (Google Maps + agendamento por WhatsApp).",
-        autor: "Claude",
+          ? "Site de demonstração atualizado com conteúdo do Claude gratuito."
+          : "Site de demonstração criado com conteúdo do Claude gratuito (Google Maps + agendamento por WhatsApp).",
+        autor: "Claude gratuito",
         detalhe: `Endereço: /site/${site.slug}${rep ? ` · criado pelo representante ${rep.nome || ""}` : ""}`,
       });
 
