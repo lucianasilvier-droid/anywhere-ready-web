@@ -15,7 +15,7 @@ const STATUS = {
 };
 
 /**
- * Cartão do CRM: quando a empresa não tem site, o agente Claude cria um site de
+ * Cartão do CRM: quando a empresa não tem site, o agente Claude AI cria um site de
  * demonstração com Google Maps e agendamento pelo WhatsApp para oferecer ao cliente.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
@@ -48,7 +48,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
     mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
     onSuccess: (r) => {
       setSite(r?.site || null);
-      toast.success("Site criado pelo agente Claude.");
+      toast.success("Site criado pelo agente Claude AI.");
       onGerado?.();
     },
     onError: (e) => toast.error(e?.message || "Não foi possível criar o site agora."),
@@ -106,7 +106,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
             {mGerar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerar.isPending ? "Criando o site... (até 1 minuto)" : "Criar site com Claude"}
+            {mGerar.isPending ? "Criando o site... (até 1 minuto)" : "Criar site com Claude AI"}
           </button>
         </div>
       ) : (
@@ -185,7 +185,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
           <PrecoDoSite site={site} salvando={mAtualizar.isPending} onSalvar={(patch) => mAtualizar.mutate(patch)} />
 
           <details className="rounded-xl border border-white/[0.07] p-3">
-            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Recriar com o agente Claude</summary>
+            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Recriar com o agente Claude AI AI</summary>
             <textarea
               value={orientacoes}
               onChange={(e) => setOrientacoes(e.target.value)}
