@@ -460,7 +460,7 @@ const inputCls =
 function urlGoogleMaps(place) {
   const nome = place?.empresa || place?.name || "";
   const endereco = place?.endereco || [place?.bairro, place?.cidade, place?.estado].filter(Boolean).join(", ");
-  const placeId = String(place?.place_id || "").replace(/^places\\//, "");
+  const placeId = String(place?.place_id || "").replace(/^places\//, "");
   const query = encodeURIComponent([nome, endereco].filter(Boolean).join(" "));
   return placeId ? "https://www.google.com/maps/search/?api=1&query=" + query + "&query_place_id=" + encodeURIComponent(placeId) : "https://www.google.com/maps/search/?api=1&query=" + query;
 }
