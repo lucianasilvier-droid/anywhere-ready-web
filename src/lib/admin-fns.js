@@ -436,6 +436,8 @@ export const integrationStatusFn = createServerFn({ method: "GET" })
     const defs = [
       { tipo: "google_places", nome: "Google Maps / Places", campos: ["GOOGLE_MAPS_API_KEY"] },
       { tipo: "groq", nome: "API Roq", campos: ["GROQ_API_KEY"] },
+      { tipo: "claude", nome: "Claude AI", campos: ["ANTHROPIC_API_KEY"] },
+      { tipo: "openai", nome: "ChatGPT (OpenAI)", campos: ["OPENAI_API_KEY"] },
       {
         tipo: "whatsapp",
         nome: "WhatsApp Business",
@@ -472,7 +474,7 @@ export const saveIntegrationKeysFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(
     z.object({
-      tipo: z.enum(["google_places", "groq", "whatsapp"]),
+      tipo: z.enum(["google_places", "groq", "claude", "openai", "whatsapp"]),
       valores: z.record(z.string(), z.string().max(600)),
     }),
   )
@@ -508,7 +510,11 @@ export const saveIntegrationKeysFn = createServerFn({ method: "POST" })
           ? "Google Maps / Places"
           : data.tipo === "groq"
             ? "API Roq"
-            : "WhatsApp Business",
+            : data.tipo === "claude"
+              ? "Claude AI"
+              : data.tipo === "openai"
+                ? "ChatGPT (OpenAI)"
+                : "WhatsApp Business",
       config,
       status: "aguardando_configuracao",
       mensagem: "Chaves salvas no painel. Execute um teste para confirmar a conexão.",
@@ -531,7 +537,7 @@ export const saveIntegrationKeysFn = createServerFn({ method: "POST" })
 
 export const testIntegrationFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
-  .validator(z.object({ tipo: z.enum(["google_places", "groq", "whatsapp"]) }))
+  .validator(z.object({ tipo: z.enum(["google_places", "groq", "claude", "openai", "whatsapp"]) }))
   .handler(async ({ data, context }) => {
     requireAdmin(context);
     const base44 = context.getBase44();
@@ -558,7 +564,11 @@ export const testIntegrationFn = createServerFn({ method: "POST" })
             ? "Google Maps / Places"
             : data.tipo === "groq"
               ? "API Roq"
-              : "WhatsApp Business",
+              : data.tipo === "claude"
+                ? "Claude AI"
+                : data.tipo === "openai"
+                  ? "ChatGPT (OpenAI)"
+                  : "WhatsApp Business",
       });
 
     await base44.entities.AtividadeLog.create({
@@ -569,6 +579,61 @@ export const testIntegrationFn = createServerFn({ method: "POST" })
     });
 
     return { ...resultado, ultimo_teste: agora };
+  });
+
+export const chatgptAdminFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(
+    z.object({
+      mensagem: z.string().trim().min(1).max(3000),
+      historico: z.array(z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(3000),
+      })).max(12).optional().default([]),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    requireAdmin(context);
+    const base44 = context.getBase44();
+    const credenciais = await resolveCredentials(base44, "openai");
+    const key = credenciais.values.openai_api_key;
+    if (!key) {
+      setResponseStatus(503);
+      throw Object.assign(new Error("ChatGPT ainda não está configurado. Cadastre a chave OpenAI em Painel > Integrações e APIs."), { status: 503 });
+    }
+
+    const historico = data.historico.slice(-10).map((item) => ({
+      role: item.role,
+      content: item.content,
+    }));
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        temperature: 0.3,
+        max_tokens: 1200,
+        messages: [
+          {
+            role: "system",
+            content: `Você é o assistente administrativo interno do sistema Google NFC Connect. Ajude o administrador a entender e operar o CRM, representantes, funil, sites de demonstração, integrações e configurações. Responda em português do Brasil, com instruções claras e simples. Não afirme que executou alterações, publicou sites, enviou mensagens ou acessou serviços externos: você apenas orienta e analisa informações fornecidas nesta conversa. Não peça nem revele chaves, senhas, tokens ou dados pessoais desnecessários. Quando uma tarefa exigir alteração técnica, explique o que deve ser verificado no GitHub/Vercel e deixe claro que este chat interno não executa deploys nem altera código por conta própria.`,
+          },
+          ...historico,
+          { role: "user", content: data.mensagem },
+        ],
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setResponseStatus(response.status === 401 ? 502 : response.status);
+      throw Object.assign(new Error(payload?.error?.message || `A API OpenAI respondeu ${response.status}.`), { status: response.status === 401 ? 502 : response.status });
+    }
+    const resposta = payload.choices?.[0]?.message?.content?.trim();
+    if (!resposta) {
+      setResponseStatus(502);
+      throw Object.assign(new Error("O ChatGPT não retornou uma resposta de texto."), { status: 502 });
+    }
+    return { resposta, modelo: "gpt-4.1-mini" };
   });
 
 /* ------------------------------ Administração ---------------------------- */
