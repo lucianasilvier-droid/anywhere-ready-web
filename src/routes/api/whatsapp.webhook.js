@@ -7,25 +7,25 @@ const STOP_WORDS = [
 const YES_WORDS = ["sim", "s", "autorizo", "autorizado", "pode enviar", "pode mandar", "aceito", "concordo", "ok", "claro"];
 
 function digits(value) {
-  return String(value || "").replace(/\\D/g, "");
+  return String(value || "").replace(/\D/g, "");
 }
 
 function normalize(text) {
   return String(text || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
-    .replace(/[^a-z0-9\\s]/g, " ")
-    .replace(/\\s+/g, " ")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function classifyReply(text) {
   const normalized = normalize(text);
   if (!normalized) return "indefinida";
-  if (STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
+  if (normalized === "nao" || normalized.startsWith("nao ") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
   if (normalized === "nao" || normalized === "negativo") return "nao";
-  if (YES_WORDS.includes(normalized)) return "sim";
+  if (YES_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "sim";
   return "indefinida";
 }
 
