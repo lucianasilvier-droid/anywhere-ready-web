@@ -11,6 +11,8 @@ const ESTADOS = {
 const CAMPO_LABEL = {
   GOOGLE_MAPS_API_KEY: "Chave da API — Google Cloud (Places API)",
   GROQ_API_KEY: "Chave da API — Roq",
+  ANTHROPIC_API_KEY: "Chave da API — Anthropic (Claude AI)",
+  OPENAI_API_KEY: "Chave da API — OpenAI (ChatGPT)",
   WHATSAPP_ACCESS_TOKEN: "Access token (Meta for Developers)",
   WHATSAPP_PHONE_NUMBER_ID: "Phone number ID",
   WHATSAPP_VERIFY_TOKEN: "Verify token do webhook (você define)",
