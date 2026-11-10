@@ -187,7 +187,8 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const autorizado = lead.consentimento === "autorizado";
   const emailLead = String(lead.email || lead.email_contato || lead.email_publico || "").trim();
   const mapsQuery = encodeURIComponent([lead.empresa, lead.endereco || [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ")].filter(Boolean).join(" "));
-  const mapsPlaceId = String(lead.place_id || "").replace(/^places\//, "");
+  const rawMapsPlaceId = String(lead.place_id || "");
+  const mapsPlaceId = rawMapsPlaceId.startsWith("osm:") ? "" : rawMapsPlaceId.replace(/^places\//, "");
   const mapsUrl = mapsPlaceId
     ? "https://www.google.com/maps/search/?api=1&query=" + mapsQuery + "&query_place_id=" + encodeURIComponent(mapsPlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + mapsQuery;
