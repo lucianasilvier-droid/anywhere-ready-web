@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { iniciais } from "@/lib/format";\nimport WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
+import { iniciais } from "@/lib/format";
+import WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";\nimport WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
 
 export const Route = createFileRoute("/_authed/admin")({
   component: AdminLayout,
@@ -96,6 +97,8 @@ function AdminLayout() {
               </span>
             </span>
           </Link>
+          <WhatsAppReplyNotifications />
+          </div>
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto no-scrollbar">
             {NAV.map((item) => (
@@ -162,6 +165,7 @@ function AdminLayout() {
                 </Link>
               ))}
             </div>
+            <WhatsAppReplyNotifications />
             <button
               onClick={sair}
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/12 px-3 py-1.5 text-[11px] font-bold text-white/60 hover:border-red-400/40 hover:text-red-300"
