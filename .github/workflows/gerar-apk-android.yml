@@ -48,7 +48,7 @@ jobs:
             appName: 'Google NFC Connect',
             webDir: 'www',
             server: {
-              url: url.toString().replace(/\\/$/, ''),
+              url: url.toString().replace(/[/]$/, ''),
               cleartext: false,
               allowNavigation: [url.hostname, '*.google.com', '*.google.com.br', '*.googleusercontent.com']
             },
