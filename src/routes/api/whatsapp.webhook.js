@@ -23,7 +23,7 @@ function normalize(text) {
 function classifyReply(text) {
   const normalized = normalize(text);
   if (!normalized) return "indefinida";
-  if (normalized === "nao" || normalized.startsWith("nao ") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
+  if (normalized.includes("nao") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
   if (normalized === "nao" || normalized === "negativo") return "nao";
   if (YES_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "sim";
   return "indefinida";
@@ -116,6 +116,7 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
           }
 
           await base44.entities.Lead.update(lead.id, patch);
+          const tipoNotificacao = respostaTipo === "sim" && patch.consentimento !== "autorizado" ? "sim_bloqueado" : respostaTipo;
           await base44.entities.LeadInteraction.create({
             lead_id: lead.id,
             empresa: lead.empresa,
@@ -130,7 +131,7 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
                     ? "Resposta identificada como SIM. Autorização registrada."
                     : "Resposta SIM recebida, mas o bloqueio anterior foi preservado."
                   : "Resposta recebida, mas não foi possível classificar como SIM ou NÃO. Revisar manualmente.",
-            resposta_tipo: respostaTipo,
+            resposta_tipo: tipoNotificacao,
             notificacao_lida: false,
             recebido_em: message.timestamp
               ? new Date(Number(message.timestamp) * 1000).toISOString()
