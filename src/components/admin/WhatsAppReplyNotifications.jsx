@@ -15,6 +15,7 @@ function dataHora(value) {
 function tipoResposta(item) {
   if (item.resposta_tipo === "sim") return { titulo: "Cliente respondeu SIM", classe: "text-emerald-300", fundo: "bg-emerald-500/10", detalhe: "Autorização recebida" };
   if (item.resposta_tipo === "nao") return { titulo: "Cliente respondeu NÃO", classe: "text-red-300", fundo: "bg-red-500/10", detalhe: "Contato bloqueado" };
+  if (item.resposta_tipo === "sim_bloqueado") return { titulo: "Cliente respondeu SIM · bloqueio mantido", classe: "text-amber-200", fundo: "bg-amber-500/10", detalhe: "Autorização não reativada" };
   return { titulo: "Cliente enviou uma resposta", classe: "text-amber-200", fundo: "bg-amber-500/10", detalhe: "Revisar resposta" };
 }
 
