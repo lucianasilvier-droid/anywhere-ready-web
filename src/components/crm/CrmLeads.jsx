@@ -41,6 +41,17 @@ export default function CrmLeads({ base = "/admin" }) {
   const { items: leads, loading, reload } = useEntityList("Lead", { arquivado: { $ne: true } }, { limit: 300 });
   const [termo, setTermo] = useState("");
   const [local, setLocal] = useState("");
+  const segmentosRepresentante = [
+    "Barbearia",
+    "Cabeleireiro",
+    "Salão de Beleza",
+    "Clínica de Estética",
+    "Assistência Técnica",
+    "Restaurantes",
+    "Bares",
+    "Imobiliária",
+    "Mecânicas",
+  ];
   const [resultados, setResultados] = useState([]);
   const [erroBusca, setErroBusca] = useState("");
   const [salvando, setSalvando] = useState("");
@@ -72,7 +83,9 @@ export default function CrmLeads({ base = "/admin" }) {
     e.preventDefault();
     setErroBusca("");
     if (termo.trim().length < 3) return setErroBusca("Digite ao menos 3 letras (ex.: restaurante).");
-    const query = local.trim() ? `${termo.trim()} em ${local.trim()}` : termo.trim();
+    const query = representante
+      ? `${termo.trim()} em São Paulo, SP, Brasil`
+      : local.trim() ? `${termo.trim()} em ${local.trim()}` : termo.trim();
     mutation.mutate(query);
   }
 
@@ -232,22 +245,55 @@ export default function CrmLeads({ base = "/admin" }) {
       )}
 
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+        {representante && (
+          <div className="mb-3 rounded-xl border border-primary/25 bg-primary/[0.07] p-3.5">
+            <p className="text-[12.5px] font-bold text-primary">Atenção, representante comercial!</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-white/75">
+              Faça a busca de <strong className="text-white">um único segmento por vez</strong>, seguindo a sequência abaixo.
+              Não misture segmentos na mesma pesquisa. Nesta fase inicial de testes, todas as buscas devem ser feitas somente em
+              <strong className="text-white"> São Paulo – SP</strong>.
+            </p>
+            <ol className="mt-2 grid gap-x-4 gap-y-1 text-[11.5px] text-white/60 sm:grid-cols-2">
+              {segmentosRepresentante.map((segmento, index) => (
+                <li key={segmento}>{index + 1}. {segmento}</li>
+              ))}
+            </ol>
+          </div>
+        )}
         <form onSubmit={pesquisar} className="grid gap-2.5 sm:grid-cols-[1.2fr_1fr_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-            <input
-              value={termo}
-              onChange={(e) => setTermo(e.target.value)}
-              placeholder="Ex.: restaurante, barbearia, clínica..."
-              className={`${inputCls} pl-9`}
-            />
+            {representante ? (
+              <select
+                value={termo}
+                onChange={(e) => setTermo(e.target.value)}
+                className={`${inputCls} pl-9`}
+                required
+              >
+                <option value="">Selecione um segmento por vez</option>
+                {segmentosRepresentante.map((segmento) => (
+                  <option key={segmento} value={segmento}>{segmento}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={termo}
+                onChange={(e) => setTermo(e.target.value)}
+                placeholder="Ex.: restaurante, barbearia, clínica..."
+                className={`${inputCls} pl-9`}
+              />
+            )}
           </div>
-          <input
-            value={local}
-            onChange={(e) => setLocal(e.target.value)}
-            placeholder="Cidade, bairro ou região"
-            className={inputCls}
-          />
+          {representante ? (
+            <input value="São Paulo – SP" readOnly aria-label="Local fixo da busca" className={inputCls} />
+          ) : (
+            <input
+              value={local}
+              onChange={(e) => setLocal(e.target.value)}
+              placeholder="Cidade, bairro ou região"
+              className={inputCls}
+            />
+          )}
           <button
             type="submit"
             disabled={mutation.isPending}
