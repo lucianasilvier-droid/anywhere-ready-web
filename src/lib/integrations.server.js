@@ -71,27 +71,27 @@ export async function resolveCredentials(base44, tipo) {
 // Um telefone brasileiro com 11 dígitos e nono dígito é um celular compatível
 // com WhatsApp. Isso não confirma que a conta esteja ativa no WhatsApp.
 function isBrazilianMobile(value) {
-  const digits = String(value || "").replace(/\\D/g, "");
+  const digits = String(value || "").replace(/\D/g, "");
   const national = digits.startsWith("55") && digits.length >= 13 ? digits.slice(2) : digits;
-  return /^\\d{2}9\\d{8}$/.test(national);
+  return /^\d{2}9\d{8}$/.test(national);
 }
 
 function validPublicEmail(value) {
   const email = String(value || "").trim().replace(/^mailto:/i, "").split(/[?#]/)[0].toLowerCase();
-  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i.test(email)) return "";
-  if (/^(no-?reply|noreply|mailer-daemon)@|example\\.|wixpress|sentry/i.test(email)) return "";
+  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i.test(email)) return "";
+  if (/^(no-?reply|noreply|mailer-daemon)@|example\.|wixpress|sentry/i.test(email)) return "";
   return email;
 }
 
 function emailsFromHtml(html) {
-  const source = String(html || "").replace(/&amp;/gi, "&").replace(/&#64;|&commat;/gi, "@").replace(/\\s*\\[at\\]\\s*|\\s*\\(at\\)\\s*/gi, "@");
+  const source = String(html || "").replace(/&amp;/gi, "&").replace(/&#64;|&commat;/gi, "@").replace(/\s*\[at\]\s*|\s*\(at\)\s*/gi, "@");
   const found = [];
-  for (const match of source.matchAll(/href\\s*=\\s*["']mailto:([^"'?#]+)[^"']*["']/gi)) {
+  for (const match of source.matchAll(/href\s*=\s*["']mailto:([^"'?#]+)[^"']*["']/gi)) {
     const email = validPublicEmail(match[1]);
     if (email) found.push(email);
   }
-  const visible = source.replace(/<script[\\s\\S]*?<\\/script>|<style[\\s\\S]*?<\\/style>/gi, " ").replace(/<[^>]+>/g, " ");
-  for (const match of visible.matchAll(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi)) {
+  const visible = source.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ");
+  for (const match of visible.matchAll(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}/gi)) {
     const email = validPublicEmail(match[0]);
     if (email) found.push(email);
   }
@@ -121,10 +121,10 @@ async function readPublicPage(url) {
         redirect: "manual",
         signal: AbortSignal.timeout(3500),
       });
-      if (!redirected.ok || !/text\\/(html|xhtml)/i.test(redirected.headers.get("content-type") || "")) return null;
+      if (!redirected.ok || !/text\/(html|xhtml)/i.test(redirected.headers.get("content-type") || "")) return null;
       return { html: (await redirected.text()).slice(0, 500000), url: next };
     }
-    if (!response.ok || !/text\\/(html|xhtml)/i.test(response.headers.get("content-type") || "")) return null;
+    if (!response.ok || !/text\/(html|xhtml)/i.test(response.headers.get("content-type") || "")) return null;
     return { html: (await response.text()).slice(0, 500000), url: new URL(url) };
   } catch {
     return null;
@@ -143,7 +143,7 @@ async function findPublicBusinessEmail(site) {
     if (emails.length) return emails[0];
 
     const links = [];
-    for (const match of home.html.matchAll(/href\\s*=\\s*["']([^"'#]+)["']/gi)) {
+    for (const match of home.html.matchAll(/href\s*=\s*["']([^"'#]+)["']/gi)) {
       const href = match[1].replace(/&amp;/gi, "&");
       if (!/(contato|contact|fale-conosco|faleconosco|atendimento)/i.test(href)) continue;
       try {
