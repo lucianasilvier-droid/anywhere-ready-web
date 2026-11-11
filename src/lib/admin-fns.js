@@ -313,7 +313,7 @@ export const summarizeHistoryFn = createServerFn({ method: "POST" })
     const historico = interacoes
       .slice()
       .reverse()
-      .map((i) => `[${i.tipo}] ${i.mensagem || ""}`)
+      .map((i) => "[" + i.tipo + "] " + (i.mensagem || ""))
       .join("\n");
 
     const result = await iaJSON(
