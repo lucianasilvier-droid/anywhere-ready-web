@@ -401,7 +401,7 @@ export const sendEmailFn = createServerFn({ method: "POST" })
     const lead = await base44.entities.Lead.get(data.leadId);
     const email = String(lead.email || lead.email_contato || lead.email_publico || "").trim();
 
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setResponseStatus(422);
       throw Object.assign(new Error("Este lead não tem um e-mail público válido cadastrado."), { status: 422 });
     }
