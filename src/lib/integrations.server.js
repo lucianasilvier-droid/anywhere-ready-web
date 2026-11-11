@@ -275,13 +275,15 @@ async function findPublicEmail(site) {
       if (!res.ok) return "";
       const html = (await res.text()).slice(0, 500000);
       const mailto = [...html.matchAll(/href=["']mailto:([^"'?]+)/gi)].map((m) => m[1]);
-      const texto = html.replace(/<script[\\s\\S]*?<\\/script>|<style[\\s\\S]*?<\\/style>/gi, " ");
-      const encontrados = [...mailto, ...(texto.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi) || [])];
       const texto = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ");
       const encontrados = [...mailto, ...(texto.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [])];
-      if (email) return email;
+      const email = encontrados
+        .map((v) => decodeURIComponent(v).trim().replace(/[),.;]+$/, "").toLowerCase())
         .find((v) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(v) && !/(example\.com|email\.com|wixpress|sentry|cloudflare|noreply|no-reply)/i.test(v));
-      const contato = links.map((href) => { try { return new URL(href, url); } catch { return null; } })
+      if (email) return email;
+      const links = [...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
+      const contato = links
+        .map((href) => { try { return new URL(href, url); } catch { return null; } })
         .find((link) => link && link.origin === url.origin && /contato|contact|fale-conosco|sobre/i.test(link.pathname));
       if (contato && paginas.length === 1) paginas.push(contato.href);
       return "";
