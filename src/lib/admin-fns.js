@@ -190,6 +190,17 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     }[data.tipo];
 
     const remetente = await senderIdentity(context);
+    // Usa a análise já salva no lead como fonte principal da oferta personalizada.
+    const contextoAnalise = [
+      ["Resumo", lead.ai_resumo],
+      ["Oportunidades identificadas", lead.ai_oportunidades],
+      ["Abordagem recomendada", lead.ai_abordagem],
+      ["Proposta sugerida", lead.ai_proposta],
+    ]
+      .filter(([, valor]) => String(valor || "").trim())
+      .map(([titulo, valor]) => `${titulo}: ${String(valor).trim()}`)
+      .join("\n");
+
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
     const catalogoFallback = [
@@ -242,6 +253,23 @@ Contexto de materiais disponíveis:
 
 Dados do estabelecimento que vai receber a mensagem:
 ${leadBrief(lead)}
+
+ANÁLISE DA EMPRESA — FONTE PRINCIPAL PARA PERSONALIZAR A OFERTA:
+${contextoAnalise || "Análise ainda não registrada."}
+
+REGRAS OBRIGATÓRIAS:
+- Identifique a necessidade prioritária desta empresa a partir da análise.
+- Ofereça o serviço que resolve essa necessidade, conforme oportunidades e proposta registradas.
+- Não ofereça automaticamente placas NFC para todos os estabelecimentos.
+- Se a análise apontar necessidade no Perfil da Empresa no Google, ofereça criação/configuração ou gestão, conforme o diagnóstico.
+- Se apontar ausência de site, ofereça criação de site; só mencione prévia se houver URL disponível.
+- Se apontar potencial para placas NFC, ofereça a placa adequada e conecte o benefício ao diagnóstico.
+- Havendo várias oportunidades, priorize a mais relevante em vez de despejar um catálogo genérico.
+- A mensagem deve refletir resumo, oportunidades, abordagem e proposta salvos na análise.
+- Não invente necessidades, problemas ou resultados. Se não houver análise salva, não finja que houve análise.
+- Adapte a mensagem à etapa "${data.tipo}" e respeite as regras de autorização já definidas.
+
+Devolva {"mensagem": string}.
 
 ${lead.ai_abordagem ? `Sugestão de abordagem já registrada: ${lead.ai_abordagem}` : ""}
 
