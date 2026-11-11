@@ -163,7 +163,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   async function salvarEmailLead(e) {
     e.preventDefault();
     const email = emailEdit.trim().toLowerCase();
-    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return toast.error("Informe um e-mail válido.");
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("Informe um e-mail válido.");
     setSalvandoEmail(true);
     try {
       await base44.entities.Lead.update(leadId, { email, email_publico: email });
