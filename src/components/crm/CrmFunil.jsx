@@ -23,12 +23,29 @@ export default function CrmFunil({ base = "/admin" }) {
       if (!silencioso) setLoading(true);
 
       try {
-        const page = await base44.entities.Lead.filter(
-          { arquivado: { $ne: true } },
-          { sort: "-updated_date", limit: 300 },
-        );
+        // Busca todos os leads ativos em páginas. O limite anterior de 300
+        // escondia registros mais antigos do funil, mesmo que continuassem no banco.
+        // A ordenação por created_date mantém a paginação estável durante atualizações.
+        const pageSize = 500;
+        const todos = [];
+        let offset = 0;
+        while (true) {
+          const page = await base44.entities.Lead.filter(
+            { arquivado: { $ne: true } },
+            { sort: "created_date", limit: pageSize, skip: offset },
+          );
+          const registros = Array.isArray(page) ? page : page?.items || [];
+          todos.push(...registros);
+          if (registros.length < pageSize) break;
+          offset += registros.length;
+        }
         if (!ativo) return;
-        setLeads(Array.isArray(page) ? page : page?.items || []);
+        todos.sort((a, b) => {
+          const dataA = new Date(a.updated_date || a.created_date || 0).getTime();
+          const dataB = new Date(b.updated_date || b.created_date || 0).getTime();
+          return dataB - dataA;
+        });
+        setLeads(todos);
         setErro("");
       } catch (e) {
         if (ativo) setErro(e?.message || "Não foi possível atualizar o funil.");
