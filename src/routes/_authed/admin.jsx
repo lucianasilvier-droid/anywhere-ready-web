@@ -153,7 +153,9 @@ function AdminLayout() {
 
         <div className="min-w-0 flex-1">
           <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-white/[0.07] bg-[#070d1c]/95 px-3 py-2 backdrop-blur lg:hidden">
-            <details ref={menuMobileRef} className="relative min-w-0 flex-1">\n              <summary className="w-fit cursor-pointer list-none rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/75">Menu do painel</summary>\n              <nav className="absolute left-0 right-0 top-full z-40 mt-2 grid max-h-[70vh] grid-cols-2 gap-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0a1324] p-2 shadow-2xl">
+            <details ref={menuMobileRef} className="relative min-w-0 flex-1">
+              <summary className="w-fit cursor-pointer list-none rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/75">Menu do painel</summary>
+              <nav className="absolute left-0 right-0 top-full z-40 mt-2 grid max-h-[70vh] grid-cols-2 gap-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0a1324] p-2 shadow-2xl">
               {NAV.map((item) => (
                 <Link
                   key={item.to}
@@ -165,7 +167,8 @@ function AdminLayout() {
                   {item.label}
                 </Link>
               ))}
-            </div>
+              </nav>
+            </details>
             <WhatsAppReplyNotifications />
             <button
               onClick={sair}
