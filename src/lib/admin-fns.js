@@ -192,13 +192,13 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const remetente = await senderIdentity(context);
     // Usa a análise já salva no lead como fonte principal da oferta personalizada.
     const contextoAnalise = [
-      ["Resumo", lead.ai_resumo],
-      ["Oportunidades identificadas", lead.ai_oportunidades],
-      ["Abordagem recomendada", lead.ai_abordagem],
-      ["Proposta sugerida", lead.ai_proposta],
+      { titulo: "Resumo", valor: lead.ai_resumo },
+      { titulo: "Oportunidades identificadas", valor: lead.ai_oportunidades },
+      { titulo: "Abordagem recomendada", valor: lead.ai_abordagem },
+      { titulo: "Proposta sugerida", valor: lead.ai_proposta },
     ]
-      .filter(([, valor]) => String(valor || "").trim())
-      .map(([titulo, valor]) => `${titulo}: ${String(valor).trim()}`)
+      .filter((item) => String(item.valor || "").trim())
+      .map((item) => item.titulo + ": " + String(item.valor).trim())
       .join("\n");
 
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
