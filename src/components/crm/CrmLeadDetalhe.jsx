@@ -109,7 +109,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       try {
         return await enviar({ data: { leadId, mensagem, tipo } });
       } catch (erroWhatsApp) {
-        const falhaConhecida = /WhatsApp Business não configurado|Telefone inválido|WhatsApp respondeu \\d{3}/i.test(erroWhatsApp?.message || "");
+        const falhaConhecida = /WhatsApp Business não configurado|Telefone inválido|WhatsApp respondeu/i.test(erroWhatsApp?.message || "");
         if (!emailAlternativo || !falhaConhecida) throw erroWhatsApp;
         const fallback = await enviarEmail({ data: { leadId, mensagem, tipo } });
         return { ...fallback, canalAlternativo: "email" };
