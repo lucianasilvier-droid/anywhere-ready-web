@@ -65,6 +65,121 @@ export async function resolveCredentials(base44, tipo) {
   return { values, origem };
 }
 
+
+/* ----------------------- Contatos públicos dos leads ---------------------- */
+
+// Um telefone brasileiro com 11 dígitos e nono dígito é um celular compatível
+// com WhatsApp. Isso não confirma que a conta esteja ativa no WhatsApp.
+function isBrazilianMobile(value) {
+  const digits = String(value || "").replace(/\\D/g, "");
+  const national = digits.startsWith("55") && digits.length >= 13 ? digits.slice(2) : digits;
+  return /^\\d{2}9\\d{8}$/.test(national);
+}
+
+function validPublicEmail(value) {
+  const email = String(value || "").trim().replace(/^mailto:/i, "").split(/[?#]/)[0].toLowerCase();
+  if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i.test(email)) return "";
+  if (/^(no-?reply|noreply|mailer-daemon)@|example\\.|wixpress|sentry/i.test(email)) return "";
+  return email;
+}
+
+function emailsFromHtml(html) {
+  const source = String(html || "").replace(/&amp;/gi, "&").replace(/&#64;|&commat;/gi, "@").replace(/\\s*\\[at\\]\\s*|\\s*\\(at\\)\\s*/gi, "@");
+  const found = [];
+  for (const match of source.matchAll(/href\\s*=\\s*["']mailto:([^"'?#]+)[^"']*["']/gi)) {
+    const email = validPublicEmail(match[1]);
+    if (email) found.push(email);
+  }
+  const visible = source.replace(/<script[\\s\\S]*?<\\/script>|<style[\\s\\S]*?<\\/style>/gi, " ").replace(/<[^>]+>/g, " ");
+  for (const match of visible.matchAll(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi)) {
+    const email = validPublicEmail(match[0]);
+    if (email) found.push(email);
+  }
+  return [...new Set(found)];
+}
+
+function samePublicHost(candidate, origin) {
+  return candidate.protocol === "https:" || candidate.protocol === "http:"
+    ? candidate.hostname === origin.hostname || candidate.hostname === "www." + origin.hostname || origin.hostname === "www." + candidate.hostname
+    : false;
+}
+
+async function readPublicPage(url) {
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "GoogleNFCConnect-CRM/1.0 (contato comercial publico)" },
+      redirect: "manual",
+      signal: AbortSignal.timeout(3500),
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      const location = response.headers.get("location");
+      if (!location) return null;
+      const next = new URL(location, url);
+      if (!samePublicHost(next, new URL(url))) return null;
+      const redirected = await fetch(next, {
+        headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "GoogleNFCConnect-CRM/1.0 (contato comercial publico)" },
+        redirect: "manual",
+        signal: AbortSignal.timeout(3500),
+      });
+      if (!redirected.ok || !/text\\/(html|xhtml)/i.test(redirected.headers.get("content-type") || "")) return null;
+      return { html: (await redirected.text()).slice(0, 500000), url: next };
+    }
+    if (!response.ok || !/text\\/(html|xhtml)/i.test(response.headers.get("content-type") || "")) return null;
+    return { html: (await response.text()).slice(0, 500000), url: new URL(url) };
+  } catch {
+    return null;
+  }
+}
+
+// Procura somente e-mails publicados no próprio site informado pelo estabelecimento.
+// Não presume e-mail a partir do domínio nem inventa endereços.
+async function findPublicBusinessEmail(site) {
+  try {
+    const origin = new URL(String(site || "").trim());
+    if (!["http:", "https:"].includes(origin.protocol) || !origin.hostname || origin.hostname === "localhost" || origin.hostname.endsWith(".local")) return "";
+    const home = await readPublicPage(origin);
+    if (!home) return "";
+    const emails = emailsFromHtml(home.html);
+    if (emails.length) return emails[0];
+
+    const links = [];
+    for (const match of home.html.matchAll(/href\\s*=\\s*["']([^"'#]+)["']/gi)) {
+      const href = match[1].replace(/&amp;/gi, "&");
+      if (!/(contato|contact|fale-conosco|faleconosco|atendimento)/i.test(href)) continue;
+      try {
+        const candidate = new URL(href, home.url);
+        if (samePublicHost(candidate, origin) && !links.some((item) => item.href === candidate.href)) links.push(candidate);
+      } catch { /* link inválido */ }
+      if (links.length >= 2) break;
+    }
+    for (const link of links) {
+      const page = await readPublicPage(link);
+      if (!page) continue;
+      const found = emailsFromHtml(page.html);
+      if (found.length) return found[0];
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+async function enrichLeadContactChannels(places) {
+  return Promise.all((places || []).map(async (place) => {
+    const publicPhone = String(place.telefone_publico || place.telefone || "").trim();
+    const mobile = isBrazilianMobile(publicPhone);
+    const email = validPublicEmail(place.email) || (place.site ? await findPublicBusinessEmail(place.site) : "");
+    return {
+      ...place,
+      telefone_publico: publicPhone,
+      telefone: mobile ? publicPhone : "",
+      whatsapp_disponivel: mobile,
+      email,
+      canais_contato: [mobile ? "whatsapp" : "", email ? "email" : ""].filter(Boolean),
+    };
+  })).then((places) => places.filter((place) => place.whatsapp_disponivel || place.email));
+}
+
 /* ----------------------------- Google Places ----------------------------- */
 
 async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {}) {
@@ -138,6 +253,8 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
       cidade: pick("administrative_area_level_2") || pick("locality"),
       estado: pick("administrative_area_level_1"),
       telefone: p.nationalPhoneNumber || p.internationalPhoneNumber || "",
+      telefone_publico: p.nationalPhoneNumber || p.internationalPhoneNumber || "",
+      email: "",
       site: p.websiteUri || "",
       categoria: p.primaryTypeDisplayName?.text || "",
       nota_google: typeof p.rating === "number" ? p.rating : null,
@@ -189,6 +306,7 @@ async function osmFetchJson(url, opts = {}) {
 function osmParaLead(el) {
   const t = el.tags || {};
   const tel = t.phone || t["contact:phone"] || t["contact:mobile"] || t.mobile || "";
+  const email = t.email || t["contact:email"] || "";
   const site = t.website || t["contact:website"] || t["contact:facebook"] || "";
   const rua = [t["addr:street"], t["addr:housenumber"]].filter(Boolean).join(", ");
   const cidade = t["addr:city"] || "";
@@ -203,6 +321,8 @@ function osmParaLead(el) {
     cidade,
     estado,
     telefone: tel,
+    telefone_publico: tel,
+    email,
     site,
     categoria,
     nota_google: null,
@@ -250,12 +370,13 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
     const lista = (data.elements || [])
       .filter((el) => el.tags?.name && !vistos.has(`${el.type}${el.id}`) && vistos.add(`${el.type}${el.id}`))
       .map(osmParaLead)
-      // quem tem telefone ou site aparece primeiro (mais útil para prospecção)
-      .sort((a, b) => Number(!!(b.telefone || b.site)) - Number(!!(a.telefone || a.site)))
+      // Prioriza registros com algum canal de contato público.
+      .sort((a, b) => Number(!!(b.telefone || b.email || b.site)) - Number(!!(a.telefone || a.email || a.site)))
       .slice(0, limite)
       .map((p) => ({ ...p, cidade: p.cidade || geo[0].name || local }));
 
-    return { ok: true, places: lista, error: null };
+    const contatos = await enrichLeadContactChannels(lista);
+    return { ok: true, places: contatos, error: null, aviso: "Resultados filtrados: somente empresas com celular compatível com WhatsApp ou e-mail comercial público. A existência de conta WhatsApp não é confirmada pela fonte." };
   } catch (err) {
     return { ok: false, error: `Busca reserva (OpenStreetMap) indisponível: ${err.message}`, places: [] };
   }
@@ -264,13 +385,21 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
 /** Tenta o Google; se estiver bloqueado/sem chave, usa a busca reserva. */
 export async function searchPlaces(args, values = {}) {
   const google = await searchGooglePlaces(args, values);
-  if (google.ok) return google;
+  if (google.ok) {
+    const places = await enrichLeadContactChannels(google.places);
+    return {
+      ...google,
+      places,
+      aviso: "Resultados filtrados: somente empresas com celular compatível com WhatsApp ou e-mail comercial público. A existência de conta WhatsApp não é confirmada pela fonte.",
+    };
+  }
   const osm = await searchOpenStreetMap(args);
   if (osm.ok) {
     return {
       ...osm,
       aviso:
-        "Busca feita pelo OpenStreetMap (a chave do Google não está funcionando). Pode haver menos empresas, sem nota e com menos telefones.",
+        (osm.aviso ? osm.aviso + " " : "Busca feita pelo OpenStreetMap (a chave do Google não está funcionando). ") +
+        "Resultados filtrados: somente empresas com celular compatível com WhatsApp ou e-mail comercial público. A existência de conta WhatsApp não é confirmada pela fonte.",
     };
   }
   return { ...google, error: `${google.error} | ${osm.error}` };
