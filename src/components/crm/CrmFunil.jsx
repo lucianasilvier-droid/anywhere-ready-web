@@ -92,7 +92,7 @@ export default function CrmFunil({ base = "/admin" }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/80">Comercial</p>
         <h1 className="mt-1.5 font-heading text-2xl font-extrabold text-white">Funil de vendas</h1>
@@ -106,11 +106,11 @@ export default function CrmFunil({ base = "/admin" }) {
       )}
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex min-w-0 flex-col gap-4 pb-4">
           {FUNIL_STAGES.map((stage) => {
             const cards = leads.filter((l) => (l.etapa || "novo_lead") === stage.key);
             return (
-              <div key={stage.key} className="w-[248px] shrink-0">
+              <section key={stage.key} className="w-full min-w-0 rounded-2xl border border-white/[0.06] bg-white/[0.015] p-3 sm:p-4">
                 <div className="mb-2 flex items-center justify-between px-1">
                   <p className="flex items-center gap-1.5 text-[11.5px] font-bold text-white/70">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: stage.color }} />
@@ -125,7 +125,7 @@ export default function CrmFunil({ base = "/admin" }) {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`min-h-[140px] space-y-2 rounded-xl border p-2 transition-colors ${
+                      className={`min-h-[72px] space-y-2 rounded-xl border p-2 transition-colors ${
                         snapshot.isDraggingOver
                           ? "border-primary/40 bg-primary/[0.06]"
                           : "border-white/[0.07] bg-white/[0.02]"
@@ -185,7 +185,7 @@ export default function CrmFunil({ base = "/admin" }) {
                     </div>
                   )}
                 </Droppable>
-              </div>
+              </section>
             );
           })}
         </div>
