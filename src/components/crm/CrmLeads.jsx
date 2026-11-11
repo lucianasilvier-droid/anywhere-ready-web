@@ -339,7 +339,7 @@ export default function CrmLeads({ base = "/admin" }) {
                     <p className="truncate text-[13px] font-semibold text-white">{place.empresa}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
                       <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
-                      {place.whatsapp_disponivel && place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />WhatsApp: {place.telefone}</span>}
+                      {place.whatsapp_disponivel && place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />Celular compatível (WhatsApp a confirmar): {place.telefone}</span>}
                       {place.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email}</span>}
                       {!place.whatsapp_disponivel && place.email && <span className="rounded-full bg-sky-500/10 px-1.5 py-0.5 font-semibold text-sky-300">Contato por e-mail</span>}
                       {place.nota_google != null && (
