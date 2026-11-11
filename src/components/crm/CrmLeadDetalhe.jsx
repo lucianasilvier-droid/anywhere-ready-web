@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
-  analyzeLeadFn, draftMessageFn, registerConsentFn, sendWhatsappFn, summarizeHistoryFn,
+  analyzeLeadFn, draftMessageFn, registerConsentFn, sendWhatsappFn, sendEmailFn, summarizeHistoryFn,
 } from "@/lib/admin-fns";
 import { useEntityList } from "@/hooks/useEntityList";
 import { FUNIL_STAGES } from "@/lib/site-content";
@@ -34,6 +34,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const rascunho = useServerFn(draftMessageFn);
   const resumir = useServerFn(summarizeHistoryFn);
   const enviar = useServerFn(sendWhatsappFn);
+  const enviarEmail = useServerFn(sendEmailFn);
   const consentimento = useServerFn(registerConsentFn);
   const buscarSite = useServerFn(siteDoLeadFn);
   const gerarSite = useServerFn(gerarSiteFn);
@@ -111,6 +112,18 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       reloadInteracoes();
     },
     onError: (e) => toast.error(e?.message || "Não foi possível enviar a mensagem."),
+  });
+
+
+  const mEnviarEmail = useMutation({
+    mutationFn: (tipo) => enviarEmail({ data: { leadId, mensagem, tipo } }),
+    onSuccess: async () => {
+      toast.success("E-mail enviado. O registro foi salvo no histórico do CRM.");
+      setMensagem("");
+      await carregar();
+      reloadInteracoes();
+    },
+    onError: (e) => toast.error(e?.message || "Não foi possível enviar o e-mail."),
   });
 
   const mConsent = useMutation({
@@ -319,15 +332,15 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               },
               onUsarMensagem: (texto) => {
                 setMensagem(texto);
-                toast.success("Mensagem pronta no campo de WhatsApp. Revise antes de enviar.");
-                document.getElementById("mensagem-whatsapp")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                toast.success("Mensagem pronta no campo de contato. Revise antes de enviar.");
+                document.getElementById("mensagem-contato")?.scrollIntoView({ behavior: "smooth", block: "center" });
               },
             };
             return representante ? <SiteDoLeadRepresentante {...props} /> : <SiteDoLead {...props} />;
           })()}
 
-          <section id="mensagem-whatsapp" className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-            <p className="text-[12px] font-bold uppercase tracking-wider text-white/50">Mensagem de WhatsApp</p>
+          <section id="mensagem-contato" className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+            <p className="text-[12px] font-bold uppercase tracking-wider text-white/50">Mensagem de contato (WhatsApp / e-mail)</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {[
                 { tipo: "autorizacao", label: "Pedir autorização" },
@@ -394,6 +407,20 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
               </a>
+              {emailLead ? (
+                <button
+                  onClick={() => mEnviarEmail.mutate(lead.consentimento === "autorizado" ? "proposta" : "autorizacao")}
+                  disabled={mEnviarEmail.isPending || bloqueado || mensagem.trim().length < 5}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-2 text-[11.5px] font-semibold text-sky-200 disabled:opacity-40"
+                >
+                  {mEnviarEmail.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+                  Enviar por e-mail
+                </button>
+              ) : (
+                <span title="Nenhum e-mail comercial público foi encontrado para este estabelecimento." className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-[11.5px] font-semibold text-white/30">
+                  <Mail className="h-3 w-3" /> E-mail não disponível
+                </span>
+              )}
               {emailLead ? (
                 <a href={emailHref} onClick={registrarAberturaEmail} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
                   <Mail className="h-3 w-3" /> Abrir e-mail
