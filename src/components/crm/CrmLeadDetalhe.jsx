@@ -128,6 +128,16 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     setLead({ ...lead, etapa });
     try {
       await base44.entities.Lead.update(leadId, { etapa });
+    } catch (e) {
+      setLead((atual) => atual ? { ...atual, etapa: anterior } : atual);
+      toast.error(e?.message || "Não foi possível salvar a etapa.");
+      return;
+    }
+
+    // A etapa já está persistida. Falha no histórico não pode reverter a tela
+    // nem fazer parecer que a alteração não foi salva.
+    setLead((atual) => atual ? { ...atual, etapa } : atual);
+    try {
       await base44.entities.LeadInteraction.create({
         lead_id: leadId,
         empresa: lead.empresa,
@@ -138,11 +148,11 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
           : "Administrador",
         detalhe: `De "${anterior}" para "${etapa}"`,
       });
-      reloadInteracoes();
-    } catch (e) {
-      setLead({ ...lead, etapa: anterior });
-      toast.error(e?.message || "Não foi possível alterar a etapa.");
+      toast.success("Etapa atualizada e registrada.");
+    } catch (historyError) {
+      toast.warning("Etapa salva. Não foi possível registrar o histórico: " + (historyError?.message || "tente novamente."));
     }
+    reloadInteracoes();
   }
 
   function registrarAberturaEmail() {
