@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Star, MapPin, Nfc, CheckCircle2 } from "lucide-react";
 import { Image } from "@/components/ui/image";
-import { SERVICE_IMAGE_URL, whatsappLink } from "@/lib/site-content";
+import { PLATE_IMAGE_URL, whatsappLink } from "@/lib/site-content";
 
 const METRICS = [
   { icon: MapPin, label: "Mais visibilidade", value: "no Google Maps" },
@@ -70,8 +70,8 @@ export default function Hero() {
             <div className="absolute -inset-6 rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(66,133,244,0.25),transparent_70%)] blur-2xl" />
             <div className="relative overflow-hidden rounded-[1.6rem] border border-white/12 bg-[#0b1428] shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]">
               <Image
-                src={SERVICE_IMAGE_URL}
-                alt="Coloque sua empresa no Google Maps — mais visibilidade e mais clientes"
+                src={PLATE_IMAGE_URL}
+                alt="Avalia-nos no Google — placa de avaliação Google NFC"
                 fittingType="fit"
                 className="w-full"
               />
