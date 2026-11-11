@@ -153,19 +153,22 @@ function AdminLayout() {
 
         <div className="min-w-0 flex-1">
           <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-white/[0.07] bg-[#070d1c]/95 px-3 py-2 backdrop-blur lg:hidden">
-            <div ref={menuMobileRef} className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
+            <details ref={menuMobileRef} className="relative min-w-0 flex-1">
+              <summary className="w-fit cursor-pointer list-none rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/75">Menu do painel</summary>
+              <nav className="absolute left-0 right-0 top-full z-40 mt-2 grid max-h-[70vh] grid-cols-2 gap-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0a1324] p-2 shadow-2xl">
               {NAV.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
                   activeOptions={{ exact: item.exact }}
-                  className="whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-medium text-white/55"
+                  className="rounded-lg px-3 py-2.5 text-[11.5px] font-medium leading-tight text-white/65 hover:bg-white/5"
                   activeProps={{ className: "bg-primary/15 text-primary" }}
                 >
                   {item.label}
                 </Link>
               ))}
-            </div>
+              </nav>
+            </details>
             <WhatsAppReplyNotifications />
             <button
               onClick={sair}

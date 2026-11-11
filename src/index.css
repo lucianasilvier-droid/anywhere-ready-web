@@ -54,6 +54,16 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    min-width: 320px;
+    overflow-x: clip;
+  }
+
+  #root, main, section, article {
+    min-width: 0;
+  }
+
+  img, video, iframe {
+    max-width: 100%;
   }
 
   h1,

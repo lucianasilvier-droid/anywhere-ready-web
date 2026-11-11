@@ -14,10 +14,61 @@ export default function CrmFunil({ base = "/admin" }) {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    base44.entities.Lead.filter({ arquivado: { $ne: true } }, { sort: "-updated_date", limit: 300 })
-      .then((page) => setLeads(Array.isArray(page) ? page : page?.items || []))
-      .catch((e) => setErro(e?.message || "Não foi possível carregar o funil."))
-      .finally(() => setLoading(false));
+    let ativo = true;
+    let buscando = false;
+
+    async function carregar(silencioso = false) {
+      if (buscando) return;
+      buscando = true;
+      if (!silencioso) setLoading(true);
+
+      try {
+        // Busca todos os leads ativos em páginas. O limite anterior de 300
+        // escondia registros mais antigos do funil, mesmo que continuassem no banco.
+        // A ordenação por created_date mantém a paginação estável durante atualizações.
+        const pageSize = 500;
+        const todos = [];
+        let offset = 0;
+        while (true) {
+          const page = await base44.entities.Lead.filter(
+            { arquivado: { $ne: true } },
+            { sort: "created_date", limit: pageSize, skip: offset },
+          );
+          const registros = Array.isArray(page) ? page : page?.items || [];
+          todos.push(...registros);
+          if (registros.length < pageSize) break;
+          offset += registros.length;
+        }
+        if (!ativo) return;
+        todos.sort((a, b) => {
+          const dataA = new Date(a.updated_date || a.created_date || 0).getTime();
+          const dataB = new Date(b.updated_date || b.created_date || 0).getTime();
+          return dataB - dataA;
+        });
+        setLeads(todos);
+        setErro("");
+      } catch (e) {
+        if (ativo) setErro(e?.message || "Não foi possível atualizar o funil.");
+      } finally {
+        buscando = false;
+        if (ativo && !silencioso) setLoading(false);
+      }
+    }
+
+    carregar();
+    // O painel administrativo acompanha as mudanças feitas pelo representante
+    // sem exigir que o administrador recarregue a página.
+    const intervalo = window.setInterval(() => {
+      if (document.visibilityState === "visible") carregar(true);
+    }, 5000);
+    const aoVoltar = () => carregar(true);
+    window.addEventListener("focus", aoVoltar);
+
+    return () => {
+      ativo = false;
+      window.clearInterval(intervalo);
+      window.removeEventListener("focus", aoVoltar);
+    };
   }, []);
 
   async function onDragEnd(result) {
@@ -25,22 +76,31 @@ export default function CrmFunil({ base = "/admin" }) {
     if (!destination || source.droppableId === destination.droppableId) return;
     const novo = destination.droppableId;
     const anterior = source.droppableId;
+    const lead = leads.find((l) => l.id === draggableId);
+    const autor = base === "/representante"
+      ? lead?.representante_nome || lead?.responsavel || "Representante"
+      : "Administrador";
     setLeads((atual) => atual.map((l) => (l.id === draggableId ? { ...l, etapa: novo } : l)));
     try {
       await base44.entities.Lead.update(draggableId, { etapa: novo });
-      const lead = leads.find((l) => l.id === draggableId);
-      await base44.entities.LeadInteraction.create({
-        lead_id: draggableId,
-        empresa: lead?.empresa || "",
-        tipo: "sistema",
-        mensagem: `Etapa alterada no funil: ${novo}`,
-        autor: "Funil",
-        detalhe: `De "${anterior}" para "${novo}"`,
-      });
-      toast.success("Etapa atualizada.");
+      // A etapa é o dado principal. Uma falha ao gravar o histórico não pode
+      // desfazer visualmente uma alteração que já foi salva no banco.
+      try {
+        await base44.entities.LeadInteraction.create({
+          lead_id: draggableId,
+          empresa: lead?.empresa || "",
+          tipo: "sistema",
+          mensagem: `Etapa alterada no funil: ${novo}`,
+          autor,
+          detalhe: `De "${anterior}" para "${novo}"`,
+        });
+        toast.success("Etapa atualizada e registrada.");
+      } catch (historyError) {
+        toast.warning("Etapa salva. Não foi possível registrar o histórico: " + (historyError?.message || "tente novamente."));
+      }
     } catch (e) {
       setLeads((atual) => atual.map((l) => (l.id === draggableId ? { ...l, etapa: anterior } : l)));
-      toast.error(e?.message || "Não foi possível mover o lead.");
+      toast.error(e?.message || "Não foi possível salvar a etapa.");
     }
   }
 
@@ -49,7 +109,7 @@ export default function CrmFunil({ base = "/admin" }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/80">Comercial</p>
         <h1 className="mt-1.5 font-heading text-2xl font-extrabold text-white">Funil de vendas</h1>
@@ -63,11 +123,11 @@ export default function CrmFunil({ base = "/admin" }) {
       )}
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex min-w-0 flex-col gap-4 pb-4">
           {FUNIL_STAGES.map((stage) => {
             const cards = leads.filter((l) => (l.etapa || "novo_lead") === stage.key);
             return (
-              <div key={stage.key} className="w-[248px] shrink-0">
+              <section key={stage.key} className="w-full min-w-0 rounded-2xl border border-white/[0.06] bg-white/[0.015] p-3 sm:p-4">
                 <div className="mb-2 flex items-center justify-between px-1">
                   <p className="flex items-center gap-1.5 text-[11.5px] font-bold text-white/70">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: stage.color }} />
@@ -82,7 +142,7 @@ export default function CrmFunil({ base = "/admin" }) {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`min-h-[140px] space-y-2 rounded-xl border p-2 transition-colors ${
+                      className={`min-h-[72px] space-y-2 rounded-xl border p-2 transition-colors ${
                         snapshot.isDraggingOver
                           ? "border-primary/40 bg-primary/[0.06]"
                           : "border-white/[0.07] bg-white/[0.02]"
@@ -142,7 +202,7 @@ export default function CrmFunil({ base = "/admin" }) {
                     </div>
                   )}
                 </Droppable>
-              </div>
+              </section>
             );
           })}
         </div>
