@@ -14,10 +14,44 @@ export default function CrmFunil({ base = "/admin" }) {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    base44.entities.Lead.filter({ arquivado: { $ne: true } }, { sort: "-updated_date", limit: 300 })
-      .then((page) => setLeads(Array.isArray(page) ? page : page?.items || []))
-      .catch((e) => setErro(e?.message || "Não foi possível carregar o funil."))
-      .finally(() => setLoading(false));
+    let ativo = true;
+    let buscando = false;
+
+    async function carregar(silencioso = false) {
+      if (buscando) return;
+      buscando = true;
+      if (!silencioso) setLoading(true);
+
+      try {
+        const page = await base44.entities.Lead.filter(
+          { arquivado: { $ne: true } },
+          { sort: "-updated_date", limit: 300 },
+        );
+        if (!ativo) return;
+        setLeads(Array.isArray(page) ? page : page?.items || []);
+        setErro("");
+      } catch (e) {
+        if (ativo) setErro(e?.message || "Não foi possível atualizar o funil.");
+      } finally {
+        buscando = false;
+        if (ativo && !silencioso) setLoading(false);
+      }
+    }
+
+    carregar();
+    // O painel administrativo acompanha as mudanças feitas pelo representante
+    // sem exigir que o administrador recarregue a página.
+    const intervalo = window.setInterval(() => {
+      if (document.visibilityState === "visible") carregar(true);
+    }, 5000);
+    const aoVoltar = () => carregar(true);
+    window.addEventListener("focus", aoVoltar);
+
+    return () => {
+      ativo = false;
+      window.clearInterval(intervalo);
+      window.removeEventListener("focus", aoVoltar);
+    };
   }, []);
 
   async function onDragEnd(result) {
@@ -25,16 +59,19 @@ export default function CrmFunil({ base = "/admin" }) {
     if (!destination || source.droppableId === destination.droppableId) return;
     const novo = destination.droppableId;
     const anterior = source.droppableId;
+    const lead = leads.find((l) => l.id === draggableId);
+    const autor = base === "/representante"
+      ? lead?.representante_nome || lead?.responsavel || "Representante"
+      : "Administrador";
     setLeads((atual) => atual.map((l) => (l.id === draggableId ? { ...l, etapa: novo } : l)));
     try {
       await base44.entities.Lead.update(draggableId, { etapa: novo });
-      const lead = leads.find((l) => l.id === draggableId);
       await base44.entities.LeadInteraction.create({
         lead_id: draggableId,
         empresa: lead?.empresa || "",
         tipo: "sistema",
         mensagem: `Etapa alterada no funil: ${novo}`,
-        autor: "Funil",
+        autor,
         detalhe: `De "${anterior}" para "${novo}"`,
       });
       toast.success("Etapa atualizada.");
