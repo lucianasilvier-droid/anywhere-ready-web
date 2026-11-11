@@ -33,9 +33,12 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Configurar Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Instalar ferramentas Capacitor
         run: |
-          npm install --no-save @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          bun add --no-save @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
 
       - name: Preparar aplicativo e endereço do sistema
         env:
