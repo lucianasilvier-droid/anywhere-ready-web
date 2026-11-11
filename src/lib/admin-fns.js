@@ -3,6 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { BRAND_NAME } from "@/lib/site-content";
+import { sendMail, smtpConfigured } from "@/lib/mailer.server";
 import {
   CREDENTIAL_KEYS,
   iaJSON,
@@ -53,7 +54,8 @@ function leadBrief(lead) {
     `Empresa: ${lead.empresa || "não informada"}`,
     `Categoria: ${lead.categoria || "não informada"}`,
     `Cidade: ${lead.cidade || "não informada"}${lead.bairro ? `, bairro ${lead.bairro}` : ""}`,
-    `Telefone: ${lead.telefone || "não informado"}`,
+    `Telefone/WhatsApp: ${lead.telefone || "não informado"}`,
+    `E-mail público: ${lead.email || lead.email_contato || lead.email_publico || "não informado"}`,
     `Site: ${lead.site || "não informado"}`,
     `Nota no Google: ${lead.nota_google ?? "sem dados"} (${lead.total_avaliacoes ?? 0} avaliações)`,
     `Serviço de interesse: ${lead.servico_interesse || "a definir"}`,
@@ -381,6 +383,73 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
     });
 
     return { ok: true, messageId: envio.messageId };
+  });
+
+
+/* ----------------------------------- E-mail -------------------------------- */
+
+export const sendEmailFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({
+    leadId: z.string().min(1),
+    mensagem: z.string().trim().min(5).max(5000),
+    tipo: z.enum(["autorizacao", "proposta", "followup"]),
+  }))
+  .handler(async ({ data, context }) => {
+    await requireCrmAccess(context);
+    const base44 = context.getBase44();
+    const lead = await base44.entities.Lead.get(data.leadId);
+    const email = String(lead.email || lead.email_contato || lead.email_publico || "").trim();
+
+    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      setResponseStatus(422);
+      throw Object.assign(new Error("Este lead não tem um e-mail público válido cadastrado."), { status: 422 });
+    }
+    if (lead.bloqueado || lead.consentimento === "recusado" || lead.consentimento === "revogado") {
+      setResponseStatus(409);
+      throw Object.assign(new Error("Este contato recusou ou revogou a autorização. Nenhum e-mail será enviado."), { status: 409 });
+    }
+    if (data.tipo !== "autorizacao" && lead.consentimento !== "autorizado") {
+      setResponseStatus(409);
+      throw Object.assign(new Error("É necessário ter autorização registrada antes de enviar material comercial por e-mail."), { status: 409 });
+    }
+    if (!smtpConfigured()) {
+      setResponseStatus(503);
+      throw Object.assign(new Error("O envio automático de e-mail ainda não está configurado. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM no ambiente de produção."), { status: 503 });
+    }
+
+    const assunto = data.tipo === "autorizacao"
+      ? "Podemos enviar uma apresentação para " + (lead.empresa || "seu estabelecimento") + "?"
+      : data.tipo === "proposta"
+        ? "Apresentação comercial — " + (lead.empresa || "seu estabelecimento")
+        : "Acompanhamento — " + (lead.empresa || "seu estabelecimento");
+    const envio = await sendMail({ to: email, subject: assunto, text: data.mensagem });
+    if (!envio.delivered) {
+      setResponseStatus(502);
+      throw Object.assign(new Error("O servidor não confirmou o envio do e-mail."), { status: 502 });
+    }
+
+    const agora = new Date().toISOString();
+    const patch = { ultimo_contato_em: agora };
+    if (data.tipo === "autorizacao") {
+      patch.consentimento = "solicitado";
+      patch.consent_solicitado_em = agora;
+      patch.consent_mensagem = data.mensagem;
+      patch.consent_origem = "E-mail SMTP";
+      patch.etapa = "aguardando_autorizacao";
+    } else if (data.tipo === "proposta") {
+      patch.etapa = "proposta_enviada";
+    }
+    await base44.entities.Lead.update(lead.id, patch);
+    await base44.entities.LeadInteraction.create({
+      lead_id: lead.id,
+      empresa: lead.empresa,
+      tipo: "email_enviado",
+      mensagem: data.mensagem,
+      autor: context.user.email,
+      detalhe: "Enviado por SMTP para " + email + " (" + data.tipo + ").",
+    });
+    return { ok: true, email };
   });
 
 export const registerConsentFn = createServerFn({ method: "POST" })
