@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Star, MapPin, Nfc, CheckCircle2 } from "lucide-react";
-import { whatsappLink } from "@/lib/site-content";
+import { Image } from "@/components/ui/image";
+import { SERVICE_IMAGE_URL, whatsappLink } from "@/lib/site-content";
 
 const METRICS = [
   { icon: MapPin, label: "Mais visibilidade", value: "no Google Maps" },
@@ -15,7 +16,7 @@ export default function Hero() {
       <div className="aurora absolute inset-0" />
       <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(60%_55%_at_50%_0%,#000_20%,transparent_100%)]" />
       <div className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-14 sm:px-6 lg:pb-24 lg:pt-20">
-        <div className="mx-auto grid w-full max-w-5xl items-center gap-14">
+        <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rise-in">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.07] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -65,6 +66,35 @@ export default function Hero() {
             </dl>
           </div>
 
+          <div className="relative mx-auto w-full max-w-[420px] lg:max-w-none">
+            <div className="absolute -inset-6 rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(66,133,244,0.25),transparent_70%)] blur-2xl" />
+            <div className="relative overflow-hidden rounded-[1.6rem] border border-white/12 bg-[#0b1428] shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]">
+              <Image
+                src={SERVICE_IMAGE_URL}
+                alt="Coloque sua empresa no Google Maps — mais visibilidade e mais clientes"
+                fittingType="fit"
+                className="w-full"
+              />
+            </div>
+            <div className="float-slow absolute -bottom-6 -left-4 w-44 rounded-2xl border border-white/10 bg-[#0b1428]/95 p-3.5 shadow-2xl backdrop-blur sm:-left-8">
+              <div className="flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#4285F4]/15">
+                  <Nfc className="h-3.5 w-3.5 text-[#4285F4]" />
+                </span>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+                  Placa NFC
+                </p>
+              </div>
+              <p className="mt-2 text-[13px] font-semibold leading-snug text-white">
+                Aproxime o celular e avalie
+              </p>
+              <div className="mt-2 flex items-center gap-0.5 text-[#FBBC05]">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star key={i} className="h-3 w-3 fill-current" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
