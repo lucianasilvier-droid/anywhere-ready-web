@@ -339,7 +339,9 @@ export default function CrmLeads({ base = "/admin" }) {
                     <p className="truncate text-[13px] font-semibold text-white">{place.empresa}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
                       <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
-                      {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}\n                      {place.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email}</span>}\n                      {!place.email && place.site && <span className="inline-flex items-center gap-1 text-white/30"><Mail className="h-3 w-3" />E-mail não localizado no site público</span>}
+                      {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}
+                      {place.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email}</span>}
+                      {!place.email && place.site && <span className="inline-flex items-center gap-1 text-white/30"><Mail className="h-3 w-3" />E-mail não localizado no site público</span>}
                       {place.nota_google != null && (
                         <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{place.nota_google} ({place.total_avaliacoes || 0})</span>
                       )}
