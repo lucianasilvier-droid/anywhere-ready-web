@@ -64,22 +64,22 @@ function RepresentanteLayout() {
       </header>
 
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-1.5">
           {TABS.map((tab) => (
             <Link
               key={tab.to}
               to={tab.to}
               activeOptions={{ exact: tab.exact }}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 px-3 py-1.5 text-[11.5px] font-semibold text-white/55"
+              className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-2.5 text-center text-[11.5px] font-semibold leading-tight text-white/55 lg:rounded-full lg:py-1.5"
               activeProps={{ className: "border-primary/40 bg-primary/10 text-primary" }}
             >
               <tab.icon className="h-3.5 w-3.5" />
               {tab.label}
             </Link>
           ))}
-        </div>
+        </nav>
 
-        <div className="mt-5">
+        <div className="mt-5 min-w-0">
           <Outlet />
         </div>
       </div>
