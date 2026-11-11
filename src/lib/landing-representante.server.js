@@ -67,7 +67,7 @@ export function perfilPublico(rep) {
     cidade: rep.pagina_cidade || "",
     instagram: rep.pagina_instagram || "",
     whatsapp: whatsappDoRep(rep),
-    foto: rep.pagina_foto ? `/api/representantes/foto?k=${encodeURIComponent(rep.pagina_foto)}` : "",
+    foto: rep.pagina_foto ? (String(rep.pagina_foto).startsWith("https://") ? rep.pagina_foto : `/api/representantes/foto?k=${encodeURIComponent(rep.pagina_foto)}`) : "",
   };
 }
 
@@ -95,6 +95,36 @@ export async function salvarFoto(repId, dataUrl) {
   const bytes = Buffer.from(m[2], "base64");
   if (bytes.length > 1_500_000) throw erro("A foto é muito grande. Envie uma imagem de até 1,5 MB.");
   const chave = `${repId}-${Date.now()}.${TIPOS_FOTO[m[1]]}`;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (token) {
+    // Vercel Functions não têm disco persistente entre execuções/deploys.
+    // Salva as fotos no Blob já conectado ao projeto, mantendo URL pública estável.
+    const storeId = token.split("_")[3] || "";
+    const response = await fetch(
+      `https://vercel.com/api/blob/?pathname=${encodeURIComponent(`${FOTOS}/${chave}`)}`,
+      {
+        method: "PUT",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-api-version": "13",
+          "x-api-blob-request-id": `${storeId}:${Date.now()}:representante-foto`,
+          "x-api-blob-request-attempt": "0",
+          "x-vercel-blob-store-id": storeId,
+          "x-vercel-blob-access": "public",
+          "x-content-type": m[1],
+        },
+        body: bytes,
+      },
+    );
+    const resultado = await response.json().catch(() => ({}));
+    if (!response.ok || !resultado.url) {
+      console.error("[representantes] Falha ao salvar foto no Vercel Blob:", response.status, resultado);
+      throw erro("Não foi possível armazenar a foto. Tente novamente em instantes.", 503);
+    }
+    return resultado.url;
+  }
+
+  // Compatibilidade com instalações antigas que usam armazenamento local/S3.
   await fotos().set(chave, bytes, { metadata: { contentType: m[1] } });
   return chave;
 }
