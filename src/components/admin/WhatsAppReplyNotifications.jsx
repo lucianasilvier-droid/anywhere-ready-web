@@ -13,6 +13,12 @@ function dataHora(value) {
 }
 
 function tipoResposta(item) {
+  if (item.origem_registro === "manual") {
+    if (item.resposta_tipo === "sim") return { titulo: "Resposta SIM registrada manualmente", classe: "text-emerald-300", fundo: "bg-emerald-500/10", detalhe: "Registro feito pelo representante" };
+    if (item.resposta_tipo === "nao") return { titulo: "Resposta NÃO registrada manualmente", classe: "text-red-300", fundo: "bg-red-500/10", detalhe: "Contato bloqueado" };
+    if (item.resposta_tipo === "sim_bloqueado") return { titulo: "Resposta SIM · bloqueio mantido", classe: "text-amber-200", fundo: "bg-amber-500/10", detalhe: "Resposta manual; bloqueio preservado" };
+    return { titulo: "Resposta registrada manualmente", classe: "text-amber-200", fundo: "bg-amber-500/10", detalhe: "Revisar resposta do cliente" };
+  }
   if (item.resposta_tipo === "sim") return { titulo: "Cliente respondeu SIM", classe: "text-emerald-300", fundo: "bg-emerald-500/10", detalhe: "Autorização recebida" };
   if (item.resposta_tipo === "nao") return { titulo: "Cliente respondeu NÃO", classe: "text-red-300", fundo: "bg-red-500/10", detalhe: "Contato bloqueado" };
   if (item.resposta_tipo === "sim_bloqueado") return { titulo: "Cliente respondeu SIM · bloqueio mantido", classe: "text-amber-200", fundo: "bg-amber-500/10", detalhe: "Autorização não reativada" };
@@ -119,7 +125,7 @@ export default function WhatsAppReplyNotifications() {
         <div className="absolute right-0 top-11 z-[70] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-white/10 bg-[#0b1426] shadow-2xl shadow-black/50">
           <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3">
             <div>
-              <p className="text-[12px] font-bold text-white">Respostas do WhatsApp</p>
+              <p className="text-[12px] font-bold text-white">Respostas dos clientes</p>
               <p className="text-[10.5px] text-white/40">{naoLidas} não lida(s) · atualização automática</p>
             </div>
             <div className="flex items-center gap-1">
