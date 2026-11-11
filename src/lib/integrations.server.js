@@ -265,7 +265,7 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
 async function findPublicEmail(site) {
   try {
     const url = new URL(site);
-    if (!["http:", "https:"].includes(url.protocol) || /^(localhost|127\\.|10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.)/i.test(url.hostname)) return "";
+    if (!["http:", "https:"].includes(url.protocol) || /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i.test(url.hostname)) return "";
     const paginas = [url.href];
     const ler = async (href) => {
       const res = await fetch(href, {
@@ -277,10 +277,10 @@ async function findPublicEmail(site) {
       const mailto = [...html.matchAll(/href=["']mailto:([^"'?]+)/gi)].map((m) => m[1]);
       const texto = html.replace(/<script[\\s\\S]*?<\\/script>|<style[\\s\\S]*?<\\/style>/gi, " ");
       const encontrados = [...mailto, ...(texto.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi) || [])];
-      const email = encontrados.map((v) => decodeURIComponent(v).trim().replace(/[),.;]+$/, "").toLowerCase())
-        .find((v) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$/i.test(v) && !/(example\\.com|email\\.com|wixpress|sentry|cloudflare|noreply|no-reply)/i.test(v));
+      const texto = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ");
+      const encontrados = [...mailto, ...(texto.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [])];
       if (email) return email;
-      const links = [...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
+        .find((v) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(v) && !/(example\.com|email\.com|wixpress|sentry|cloudflare|noreply|no-reply)/i.test(v));
       const contato = links.map((href) => { try { return new URL(href, url); } catch { return null; } })
         .find((link) => link && link.origin === url.origin && /contato|contact|fale-conosco|sobre/i.test(link.pathname));
       if (contato && paginas.length === 1) paginas.push(contato.href);
