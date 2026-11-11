@@ -27,9 +27,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const [lead, setLead] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState("");
-  const [respostaManual, setRespostaManual] = useState("");
-  const [tipoRespostaManual, setTipoRespostaManual] = useState("indefinida");
-  const [salvandoRespostaManual, setSalvandoRespostaManual] = useState(false);
   const [erro, setErro] = useState("");
   const { items: interacoes, reload: reloadInteracoes } = useEntityList("LeadInteraction", { lead_id: leadId });
 
@@ -197,65 +194,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       reloadInteracoes();
     } catch (e) {
       toast.error(e?.message || "Não foi possível registrar.");
-    }
-  }
-
-  async function registrarRespostaManual(e) {
-    e.preventDefault();
-    if (!representante || salvandoRespostaManual) return;
-    const texto = respostaManual.trim();
-    if (texto.length < 2) return toast.error("Informe o que o cliente respondeu.");
-
-    const bloqueado = lead.bloqueado || ["recusado", "revogado"].includes(lead.consentimento);
-    const tipo = tipoRespostaManual === "sim" && bloqueado ? "sim_bloqueado" : tipoRespostaManual;
-    const agora = new Date().toISOString();
-    setSalvandoRespostaManual(true);
-    let notificacaoSalva = false;
-    try {
-      await base44.entities.LeadInteraction.create({
-        lead_id: leadId,
-        empresa: lead.empresa,
-        tipo: "whatsapp_recebido",
-        origem_registro: "manual",
-        resposta_tipo: tipo,
-        mensagem: texto,
-        autor: lead.representante_nome || lead.responsavel || "Representante",
-        detalhe: tipo === "sim_bloqueado"
-          ? "Resposta anotada manualmente. O bloqueio anterior foi preservado."
-          : "Resposta recebida pelo representante e registrada manualmente, sem conexão com a API.",
-        notificacao_lida: false,
-        recebido_em: agora,
-      });
-      notificacaoSalva = true;
-
-      if (tipoRespostaManual === "nao") {
-        await consentimento({ data: {
-          leadId,
-          status: "recusado",
-          resposta: texto,
-          origem: "Resposta recebida e registrada manualmente pelo representante",
-        } });
-      } else if (tipoRespostaManual === "sim" && !bloqueado) {
-        await consentimento({ data: {
-          leadId,
-          status: "autorizado",
-          resposta: texto,
-          origem: "Resposta recebida e registrada manualmente pelo representante",
-        } });
-      }
-
-      toast.success("Resposta registrada. A notificação foi enviada ao painel administrativo.");
-      setRespostaManual("");
-      setTipoRespostaManual("indefinida");
-      await carregar();
-      reloadInteracoes();
-    } catch (e) {
-      toast.error(notificacaoSalva
-        ? "A resposta foi registrada e notificada, mas houve falha ao atualizar a autorização: " + (e?.message || "verifique o cadastro.")
-        : e?.message || "Não foi possível registrar a resposta.");
-      if (notificacaoSalva) reloadInteracoes();
-    } finally {
-      setSalvandoRespostaManual(false);
     }
   }
 
@@ -529,49 +467,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               Revogar autorização
             </button>
           </section>
-
-          {representante && (
-            <section className="rounded-2xl border border-primary/25 bg-primary/[0.045] p-4">
-              <p className="text-[12px] font-bold uppercase tracking-wider text-primary">Registrar resposta recebida</p>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-white/55">
-                Enquanto a API do WhatsApp não estiver conectada, anote aqui a resposta que você recebeu do cliente.
-                O painel administrativo será avisado automaticamente.
-              </p>
-              <form onSubmit={registrarRespostaManual} className="mt-3 space-y-2.5">
-                <select
-                  value={tipoRespostaManual}
-                  onChange={(e) => setTipoRespostaManual(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d1729] px-3 py-2 text-[12px] text-white"
-                  disabled={salvandoRespostaManual}
-                >
-                  <option value="indefinida">Outra resposta / precisa analisar</option>
-                  <option value="sim">Cliente autorizou (SIM)</option>
-                  <option value="nao">Cliente recusou (NÃO)</option>
-                </select>
-                <textarea
-                  value={respostaManual}
-                  onChange={(e) => setRespostaManual(e.target.value)}
-                  rows={3}
-                  placeholder="Digite a resposta que o cliente enviou..."
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[12px] leading-relaxed text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
-                  disabled={salvandoRespostaManual}
-                />
-                <button
-                  type="submit"
-                  disabled={salvandoRespostaManual || respostaManual.trim().length < 2}
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2.5 text-[12px] font-bold text-[#0a1128] disabled:opacity-50"
-                >
-                  {salvandoRespostaManual ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
-                  {salvandoRespostaManual ? "Registrando..." : "Registrar resposta e notificar administrador"}
-                </button>
-              </form>
-              {bloqueado && (
-                <p className="mt-2 text-[10.5px] leading-relaxed text-amber-200/75">
-                  Este contato já está bloqueado. Uma resposta SIM será registrada, mas não removerá o bloqueio nem reativará a autorização.
-                </p>
-              )}
-            </section>
-          )}
 
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
             <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider text-white/50">
