@@ -66,18 +66,24 @@ export default function CrmFunil({ base = "/admin" }) {
     setLeads((atual) => atual.map((l) => (l.id === draggableId ? { ...l, etapa: novo } : l)));
     try {
       await base44.entities.Lead.update(draggableId, { etapa: novo });
-      await base44.entities.LeadInteraction.create({
-        lead_id: draggableId,
-        empresa: lead?.empresa || "",
-        tipo: "sistema",
-        mensagem: `Etapa alterada no funil: ${novo}`,
-        autor,
-        detalhe: `De "${anterior}" para "${novo}"`,
-      });
-      toast.success("Etapa atualizada.");
+      // A etapa é o dado principal. Uma falha ao gravar o histórico não pode
+      // desfazer visualmente uma alteração que já foi salva no banco.
+      try {
+        await base44.entities.LeadInteraction.create({
+          lead_id: draggableId,
+          empresa: lead?.empresa || "",
+          tipo: "sistema",
+          mensagem: `Etapa alterada no funil: ${novo}`,
+          autor,
+          detalhe: `De "${anterior}" para "${novo}"`,
+        });
+        toast.success("Etapa atualizada e registrada.");
+      } catch (historyError) {
+        toast.warning("Etapa salva. Não foi possível registrar o histórico: " + (historyError?.message || "tente novamente."));
+      }
     } catch (e) {
       setLeads((atual) => atual.map((l) => (l.id === draggableId ? { ...l, etapa: anterior } : l)));
-      toast.error(e?.message || "Não foi possível mover o lead.");
+      toast.error(e?.message || "Não foi possível salvar a etapa.");
     }
   }
 
