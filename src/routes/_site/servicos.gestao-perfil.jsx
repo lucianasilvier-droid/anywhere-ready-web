@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ServiceLanding from "@/components/site/ServiceLanding";
+import { SERVICE_IMAGE_URL } from "@/lib/site-content";
 
 export const routePath = "/servicos/gestao-perfil";
 
@@ -46,6 +47,7 @@ const PLANOS = [
 function GestaoPerfilPage() {
   return (
     <ServiceLanding
+      serviceImage={SERVICE_IMAGE_URL}
       eyebrow="Serviço 02 · Gestão contínua"
       title="Seu perfil sempre atualizado,"
       highlight="todos os meses."
