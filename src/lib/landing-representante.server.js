@@ -67,7 +67,7 @@ export function perfilPublico(rep) {
     cidade: rep.pagina_cidade || "",
     instagram: rep.pagina_instagram || "",
     whatsapp: whatsappDoRep(rep),
-    foto: rep.pagina_foto ? `/api/representantes/foto?k=${encodeURIComponent(rep.pagina_foto)}` : "",
+    foto: rep.pagina_foto ? (String(rep.pagina_foto).startsWith("https://") ? rep.pagina_foto : `/api/representantes/foto?k=${encodeURIComponent(rep.pagina_foto)}`) : "",
   };
 }
 
@@ -95,12 +95,83 @@ export async function salvarFoto(repId, dataUrl) {
   const bytes = Buffer.from(m[2], "base64");
   if (bytes.length > 1_500_000) throw erro("A foto é muito grande. Envie uma imagem de até 1,5 MB.");
   const chave = `${repId}-${Date.now()}.${TIPOS_FOTO[m[1]]}`;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (token) {
+    // Usa o endpoint oficial do Vercel Blob com o mesmo protocolo do SDK @vercel/blob.
+    // As fotos são públicas para aparecerem na landing page sem autenticação.
+    const storeId = token.split("_")[3] || "";
+    if (!storeId) throw erro("A configuração do armazenamento de fotos está incompleta.", 503);
+
+    const requestId = `${storeId}:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+    const response = await fetch(
+      `https://vercel.com/api/blob/?pathname=${encodeURIComponent(`${FOTOS}/${chave}`)}`,
+      {
+        method: "PUT",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-api-version": "13",
+          "x-api-blob-request-id": requestId,
+          "x-api-blob-request-attempt": "0",
+          "x-vercel-blob-store-id": storeId,
+          "x-vercel-blob-access": "public",
+          "x-content-type": m[1],
+        },
+        body: bytes,
+      },
+    );
+
+    const resultado = await response.json().catch(() => ({}));
+    if (!response.ok || !resultado.url || !String(resultado.url).startsWith("https://")) {
+      console.error("[representantes] Falha ao salvar foto no Vercel Blob:", response.status, resultado);
+      const codigo = resultado?.error?.code;
+      const mensagem = codigo === "forbidden"
+        ? "O armazenamento de fotos recusou o acesso. Verifique a conexão do Blob com o projeto."
+        : "Não foi possível armazenar a foto. Tente novamente em instantes.";
+      throw erro(mensagem, 503);
+    }
+    return resultado.url;
+  }
+
+  // Na Vercel, nunca grava no disco temporário: ele não é persistente entre execuções.
+  if (process.env.VERCEL) {
+    throw erro("O armazenamento persistente de fotos não está configurado neste ambiente.", 503);
+  }
+
+  // Compatibilidade local e com instalações antigas que usam armazenamento S3.
   await fotos().set(chave, bytes, { metadata: { contentType: m[1] } });
   return chave;
 }
 
 export async function removerFoto(chave) {
-  if (chave) await fotos().delete(chave).catch(() => {});
+  if (!chave) return;
+
+  // Fotos novas ficam no Blob público; arquivos antigos continuam no storage configurado.
+  if (String(chave).startsWith("https://") && String(chave).includes(".blob.vercel-storage.com/")) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) return;
+    const storeId = token.split("_")[3] || "";
+    if (!storeId) return;
+
+    const response = await fetch("https://vercel.com/api/blob/delete", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "x-api-version": "13",
+        "x-api-blob-request-id": `${storeId}:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        "x-api-blob-request-attempt": "0",
+        "x-vercel-blob-store-id": storeId,
+      },
+      body: JSON.stringify({ urls: [chave] }),
+    });
+    if (!response.ok) {
+      const detalhe = await response.text().catch(() => "");
+      console.warn("[representantes] Não foi possível remover a foto antiga do Blob:", response.status, detalhe);
+    }
+    return;
+  }
+
+  await fotos().delete(chave).catch(() => {});
 }
 
 export async function lerFoto(chave) {
