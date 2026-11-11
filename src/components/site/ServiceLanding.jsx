@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Check, CheckCircle2 } from "lucide-react";
 import ServiceRequestForm from "@/components/site/ServiceRequestForm";
+import { Image } from "@/components/ui/image";
 
 export default function ServiceLanding({
   eyebrow,
@@ -15,6 +16,7 @@ export default function ServiceLanding({
   formTitle,
   formDescription,
   aside,
+  serviceImage,
 }) {
   return (
     <div>
@@ -29,6 +31,17 @@ export default function ServiceLanding({
                 {title} <span className="text-gradient-gold">{highlight}</span>
               </h1>
               <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/60">{subtitle}</p>
+
+              {serviceImage && (
+                <div className="mt-7 max-w-[560px] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-2xl">
+                  <Image
+                    src={serviceImage}
+                    alt="Coloque sua empresa no Google Maps — mais visibilidade para o seu negócio"
+                    fittingType="fit"
+                    className="h-auto w-full"
+                  />
+                </div>
+              )}
 
               <ul className="mt-7 space-y-3">
                 {bullets.map((b) => (
