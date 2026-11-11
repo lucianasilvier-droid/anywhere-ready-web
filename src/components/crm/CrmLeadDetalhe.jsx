@@ -133,7 +133,9 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
         empresa: lead.empresa,
         tipo: "sistema",
         mensagem: `Etapa alterada: ${etapa}`,
-        autor: "Painel",
+        autor: representante
+          ? lead.representante_nome || lead.responsavel || "Representante"
+          : "Administrador",
         detalhe: `De "${anterior}" para "${etapa}"`,
       });
       reloadInteracoes();
@@ -471,6 +473,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
                       <span>{dataHora(i.created_date)}</span>
                     </p>
                     <p className="mt-1 whitespace-pre-line text-[12px] leading-relaxed text-white/65">{i.mensagem}</p>
+                    {i.autor && <p className="mt-1 text-[10.5px] font-semibold text-sky-200/70">Responsável: {i.autor}</p>}
                     {i.detalhe && <p className="mt-1 text-[10.5px] text-white/30">{i.detalhe}</p>}
                   </div>
                 ))
