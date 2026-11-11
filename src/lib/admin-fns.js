@@ -273,6 +273,7 @@ REGRAS OBRIGATÓRIAS:
 ${lead.ai_abordagem ? `Sugestão de abordagem já registrada: ${lead.ai_abordagem}` : ""}
 
 Devolva {"mensagem": string}.
+      `,
       '{"mensagem": string}',
       await iaValues(base44),
     );
