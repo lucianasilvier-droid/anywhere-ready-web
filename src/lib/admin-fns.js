@@ -404,7 +404,7 @@ export const registerConsentFn = createServerFn({ method: "POST" })
       patch.consentimento = "autorizado";
       patch.consent_autorizado_em = agora;
       patch.consent_origem = data.origem;
-      patch.etapa = "contato_autorizado";
+      patch.etapa = "autorizacao_recebida";
     } else {
       patch.consentimento = data.status;
       patch.consent_revogado_em = agora;
