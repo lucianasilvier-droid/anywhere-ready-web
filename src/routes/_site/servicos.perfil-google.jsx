@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ServiceLanding from "@/components/site/ServiceLanding";
+import { SERVICE_IMAGE_URL } from "@/lib/site-content";
 
 export const Route = createFileRoute("/_site/servicos/perfil-google")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_site/servicos/perfil-google")({
 function PerfilGooglePage() {
   return (
     <ServiceLanding
+      serviceImage={SERVICE_IMAGE_URL}
       eyebrow="Serviço 01 · Google Maps"
       title="Coloque sua empresa no"
       highlight="Google Maps!"
