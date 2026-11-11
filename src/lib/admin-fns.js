@@ -260,20 +260,19 @@ ${contextoAnalise || "Análise ainda não registrada."}
 REGRAS OBRIGATÓRIAS:
 - Identifique a necessidade prioritária desta empresa a partir da análise.
 - Ofereça o serviço que resolve essa necessidade, conforme oportunidades e proposta registradas.
-- Não ofereça automaticamente placas NFC para todos os estabelecimentos.
+- Além desse serviço principal, inclua também as plaquinhas NFC como oferta complementar em toda mensagem de proposta comercial, conectando-as ao benefício de facilitar avaliações no Google e/ou acesso ao Instagram.
+- Portanto, nunca substitua o serviço indicado pela análise pelas plaquinhas: ofereça a solução prioritária e também as plaquinhas NFC como complemento.
 - Se a análise apontar necessidade no Perfil da Empresa no Google, ofereça criação/configuração ou gestão, conforme o diagnóstico.
 - Se apontar ausência de site, ofereça criação de site; só mencione prévia se houver URL disponível.
-- Se apontar potencial para placas NFC, ofereça a placa adequada e conecte o benefício ao diagnóstico.
-- Havendo várias oportunidades, priorize a mais relevante em vez de despejar um catálogo genérico.
+- Se apontar potencial para placas NFC, explique o benefício das placas de forma específica.
+- Havendo várias oportunidades, priorize a mais relevante e apresente as demais com concisão, sem despejar catálogo genérico.
 - A mensagem deve refletir resumo, oportunidades, abordagem e proposta salvos na análise.
 - Não invente necessidades, problemas ou resultados. Se não houver análise salva, não finja que houve análise.
 - Adapte a mensagem à etapa "${data.tipo}" e respeite as regras de autorização já definidas.
 
-Devolva {"mensagem": string}.
-
 ${lead.ai_abordagem ? `Sugestão de abordagem já registrada: ${lead.ai_abordagem}` : ""}
 
-Devolva {"mensagem": string}.`,
+Devolva {"mensagem": string}.
       '{"mensagem": string}',
       await iaValues(base44),
     );
