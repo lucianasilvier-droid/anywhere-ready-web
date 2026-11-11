@@ -104,14 +104,26 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   });
 
   const mEnviar = useMutation({
-    mutationFn: (tipo) => enviar({ data: { leadId, mensagem, tipo } }),
-    onSuccess: async () => {
-      toast.success("Mensagem enviada pelo WhatsApp Business.");
+    mutationFn: async (tipo) => {
+      const emailAlternativo = String(lead?.email || lead?.email_contato || lead?.email_publico || "").trim();
+      try {
+        return await enviar({ data: { leadId, mensagem, tipo } });
+      } catch (erroWhatsApp) {
+        const falhaConhecida = /WhatsApp Business não configurado|Telefone inválido|WhatsApp respondeu (400|401|403|404)/i.test(erroWhatsApp?.message || "");
+        if (!emailAlternativo || !falhaConhecida) throw erroWhatsApp;
+        const fallback = await enviarEmail({ data: { leadId, mensagem, tipo } });
+        return { ...fallback, canalAlternativo: "email" };
+      }
+    },
+    onSuccess: async (resultado) => {
+      toast.success(resultado?.canalAlternativo === "email"
+        ? "WhatsApp indisponível. A autorização/mensagem foi enviada por e-mail e registrada no CRM."
+        : "Mensagem enviada pelo WhatsApp Business.");
       setMensagem("");
       await carregar();
       reloadInteracoes();
     },
-    onError: (e) => toast.error(e?.message || "Não foi possível enviar a mensagem."),
+    onError: (e) => toast.error(e?.message || "Não foi possível enviar a mensagem nem pelo canal alternativo."),
   });
 
 
@@ -384,7 +396,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
             <div className="mt-2.5 flex flex-wrap gap-2">
               <button
                 onClick={() => mEnviar.mutate(lead.consentimento === "autorizado" ? "proposta" : "autorizacao")}
-                disabled={mEnviar.isPending || bloqueado || mensagem.trim().length < 5}
+                disabled={mEnviar.isPending || bloqueado || !lead.telefone || mensagem.trim().length < 5}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-[11.5px] font-bold text-[#062b14] disabled:opacity-40"
               >
                 {mEnviar.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
@@ -399,14 +411,20 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <Copy className="h-3 w-3" /> Copiar
               </button>
-              <a
-                href={`https://wa.me/${telefoneWhatsApp(lead.telefone)}?text=${encodeURIComponent(mensagem)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70"
-              >
-                <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
-              </a>
+              {lead.telefone ? (
+                <a
+                  href={`https://wa.me/${telefoneWhatsApp(lead.telefone)}?text=${encodeURIComponent(mensagem)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70"
+                >
+                  <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
+                </a>
+              ) : (
+                <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-[11.5px] font-semibold text-white/30">
+                  <Phone className="h-3 w-3" /> WhatsApp não disponível
+                </span>
+              )}
               {emailLead ? (
                 <button
                   onClick={() => mEnviarEmail.mutate(lead.consentimento === "autorizado" ? "proposta" : "autorizacao")}
@@ -446,7 +464,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
         <div className="space-y-4">
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
             <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider text-white/50">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Autorização (LGPD / WhatsApp)
+              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Autorização (WhatsApp / e-mail)
             </p>
             <dl className="mt-3 space-y-1.5 text-[11.5px]">
               <Row label="Situação" value={<StatusPill map={STATUS_CONSENT} value={lead.consentimento} />} />
