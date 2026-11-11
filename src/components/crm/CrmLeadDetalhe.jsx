@@ -177,7 +177,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   }
 
   function registrarAberturaEmail() {
-    if (!emailLead) return;
+    if (!emailLead || bloqueado) return;
     base44.entities.LeadInteraction.create({
       lead_id: leadId,
       empresa: lead.empresa,
@@ -299,17 +299,21 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     ? "https://www.google.com/maps/search/?api=1&query=" + mapsQuery + "&query_place_id=" + encodeURIComponent(mapsPlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + mapsQuery;
   const emailAssunto = "Uma ideia para valorizar " + (lead.empresa || "seu estabelecimento") + " no Google";
-  const emailCorpo = [
-    "Olá, equipe " + (lead.empresa || "do estabelecimento") + "!",
-    "",
-    "Encontrei o perfil de vocês" + (lead.categoria ? " na categoria " + lead.categoria : "") + ((lead.bairro || lead.cidade) ? " em " + [lead.bairro, lead.cidade].filter(Boolean).join(", ") : "") + " e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações no Google por meio de uma placa NFC.",
-    "",
-    "Se fizer sentido para vocês, posso enviar uma apresentação breve com os detalhes. Se não quiserem receber esse tipo de contato, basta me avisar.",
-    "",
-    "Atenciosamente,",
-    "Equipe Google NFC Connect",
-  ].join("\n");
-  const emailHref = emailLead
+  const emailCorpo = bloqueado
+    ? ""
+    : autorizado && mensagem.trim()
+      ? mensagem.trim()
+      : [
+          "Olá, equipe " + (lead.empresa || "do estabelecimento") + "!",
+          "",
+          "Encontrei o perfil de vocês" + (lead.categoria ? " na categoria " + lead.categoria : "") + ((lead.bairro || lead.cidade) ? " em " + [lead.bairro, lead.cidade].filter(Boolean).join(", ") : "") + " e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações no Google por meio de uma placa NFC.",
+          "",
+          "Se fizer sentido para vocês, posso enviar uma apresentação breve com os detalhes. Se não quiserem receber esse tipo de contato, basta me avisar.",
+          "",
+          "Atenciosamente,",
+          "Equipe Google NFC Connect",
+        ].join("\n");
+  const emailHref = emailLead && !bloqueado
     ? "mailto:" + encodeURIComponent(emailLead) + "?subject=" + encodeURIComponent(emailAssunto) + "&body=" + encodeURIComponent(emailCorpo)
     : "";
 
@@ -487,7 +491,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
               </a>
-              {emailLead ? (
+              {emailLead && !bloqueado ? (
                 <a href={emailHref} onClick={registrarAberturaEmail} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
                   <Mail className="h-3 w-3" /> Abrir e-mail
                 </a>
