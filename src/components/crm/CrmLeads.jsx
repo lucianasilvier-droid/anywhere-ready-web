@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, MapPin, Phone, Star, Check, Target, X, CalendarClock } from "lucide-react";
+import { Search, Loader2, Plus, MapPin, Phone, Mail, Star, Check, Target, X, CalendarClock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { searchPlacesFn } from "@/lib/admin-fns";
 import { meuLimiteCrmFn } from "@/lib/representantes-fns";
@@ -90,6 +90,7 @@ export default function CrmLeads({ base = "/admin" }) {
   }
 
   async function salvarLead(place) {
+    if (!(place.whatsapp_disponivel || place.email)) return toast.error("Este resultado não tem WhatsApp compatível nem e-mail público. Não será salvo.");
     setSalvando(place.place_id);
     try {
       await base44.entities.Lead.create({
@@ -112,7 +113,7 @@ export default function CrmLeads({ base = "/admin" }) {
   }
 
   async function salvarTodosResultados() {
-    const pendentes = resultados.filter((place) => place.place_id && !existentes.has(place.place_id));
+    const pendentes = resultados.filter((place) => place.place_id && (place.whatsapp_disponivel || place.email) && !existentes.has(place.place_id));
     if (!pendentes.length) return toast.info("Todos os resultados já estão no CRM.");
     const permitidos = representante && limite
       ? pendentes.slice(0, Math.max(0, limite.restantes))
@@ -304,8 +305,7 @@ export default function CrmLeads({ base = "/admin" }) {
           </button>
         </form>
         <p className="mt-2 text-[11px] leading-relaxed text-white/30">
-          A busca usa a Google Places API com os limites e termos de uso do Google. Resultados são
-          empresas reais retornadas pela fonte.
+          A busca mantém apenas empresas com celular brasileiro compatível com WhatsApp ou e-mail comercial público encontrado no site. Celular compatível não confirma que a conta esteja ativa no WhatsApp.
         </p>
 
         {erroBusca && (
@@ -339,7 +339,9 @@ export default function CrmLeads({ base = "/admin" }) {
                     <p className="truncate text-[13px] font-semibold text-white">{place.empresa}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
                       <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
-                      {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}
+                      {place.whatsapp_disponivel && place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />WhatsApp: {place.telefone}</span>}
+                      {place.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email}</span>}
+                      {!place.whatsapp_disponivel && place.email && <span className="rounded-full bg-sky-500/10 px-1.5 py-0.5 font-semibold text-sky-300">Contato por e-mail</span>}
                       {place.nota_google != null && (
                         <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{place.nota_google} ({place.total_avaliacoes || 0})</span>
                       )}
@@ -459,7 +461,7 @@ export default function CrmLeads({ base = "/admin" }) {
                       <td className="max-w-[180px] px-4 py-2.5 text-white/55">
                         <p className="truncate">{lead.cidade || "—"}{lead.bairro ? ` · ${lead.bairro}` : ""}</p>
                       </td>
-                      <td className="px-4 py-2.5 text-white/55">{lead.telefone || "—"}</td>
+                      <td className="px-4 py-2.5 text-white/55"><div>{lead.telefone || "—"}</div>{lead.email && <div className="mt-0.5 flex items-center gap-1 text-[11px] text-white/40"><Mail className="h-3 w-3" />{lead.email}</div>}</td>
                       <td className="px-4 py-2.5">
                         <span
                           className="inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[10.5px] font-semibold"
