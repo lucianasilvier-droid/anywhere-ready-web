@@ -42,7 +42,7 @@ jobs:
 
       - name: Preparar aplicativo e endereço do sistema
         env:
-          APP_URL: ${{ inputs.app_url }}
+          APP_URL: ${{ inputs.app_url || 'https://google-nfc-connect.vercel.app' }}
         run: |
           node --input-type=module <<'NODE'
           import { mkdir, writeFile } from 'node:fs/promises';
