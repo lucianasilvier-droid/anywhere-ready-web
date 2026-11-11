@@ -143,6 +143,20 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     }
   }
 
+  function registrarAberturaEmail() {
+    if (!emailLead) return;
+    base44.entities.LeadInteraction.create({
+      lead_id: leadId,
+      empresa: lead.empresa,
+      tipo: "email_aberto",
+      mensagem: "Rascunho preparado para " + emailLead + ": " + emailAssunto,
+      autor: "Painel",
+      detalhe: "Aplicativo de e-mail aberto; o envio não foi confirmado.",
+    })
+      .then(() => reloadInteracoes())
+      .catch((e) => toast.error(e?.message || "Não foi possível registrar a abertura do e-mail."));
+  }
+
   async function registrarEnvioManual() {
     if (mensagem.trim().length < 5) return toast.error("Escreva a mensagem antes de registrar.");
     try {
@@ -369,7 +383,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
                 <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
               </a>
               {emailLead ? (
-                <a href={emailHref} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
+                <a href={emailHref} onClick={registrarAberturaEmail} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
                   <Mail className="h-3 w-3" /> Abrir e-mail
                 </a>
               ) : (
