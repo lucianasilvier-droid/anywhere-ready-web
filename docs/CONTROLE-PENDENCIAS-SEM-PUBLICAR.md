@@ -192,3 +192,15 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - Nenhuma credencial, pagamento ou configuração externa foi alterada.
 
 **Limitação ainda pendente:** revisar a autorização do início do checkout para pedidos de clientes autenticados e convidados. A função de criação recebe pedido_id e usa acesso privilegiado ao registro; a estratégia de token público/identidade do cliente deve ser confirmada no fluxo completo antes de restringir ou modificar, para não quebrar checkout de convidados. Também permanece a conferência de erros 404 nos registros reais.
+
+
+## Financeiro — segurança do estorno — 12/11/2026
+
+- Encontrado risco no fluxo administrativo: após clicar em concluir estorno, o sistema podia marcar como reembolsado mesmo quando não havia chamada de estorno ao provedor (InfinitePay e checkout Mercado Pago baseado em preferência).
+- Corrigido em `src/lib/payments-fns.js`: a conclusão automática agora só é permitida para pagamento Mercado Pago com ID numérico, após resposta bem-sucedida da API oficial de estorno.
+- InfinitePay e pagamentos sem ID numérico de transação ficam em `reembolso_solicitado`; a interface recebe orientação para concluir no provedor e só registrar como concluído após confirmação real. Nenhuma baixa financeira falsa é feita pelo fluxo automático.
+- A solicitação de reembolso continua sendo uma etapa separada e registrada.
+
+**Limitação:** o registro administrativo de conclusão manual precisa ser tratado com cuidado, exigindo confirmação humana documentada. O estorno parcial também não está implementado; a API atual solicita estorno total.
+
+**Validação:** alteração estática confirmada no GitHub. Nenhum pagamento ou estorno real foi executado; nenhum build, teste ou deploy foi executado.
