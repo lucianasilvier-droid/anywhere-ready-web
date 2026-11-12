@@ -278,3 +278,20 @@ Arquivos alterados:
 - Não foi ampliado o suporte de estorno para InfinitePay, não foi alterado o critério de confirmação e nenhum estorno real foi solicitado.
 
 **Validação:** inspeção estática da expressão no código e confirmação da alteração no GitHub. Nenhuma chamada ao provedor, teste, build ou deploy foi executado.
+
+## Sites de demonstração — apresentação, fotos Google e autorização — 12/11/2026
+
+### Melhorias implementadas na branch de trabalho
+- A paleta automática foi refinada por ramo: floresta para pet/veterinária, terracota para beleza/moda, esmeralda para saúde, grafite para consultoria/tecnologia, vinho para alimentação e oceano como opção geral.
+- O conteúdo automático passou a considerar também o resumo e as oportunidades da análise comercial do CRM, além das observações do estabelecimento. O texto continua sem inventar preços, resultados ou dados não confirmados.
+- A busca Google Places agora solicita até cinco referências de fotos reais e seus créditos de autoria. Leads salvos pelo resultado da busca preservam esses metadados.
+- A página pública do site exibe a primeira foto na área principal e as demais em uma galeria, mantendo os créditos fornecidos pelo Google.
+- Criado um endpoint servidor para buscar a mídia do Google Places sem expor a chave da API no navegador. O endpoint valida o nome do recurso e usa a chave salva nas integrações ou a variável de ambiente.
+- A primeira mensagem de autorização agora inclui o link provisório do site quando disponível. A ordem é: link público do representante comercial e, logo abaixo, link da prévia do site. O texto orienta o cliente a abrir a demonstração e pedir SIM para receber mais informações das placas NFC.
+
+### Cuidados e validação pendente
+- A inclusão do campo `places.photos` e a recuperação das imagens usam a Google Places API e podem consumir cota e/ou gerar cobrança conforme o projeto e o faturamento do Google Cloud. Nenhuma chamada de foto foi executada nesta rodada.
+- Fotos só aparecem para leads cuja busca de origem Google Places retornou imagens; resultados do OpenStreetMap ou leads manuais sem referências de fotos permanecem sem galeria.
+- Atribuições de autoria são exibidas quando fornecidas pelo Google.
+- A alteração foi revisada estaticamente pelos arquivos de integração, geração do site, página pública, proxy de fotos e mensagem do CRM.
+- Nenhum build, teste automatizado, teste na Vercel, deploy ou publicação foi executado. A branch `main` e a produção permanecem intocadas.
