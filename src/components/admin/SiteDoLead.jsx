@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Plus, RefreshCw, Save, Server, Wand2 } from "lucide-react";
-import { atualizarSiteFn, gerarSiteFn, prepararSiteGratuitoFn, registrarVendaSiteFn, representantesParaSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
+import { atualizarSiteFn, gerarSiteFn, registrarVendaSiteFn, representantesParaSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { competenciaAtual } from "@/lib/representante-ui";
 import { MENSALIDADE_SITE, PRECO_SITE, custosDoSite, resumoFinanceiro } from "@/lib/preco-site";
 import { brl } from "@/lib/format";
@@ -21,13 +21,10 @@ const STATUS = {
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
   const gerar = useServerFn(gerarSiteFn);
-  const prepararGratis = useServerFn(prepararSiteGratuitoFn);
   const atualizar = useServerFn(atualizarSiteFn);
   const [site, setSite] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [orientacoes, setOrientacoes] = useState("");
-  const [promptClaude, setPromptClaude] = useState("");
-  const [jsonClaude, setJsonClaude] = useState("");
   const [ajustes, setAjustes] = useState({ whatsapp: "", instagram: "", horario: "", slug: "" });
 
   useEffect(() => {
@@ -47,30 +44,18 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
     if (site) setAjustes({ whatsapp: site.whatsapp || "", instagram: site.instagram || "", horario: site.horario || "", slug: site.slug || "" });
   }, [site]);
 
-  const mPrepararGratis = useMutation({
-    mutationFn: () => prepararGratis({ data: { leadId: lead.id, orientacoes } }),
-    onSuccess: async (r) => {
-      setPromptClaude(r?.prompt || "");
-      try {
-        await navigator.clipboard.writeText(r.prompt);
-        toast.success("Instruções copiadas. Cole no Claude gratuito e peça o JSON.");
-      } catch {
-        toast.success("Instruções prontas. Copie o texto exibido abaixo.");
-      }
-    },
-    onError: (e) => toast.error(e?.message || "Não foi possível preparar as instruções."),
-  });
-
-  const mSalvarGratis = useMutation({
-    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes, conteudoManual: jsonClaude } }),
+  const mGerarAutomatico = useMutation({
+    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
     onSuccess: (r) => {
-      setSite(r?.site || null);
-      setJsonClaude("");
-      setPromptClaude("");
-      toast.success("Site salvo no CRM usando o Claude gratuito.");
+      if (!r?.ok || !r?.site) {
+        toast.error("O CRM não confirmou a criação do site.");
+        return;
+      }
+      setSite(r.site);
+      toast.success("Site de demonstração criado e salvo no CRM.");
       onGerado?.();
     },
-    onError: (e) => toast.error(e?.message || "Não foi possível validar e salvar o site."),
+    onError: (e) => toast.error(e?.message || "Não foi possível criar o site."),
   });
 
   const mAtualizar = useMutation({
@@ -109,7 +94,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Crie a demonstração com o Claude AI gratuito, sem chave de API: o sistema prepara as instruções da empresa e abre o Claude. Depois, traga a resposta para salvar o site no CRM.
+            Crie a demonstração diretamente no sistema. O gerador usa os dados já cadastrados no CRM, salva o site e prepara o link para você enviar ao cliente, sem API paga ou etapas de copiar e colar.
           </p>
           <textarea
             value={orientacoes}
@@ -120,46 +105,13 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className={inputCls}
           />
           <button
-            onClick={() => {
-              const janela = window.open("about:blank", "_blank");
-              if (!janela) { toast.error("O navegador bloqueou a nova aba. Permita pop-ups e tente novamente."); return; }
-              mPrepararGratis.mutateAsync().then((r) => {
-                if (!r?.prompt) throw new Error("As instruções não foram retornadas pelo sistema.");
-                janela.location.href = `https://claude.ai/new?q=${encodeURIComponent(r.prompt)}`;
-              }).catch((e) => { janela.close(); toast.error(e?.message || "Não foi possível abrir o Claude com as instruções."); });
-            }}
-            disabled={mPrepararGratis.isPending}
+            onClick={() => mGerarAutomatico.mutate()}
+            disabled={mGerarAutomatico.isPending}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
-            {mPrepararGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mPrepararGratis.isPending ? "Preparando instruções..." : "Criar site com Claude AI (gratuito)"}
+            {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {mGerarAutomatico.isPending ? "Criando demonstração..." : "Criar site automaticamente"}
           </button>
-          {promptClaude && (
-            <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
-              <p className="text-[11.5px] leading-relaxed text-white/65">As instruções foram copiadas. No Claude gratuito, cole o texto, envie e depois copie a resposta JSON completa para o campo abaixo.</p>
-              <textarea readOnly value={promptClaude} rows={4} className={inputCls} />
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(promptClaude);
-                    toast.success("Instruções copiadas. Cole no Claude e envie.");
-                  } catch {
-                    toast.error("Não foi possível copiar automaticamente. Selecione e copie o texto acima.");
-                  }
-                }}
-                className={btnCls}
-              >
-                <Copy className="h-3 w-3" /> Copiar instruções novamente
-              </button>
-              <label className="block text-[11px] font-semibold text-white/60">Cole aqui a resposta JSON do Claude</label>
-              <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={6} maxLength={30000} placeholder='{"slogan":"...","titulo":"...","servicos":[...]}' className={inputCls} />
-              <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
-                {mSalvarGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                {mSalvarGratis.isPending ? "Validando e salvando..." : "Salvar site no CRM"}
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <div className="mt-3 space-y-3">
@@ -236,31 +188,21 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <PrecoDoSite site={site} salvando={mAtualizar.isPending} onSalvar={(patch) => mAtualizar.mutate(patch)} />
 
-          <details className="rounded-xl border border-white/[0.07] p-3">
-            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Atualizar com Claude gratuito</summary>
+          <div className="rounded-xl border border-white/[0.07] p-3">
+            <p className="text-[11.5px] font-semibold text-white/55">Atualizar demonstração</p>
             <textarea
               value={orientacoes}
               onChange={(e) => setOrientacoes(e.target.value)}
               rows={2}
               maxLength={600}
-              placeholder="O que mudar? (ex.: incluir delivery, cores mais sóbrias...)"
+              placeholder="Orientações opcionais para a atualização"
               className={`${inputCls} mt-2`}
             />
-            <button onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }} disabled={mPrepararGratis.isPending} className={`${btnCls} mt-2`}>
-              {mPrepararGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              Atualizar com Claude AI (gratuito)
+            <button onClick={() => mGerarAutomatico.mutate()} disabled={mGerarAutomatico.isPending} className={`${btnCls} mt-2`}>
+              {mGerarAutomatico.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Atualizar site automaticamente
             </button>
-            {promptClaude && (
-              <div className="mt-2 space-y-2">
-                <textarea readOnly value={promptClaude} rows={3} className={inputCls} />
-                <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={5} maxLength={30000} placeholder="Cole aqui o JSON retornado pelo Claude gratuito" className={inputCls} />
-                <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className={btnCls}>
-                  {mSalvarGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Validar e salvar atualização
-                </button>
-              </div>
-            )}
-            <p className="mt-1.5 text-[10.5px] text-white/30">O endereço, o WhatsApp e o status continuam os mesmos. Nenhuma chave de API é necessária.</p>
-          </details>
+          </div>
         </div>
       )}
     </section>
