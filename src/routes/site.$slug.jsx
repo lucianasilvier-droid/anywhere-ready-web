@@ -76,6 +76,9 @@ function SiteClientePage() {
 function SiteCliente({ site }) {
   const c = site.conteudo || {};
   const t = TEMAS[c.tema] || TEMAS.oceano;
+  const estiloVisual = ["premium", "urbano", "editorial", "acolhedor", "tecnologico"].includes(c.estilo_visual)
+    ? c.estilo_visual
+    : "premium";
   const vars = {
     "--bg": t.bg, "--surface": t.surface, "--ink": t.ink, "--muted": t.muted,
     "--accent": t.accent, "--accent-ink": t.accentInk, "--soft": t.soft, "--dark": t.dark,
@@ -121,7 +124,7 @@ function SiteCliente({ site }) {
   };
 
   return (
-    <div style={{ ...vars, backgroundColor: "var(--bg)", color: "var(--ink)" }} className="min-h-screen font-sans antialiased">
+    <div data-estilo={estiloVisual} style={{ ...vars, backgroundColor: "var(--bg)", color: "var(--ink)" }} className="min-h-screen font-sans antialiased">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados).replace(/</g, "\\u003c") }} />
       {site.status === "demonstracao" && (
         <div className="bg-[var(--dark)] px-4 py-2 text-center text-[12px] text-white/80">
@@ -152,20 +155,37 @@ function SiteCliente({ site }) {
         </div>
       </header>
 
-      <section id="topo" style={{ backgroundImage: "linear-gradient(135deg, var(--soft) 0%, transparent 62%)" }} className="relative overflow-hidden">
+      <section
+        id="topo"
+        style={{
+          backgroundImage: estiloVisual === "tecnologico"
+            ? "radial-gradient(circle at 85% 20%, var(--soft), transparent 48%), linear-gradient(135deg, var(--bg), var(--surface))"
+            : estiloVisual === "acolhedor"
+              ? "linear-gradient(145deg, var(--soft), var(--bg) 72%)"
+              : estiloVisual === "editorial"
+                ? "linear-gradient(90deg, var(--surface), var(--bg))"
+                : "linear-gradient(135deg, var(--soft) 0%, transparent 62%)",
+        }}
+        className={`relative overflow-hidden ${estiloVisual === "urbano" ? "bg-[var(--dark)] text-white" : ""}`}
+      >
         <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-[var(--soft)] opacity-80" />
         <div className="absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[var(--soft)] opacity-50" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.2fr_0.8fr] md:py-24">
           <div>
             {c.slogan && (
-              <p className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-[var(--surface)] px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+              <p className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] ${estiloVisual === "urbano" ? "border-white/20 bg-white/10 text-white/80" : "border-black/[0.08] bg-[var(--surface)] text-[var(--accent)]"}`}>
                 {c.slogan}
               </p>
             )}
-            <h1 style={serif} className="mt-5 text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-[3.4rem]">
+            {c.faixa_destaque && (
+              <p className={`mt-5 text-[11px] font-bold uppercase tracking-[0.16em] ${estiloVisual === "urbano" ? "text-white/55" : "text-[var(--accent)]"}`}>
+                {c.faixa_destaque}
+              </p>
+            )}
+            <h1 style={serif} className={`mt-5 text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-[3.4rem] ${estiloVisual === "urbano" ? "text-white" : ""}`}>
               {c.titulo || site.empresa}
             </h1>
-            {c.subtitulo && <p className="mt-5 max-w-xl text-[16.5px] leading-relaxed text-[var(--muted)]">{c.subtitulo}</p>}
+            {c.subtitulo && <p className={`mt-5 max-w-xl text-[16.5px] leading-relaxed ${estiloVisual === "urbano" ? "text-white/70" : "text-[var(--muted)]"}`}>{c.subtitulo}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90">
                 <Calendar className="h-4 w-4" /> {isRestaurante ? "Reserve já" : "Agendar pelo WhatsApp"}
@@ -266,9 +286,36 @@ function SiteCliente({ site }) {
                   </span>
                   <h3 className="mt-4 text-[16.5px] font-semibold">{s.nome}</h3>
                   <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--muted)]">{s.descricao}</p>
+                  {(s.preco || s.duracao) && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {s.preco && <span className="rounded-full bg-[var(--soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">{s.preco}</span>}
+                      {s.duracao && <span className="rounded-full border border-black/10 px-3 py-1.5 text-[11px] font-medium text-[var(--muted)]">{s.duracao}</span>}
+                    </div>
+                  )}
                 </div>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {c.profissionais?.length > 0 && (
+        <section id="equipe" className="mx-auto max-w-6xl px-5 py-16">
+          <div className="max-w-2xl">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Nossa equipe</p>
+            <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Profissionais que cuidam de você</h2>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {c.profissionais.map((profissional) => (
+              <article key={profissional.nome} className="rounded-2xl border border-black/[0.06] bg-[var(--surface)] p-5">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--soft)] text-lg font-bold text-[var(--accent)]">
+                  {profissional.nome.trim().charAt(0).toUpperCase()}
+                </span>
+                <h3 className="mt-4 text-[16px] font-bold">{profissional.nome}</h3>
+                {profissional.especialidade && <p className="mt-1 text-[12px] font-semibold text-[var(--accent)]">{profissional.especialidade}</p>}
+                {profissional.descricao && <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted)]">{profissional.descricao}</p>}
+              </article>
+            ))}
           </div>
         </section>
       )}
