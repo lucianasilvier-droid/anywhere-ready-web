@@ -121,6 +121,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
     mutationFn: () => prepararGratis({ data: { leadId: lead.id, orientacoes } }),
     onSuccess: async (r) => {
       setPromptClaude(r?.prompt || "");
+      setJsonClaude("");
       try {
         await navigator.clipboard.writeText(r.prompt);
         toast.success("Instruções copiadas. Cole no Claude gratuito e peça o JSON.");
