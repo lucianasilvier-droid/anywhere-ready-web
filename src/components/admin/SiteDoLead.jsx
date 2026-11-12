@@ -86,7 +86,7 @@ const STATUS = {
 };
 
 /**
- * Cartão do CRM: cria uma demonstração local sem API paga a partir dos dados cadastrados no CRM.
+ * Cartão do CRM: cria e atualiza sites personalizados com a IA já configurada no sistema.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
@@ -164,7 +164,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Crie a demonstração diretamente no sistema. O gerador usa os dados já cadastrados no CRM, salva o site e prepara o link para você enviar ao cliente, sem API paga ou etapas de copiar e colar.
+            Crie a demonstração com Cloud AI. A IA usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para produzir um conteúdo específico para esta empresa. A geração só acontece quando você clicar e pode consumir a cota da integração de IA configurada no painel.
           </p>
           <textarea
             value={orientacoes}
@@ -180,7 +180,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
             {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerarAutomatico.isPending ? "Criando demonstração..." : "Criar site automaticamente"}
+            {mGerarAutomatico.isPending ? "Criando site com Cloud AI..." : "Criar site com Cloud AI"}
           </button>
         </div>
       ) : (
@@ -273,7 +273,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             />
             <button onClick={() => mGerarAutomatico.mutate()} disabled={mGerarAutomatico.isPending} className={`${btnCls} mt-2`}>
               {mGerarAutomatico.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              Atualizar site automaticamente
+              Atualizar com Cloud AI
             </button>
           </div>
         </div>
