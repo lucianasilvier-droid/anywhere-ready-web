@@ -12,6 +12,13 @@ export const Route = createFileRoute("/_site/loja/$slug")({
   component: ProdutoPage,
 });
 
+const CHECKOUTS_CONHECIDOS = {
+  "placa-google-instagram": "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram",
+  "placa-instagram": "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
+  "placa-google": "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc",
+  "perfil-google-maps": "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google",
+};
+
 function ProdutoPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
@@ -68,6 +75,8 @@ function ProdutoPage() {
       </div>
     );
   }
+
+  const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
 
   function adicionar(irParaCarrinho) {
     cart.add(produto, quantidade);
@@ -152,9 +161,9 @@ function ProdutoPage() {
             </button>
           </div>
 
-          {produto.checkout_url ? (
+          {checkoutUrl ? (
             <a
-              href={produto.checkout_url}
+              href={checkoutUrl}
               target="_blank"
               rel="noreferrer"
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128]"
