@@ -69,6 +69,58 @@ function briefing(lead, orientacoes) {
     .join("\n");
 }
 
+const textoSeguro = (valor, limite = 220) => String(valor ?? "").trim().slice(0, limite);
+
+/** Gera conteúdo local a partir dos dados já cadastrados. Não chama IA externa nem inventa dados comerciais. */
+export function gerarConteudoSiteAutomatico(lead) {
+  const nome = textoSeguro(lead.empresa || "Nossa empresa", 120);
+  const categoria = textoSeguro(lead.categoria || "", 100);
+  const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
+  const ramo = `${categoria} ${nome}`.toLowerCase();
+  const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
+  const tema = /beleza|barbearia|sal[aã]o|est[eé]tica|pet|veterin/.test(ramo) ? "terracota" : restaurante ? "vinho" : "oceano";
+  const servicos = restaurante
+    ? [
+        { nome: "Cardápio e opções", descricao: "Consulte as opções disponíveis e tire suas dúvidas diretamente com a equipe.", icone: "comida" },
+        { nome: "Atendimento", descricao: "Entre em contato para confirmar informações sobre produtos e atendimento.", icone: "check" },
+        { nome: "Reservas", descricao: "Fale com a equipe pelo WhatsApp para consultar disponibilidade e fazer sua reserva.", icone: "relogio" },
+      ]
+    : [
+        { nome: `Atendimento em ${categoria || "nossos serviços"}`, descricao: `Entre em contato com ${nome} para conhecer as opções de atendimento disponíveis.`, icone: "check" },
+        { nome: "Informações e orientações", descricao: "Consulte informações sobre os serviços e esclareça suas dúvidas diretamente com a equipe.", icone: "estrela" },
+        { nome: "Contato direto", descricao: "Use os canais de contato e a localização desta página para falar com a empresa.", icone: "coracao" },
+      ];
+  const itensCardapio = Array.isArray(lead.cardapio) ? lead.cardapio : Array.isArray(lead.menu) ? lead.menu : [];
+  const cardapio = itensCardapio.slice(0, 80).map((item) => ({
+    categoria: textoSeguro(item?.categoria || "", 60),
+    nome: textoSeguro(item?.nome || item?.name || item?.produto || "", 100),
+    descricao: textoSeguro(item?.descricao || item?.description || "", 240),
+    preco: textoSeguro(item?.preco || item?.price || "", 40),
+    imagem_url: /^https:\/\//i.test(String(item?.imagem_url || item?.image || "")) ? String(item.imagem_url || item.image) : "",
+  })).filter((item) => item.nome);
+  return {
+    slogan: restaurante ? "Uma experiência para aproveitar" : `Conheça ${nome}` ,
+    titulo: nome,
+    subtitulo: [categoria, local].filter(Boolean).join(" · ") || "Conheça a empresa e fale diretamente com a equipe.",
+    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. Esta demonstração reúne as informações disponíveis no cadastro e facilita o contato com a empresa.\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
+    servicos,
+    diferenciais: [
+      { titulo: "Contato direto", texto: "Fale com a empresa para confirmar informações e tirar dúvidas." },
+      { titulo: "Localização", texto: local ? `Referência de atendimento: ${local}.` : "Consulte a localização e as formas de contato disponíveis." },
+      { titulo: "Informações claras", texto: "Consulte os dados cadastrados e confirme detalhes diretamente com a equipe." },
+    ],
+    perguntas: [
+      { pergunta: "Como posso entrar em contato?", resposta: "Use o botão de WhatsApp ou os dados de contato apresentados nesta página." },
+      { pergunta: "Quais serviços ou opções estão disponíveis?", resposta: "Fale diretamente com a equipe para confirmar as opções disponíveis." },
+      { pergunta: "Como confirmar valores e horários?", resposta: "Valores, disponibilidade e horários devem ser confirmados diretamente com a empresa." },
+    ],
+    chamada_agendamento: restaurante ? "Faça sua reserva ou consulte a disponibilidade diretamente pelo WhatsApp." : "Entre em contato para saber mais e consultar a disponibilidade.",
+    tema,
+    seo_descricao: `${nome}${categoria ? ` em ${categoria}` : ""}${local ? ` em ${local}` : ""}. Consulte informações e entre em contato diretamente com a empresa.`.slice(0, 160),
+    tipo_negocio: restaurante ? "restaurante" : "servicos",
+    cardapio,
+  };
+}
 /** O conteúdo é produzido no Claude gratuito pelo navegador e validado antes de salvar. */
 export function validarConteudoSite(d) {
   if (!d || typeof d !== "object" || !Array.isArray(d.servicos) || d.servicos.length < 3 || !String(d.titulo || "").trim()) {
@@ -94,6 +146,11 @@ export function validarConteudoSite(d) {
     chamada_agendamento: txt(d.chamada_agendamento, 180),
     tema: TEMAS.includes(d.tema) ? d.tema : "oceano",
     seo_descricao: txt(d.seo_descricao, 160),
+    tipo_negocio: d.tipo_negocio === "restaurante" ? "restaurante" : "servicos",
+    cardapio: (Array.isArray(d.cardapio) ? d.cardapio : []).slice(0, 80).map((item) => ({
+      categoria: txt(item.categoria, 60), nome: txt(item.nome, 100), descricao: txt(item.descricao, 240),
+      preco: txt(item.preco, 40), imagem_url: /^https:\/\//i.test(String(item.imagem_url || "")) ? String(item.imagem_url) : "",
+    })).filter((item) => item.nome),
   };
 }
 
