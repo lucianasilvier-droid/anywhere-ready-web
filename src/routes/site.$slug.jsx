@@ -293,15 +293,6 @@ function SiteCliente({ site }) {
         </section>
       )}
 
-      {c.observacao_operador && (
-        <section className="mx-auto max-w-6xl px-5 py-10">
-          <div className="rounded-2xl border border-black/[0.07] bg-[var(--surface)] p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Informação adicional</p>
-            <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-[var(--muted)]">{c.observacao_operador}</p>
-          </div>
-        </section>
-      )}
-
       <section id="sobre" className="scroll-mt-20 bg-[var(--dark)] text-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2">
           <div>
