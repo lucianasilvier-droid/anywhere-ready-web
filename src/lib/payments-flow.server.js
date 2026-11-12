@@ -360,6 +360,16 @@ export async function createPaymentForOrder(base44, pedidoId, { documento } = {}
   if (pedido.status_pagamento === "pago") {
     return { ok: true, jaPago: true, pedidoNumero: pedido.numero };
   }
+  if (["cancelado", "reembolsado"].includes(String(pedido.status_pagamento || "").toLowerCase())) {
+    return {
+      ok: false,
+      erro: "Este pedido está cancelado ou reembolsado e não pode receber uma nova cobrança.",
+    };
+  }
+  const valorPedido = Number(pedido.total);
+  if (!Number.isFinite(valorPedido) || valorPedido <= 0) {
+    return { ok: false, erro: "O valor deste pedido é inválido para cobrança." };
+  }
 
   const estado = await paymentMethodsState(svc);
   const metodo = estado.ativo;
