@@ -2,11 +2,82 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Plus, RefreshCw, Save, Server, Wand2 } from "lucide-react";
+import { zipSync, strToU8 } from "fflate";
+import { Copy, Download, ExternalLink, Globe, Loader2, MessageCircle, Plus, RefreshCw, Save, Server, Wand2 } from "lucide-react";
 import { atualizarSiteFn, gerarSiteFn, registrarVendaSiteFn, representantesParaSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { competenciaAtual } from "@/lib/representante-ui";
 import { MENSALIDADE_SITE, PRECO_SITE, custosDoSite, resumoFinanceiro } from "@/lib/preco-site";
 import { brl } from "@/lib/format";
+
+function escaparHtml(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, (caractere) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[caractere]);
+}
+
+function exportarSiteZip(site) {
+  const conteudo = site.conteudo || {};
+  const publico = {
+    slug: site.slug,
+    empresa: site.empresa,
+    categoria: site.categoria || "",
+    endereco: site.endereco || "",
+    cidade: site.cidade || "",
+    bairro: site.bairro || "",
+    estado: site.estado || "",
+    telefone: site.telefone || "",
+    whatsapp: site.whatsapp || "",
+    instagram: site.instagram || "",
+    horario: site.horario || "",
+    conteudo,
+  };
+  const servicos = (conteudo.servicos || []).map((item) =>
+    "<article><h3>" + escaparHtml(item.nome) + "</h3><p>" + escaparHtml(item.descricao) + "</p></article>"
+  ).join("");
+  const cardapio = (conteudo.cardapio || []).map((item) =>
+    "<article>" + (item.imagem_url ? '<img src="' + escaparHtml(item.imagem_url) + '" alt="' + escaparHtml(item.nome) + '">' : "") +
+    "<small>" + escaparHtml(item.categoria) + "</small><h3>" + escaparHtml(item.nome) + "</h3><p>" +
+    escaparHtml(item.descricao) + "</p><strong>" + escaparHtml(item.preco) + "</strong></article>"
+  ).join("");
+  const perguntas = (conteudo.perguntas || []).map((item) =>
+    "<details><summary>" + escaparHtml(item.pergunta) + "</summary><p>" + escaparHtml(item.resposta) + "</p></details>"
+  ).join("");
+  const local = [site.endereco, site.bairro, site.cidade, site.estado].filter(Boolean).join(", ");
+  const numero = String(site.whatsapp || site.telefone || "").replace(/\D/g, "");
+  const wa = numero ? "https://wa.me/" + (numero.length <= 11 ? "55" + numero : numero) + "?text=" + encodeURIComponent("Olá, " + site.empresa + "! Gostaria de mais informações.") : "";
+  const mapa = "https://www.google.com/maps?q=" + encodeURIComponent([site.empresa, local].filter(Boolean).join(", ")) + "&output=embed";
+  const html = [
+    "<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
+    "<title>" + escaparHtml(site.empresa) + (site.cidade ? " — " + escaparHtml(site.cidade) : "") + "</title>",
+    "<meta name='description' content='" + escaparHtml(conteudo.seo_descricao || conteudo.subtitulo || site.empresa) + "'><link rel='stylesheet' href='styles.css'></head><body>",
+    "<header><p>" + escaparHtml(site.empresa) + "</p><nav><a href='#servicos'>Serviços</a><a href='#sobre'>Sobre</a><a href='#local'>Localização</a></nav></header>",
+    "<main><section class='hero'><p class='eyebrow'>" + escaparHtml(conteudo.slogan) + "</p><h1>" + escaparHtml(conteudo.titulo || site.empresa) + "</h1><p>" + escaparHtml(conteudo.subtitulo) + "</p>" + (wa ? "<a class='button' href='" + wa + "'>Falar pelo WhatsApp</a>" : "") + "</section>",
+    "<section id='servicos'><h2>Serviços</h2><div class='grid'>" + servicos + "</div></section>",
+    cardapio ? "<section id='cardapio'><h2>Cardápio</h2><div class='grid'>" + cardapio + "</div></section>" : "",
+    "<section id='sobre'><h2>Sobre " + escaparHtml(site.empresa) + "</h2><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + (conteudo.observacao_operador ? "<p>" + escaparHtml(conteudo.observacao_operador) + "</p>" : "") + "</section>",
+    "<section><h2>Perguntas frequentes</h2>" + perguntas + "</section>",
+    "<section id='local'><h2>Localização</h2><p>" + escaparHtml(local) + "</p><iframe title='Mapa' loading='lazy' src='" + mapa + "'></iframe></section>",
+    "</main><footer>" + escaparHtml(site.empresa) + "</footer></body></html>",
+  ].join("");
+  const css = [
+    "*{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#142338;font:16px/1.6 Arial,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:20px;align-items:center}header p{font-weight:800}nav{display:flex;gap:18px}a{color:#145da8;text-decoration:none}.hero{padding:70px 24px;background:#e4edf7;border-radius:24px}.eyebrow{color:#145da8;text-transform:uppercase;letter-spacing:.12em;font-weight:700}h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.05}.button{display:inline-block;background:#145da8;color:white;padding:12px 22px;border-radius:30px;margin-top:16px}section{padding:42px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}article,details{background:white;border:1px solid #dce3ea;border-radius:16px;padding:20px}article img{width:100%;height:160px;object-fit:cover;border-radius:10px}iframe{width:100%;height:320px;border:0;border-radius:16px}footer{text-align:center;color:#65758a}@media(max-width:600px){header{display:block}nav{margin-top:12px;flex-wrap:wrap}.hero{padding:40px 20px}}",
+  ].join("");
+  const arquivos = {
+    "index.html": strToU8(html),
+    "styles.css": strToU8(css),
+    "site.json": strToU8(JSON.stringify(publico, null, 2)),
+    "README.txt": strToU8("SITE EDITÁVEL — " + site.empresa + "\n\nAbra index.html no navegador. Edite o conteúdo em site.json e o visual em styles.css. O site usa HTML e CSS simples, sem dependências pagas.\n\nO mapa é incorporado pelo Google Maps. O botão de contato abre o WhatsApp informado no cadastro.\n"),
+    "assets/README.txt": strToU8("O cadastro atual não contém arquivos de imagem locais para exportação. Imagens de itens do cardápio, quando informadas por URL, permanecem referenciadas externamente no index.html.\n"),
+  };
+  const pacote = zipSync(arquivos, { level: 6 });
+  const blob = new Blob([pacote], { type: "application/zip" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "site-" + (site.slug || "demonstracao") + ".zip";
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 const STATUS = {
   demonstracao: { label: "Demonstração", cls: "border-amber-500/30 bg-amber-500/10 text-amber-200" },
@@ -134,6 +205,9 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
               className={btnCls}
             >
               <Copy className="h-3 w-3" /> Copiar link
+            </button>
+            <button onClick={() => exportarSiteZip(site)} className={btnCls}>
+              <Download className="h-3 w-3" /> Exportar ZIP editável
             </button>
             <button
               onClick={() =>
