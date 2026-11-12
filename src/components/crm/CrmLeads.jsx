@@ -25,7 +25,7 @@ const emailValido = (value) => {
   const domain = email.split("@")[1] || "";
   return email.length <= 254 &&
     /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
-    !/(^|\.)(example|invalid|localhost|test)$/i.test(domain) &&
+    !/(^|\.)(example|invalid|localhost|test)(\.|$)/i.test(domain) &&
     !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
 };
 const emailContatoParaExibir = (place) => [place?.email, place?.email_contato, place?.email_publico].find(emailValido) || "";
