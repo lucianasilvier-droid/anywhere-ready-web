@@ -110,7 +110,7 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             ) : (
               <><strong className="text-white">Esta empresa não tem site.</strong> </>
             )}
-            Prepare as instruções no sistema, abra o Claude gratuito, gere o JSON e cole a resposta aqui. Não precisa de chave de API nem gera cobrança da Anthropic. O site usa os dados do CRM e as fotos reais do Google disponíveis.
+            Prepare as instruções no sistema, abra o Claude gratuito, gere o JSON e cole a resposta aqui. O Claude não exige chave de API nem gera cobrança da Anthropic. O site usa as fotos reais já salvas; somente leads antigos sem fotos podem acionar a consulta ao Google Places.
           </p>
           <textarea
             value={orientacoes}
