@@ -78,9 +78,9 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
   const nome = textoSeguro(lead.empresa || "Nossa empresa", 120);
   const categoria = textoSeguro(lead.categoria || "", 100);
   const observacaoOperador = textoSeguro(orientacoes, 600);
-  const analiseCliente = textoSeguro(lead.ai_resumo || "", 500);
-  const oportunidadesCliente = textoSeguro(lead.ai_oportunidades || "", 420);
-  const observacoesCliente = textoSeguro(lead.observacoes || "", 420);
+  // A análise comercial orienta o tom e a estrutura, mas nunca é exposta literalmente no site público.
+  const analiseEstrategica = `${lead.ai_resumo || ""} ${lead.ai_oportunidades || ""} ${lead.observacoes || ""}`.toLowerCase();
+  const focoAgendamento = /agend|reserva|consulta|hor[aá]rio/.test(analiseEstrategica);
   const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
   const ramo = `${categoria} ${nome}`.toLowerCase();
   const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
@@ -91,15 +91,39 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
     : restaurante ? "vinho" : "oceano";
   const servicos = restaurante
     ? [
-        { nome: "Cardápio e opções", descricao: "Consulte as opções disponíveis e tire suas dúvidas diretamente com a equipe.", icone: "comida" },
-        { nome: "Atendimento", descricao: "Entre em contato para confirmar informações sobre produtos e atendimento.", icone: "check" },
-        { nome: "Reservas", descricao: "Fale com a equipe pelo WhatsApp para consultar disponibilidade e fazer sua reserva.", icone: "relogio" },
+        { nome: "Cardápio e opções", descricao: "Conheça as opções disponíveis e consulte a equipe sobre os itens do dia.", icone: "comida" },
+        { nome: "Atendimento", descricao: "Tire dúvidas sobre produtos, horários e formas de atendimento.", icone: "check" },
+        { nome: "Reservas", descricao: "Consulte a disponibilidade e fale com a equipe para organizar sua visita.", icone: "relogio" },
       ]
-    : [
-        { nome: `Atendimento em ${categoria || "nossos serviços"}`, descricao: `Entre em contato com ${nome} para conhecer as opções de atendimento disponíveis.`, icone: "check" },
-        { nome: "Informações e orientações", descricao: "Consulte informações sobre os serviços e esclareça suas dúvidas diretamente com a equipe.", icone: "estrela" },
-        { nome: "Contato direto", descricao: "Use os canais de contato e a localização desta página para falar com a empresa.", icone: "coracao" },
-      ];
+    : beleza
+      ? [
+          { nome: "Cuidados e serviços", descricao: "Conheça as opções de cuidado e beleza oferecidas pelo estabelecimento.", icone: "beleza" },
+          { nome: "Atendimento personalizado", descricao: "Converse com a equipe para encontrar o serviço mais adequado ao que procura.", icone: "coracao" },
+          { nome: "Agendamento", descricao: "Consulte horários e agende seu atendimento diretamente.", icone: "relogio" },
+        ]
+      : pet
+        ? [
+            { nome: "Cuidados para seu pet", descricao: "Consulte os serviços disponíveis para o cuidado e bem-estar do seu companheiro.", icone: "pet" },
+            { nome: "Orientação da equipe", descricao: "Fale com os profissionais para esclarecer dúvidas sobre os atendimentos.", icone: "coracao" },
+            { nome: "Agendamento", descricao: "Consulte a disponibilidade e organize o atendimento do seu pet.", icone: "relogio" },
+          ]
+        : saude
+          ? [
+              { nome: "Atendimento especializado", descricao: "Consulte as áreas de atendimento e os serviços disponíveis na unidade.", icone: "saude" },
+              { nome: "Orientações", descricao: "Entre em contato para esclarecer dúvidas e receber informações sobre o atendimento.", icone: "check" },
+              { nome: "Agendamento", descricao: "Consulte horários e informações para agendar uma consulta.", icone: "relogio" },
+            ]
+          : automotivo
+            ? [
+                { nome: "Serviços automotivos", descricao: "Consulte os serviços disponíveis para seu veículo.", icone: "carro" },
+                { nome: "Orçamento e informações", descricao: "Fale com a equipe para explicar sua necessidade e confirmar as opções.", icone: "ferramenta" },
+                { nome: "Atendimento", descricao: "Consulte disponibilidade e horários diretamente com o estabelecimento.", icone: "check" },
+              ]
+            : [
+                { nome: `Atendimento em ${categoria || "nossos serviços"}`, descricao: `Entre em contato com ${nome} para conhecer as opções de atendimento disponíveis.`, icone: "check" },
+                { nome: "Informações e orientações", descricao: "Consulte informações sobre os serviços e esclareça suas dúvidas diretamente com a equipe.", icone: "estrela" },
+                { nome: "Contato direto", descricao: "Use os canais de contato e a localização desta página para falar com a empresa.", icone: "coracao" },
+              ];
   const itensCardapio = Array.isArray(lead.cardapio) ? lead.cardapio : Array.isArray(lead.menu) ? lead.menu : [];
   const cardapio = itensCardapio.slice(0, 80).map((item) => ({
     categoria: textoSeguro(item?.categoria || "", 60),
@@ -109,22 +133,22 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
     imagem_url: /^https:\/\//i.test(String(item?.imagem_url || item?.image || "")) ? String(item.imagem_url || item.image) : "",
   })).filter((item) => item.nome);
   return {
-    slogan: restaurante ? "Uma experiência para aproveitar" : `Conheça ${nome}` ,
+    slogan: restaurante ? "Uma experiência para aproveitar" : beleza ? "Seu momento de cuidado começa aqui" : pet ? "Cuidado e carinho para seu pet" : saude ? "Cuidado e atenção em cada atendimento" : automotivo ? "Cuidado e confiança para seu veículo" : `Conheça ${nome}` ,
     titulo: nome,
     subtitulo: [categoria, local].filter(Boolean).join(" · ") || "Conheça a empresa e fale diretamente com a equipe.",
-    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. ${analiseCliente || "Esta página foi organizada para apresentar o negócio com clareza e facilitar o contato com a equipe."}${oportunidadesCliente ? `\n\nA apresentação destaca os pontos de contato e oportunidades mais relevantes identificados na análise do estabelecimento.` : ""}${observacoesCliente ? `\n\nInformações adicionais consideradas na preparação: ${observacoesCliente}` : ""}\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
+    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. Esta página apresenta as informações disponíveis sobre o estabelecimento e facilita o contato com a equipe.\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
     servicos,
     diferenciais: [
       { titulo: "Atendimento próximo", texto: "Entre em contato diretamente com a equipe para receber orientação sobre a melhor opção para sua necessidade." },
       { titulo: "Presença local", texto: local ? `Encontre a empresa em ${local} e consulte a rota para chegar com facilidade.` : "Consulte a localização e as formas de contato disponíveis." },
-      { titulo: oportunidadesCliente ? "Soluções para seu negócio" : "Informações claras", texto: oportunidadesCliente ? "A apresentação considera as oportunidades identificadas para este estabelecimento, sem prometer resultados não comprovados." : "Consulte os dados cadastrados e confirme detalhes diretamente com a equipe." },
+      { titulo: "Informações claras", texto: "Consulte os dados disponíveis e confirme os detalhes diretamente com a equipe." },
     ],
     perguntas: [
       { pergunta: "Como posso entrar em contato?", resposta: "Use o botão de WhatsApp ou os dados de contato apresentados nesta página." },
       { pergunta: "Quais serviços ou opções estão disponíveis?", resposta: "Fale diretamente com a equipe para confirmar as opções disponíveis." },
       { pergunta: "Como confirmar valores e horários?", resposta: "Valores, disponibilidade e horários devem ser confirmados diretamente com a empresa." },
     ],
-    chamada_agendamento: restaurante ? "Faça sua reserva ou consulte a disponibilidade diretamente pelo WhatsApp." : "Entre em contato para saber mais e consultar a disponibilidade.",
+    chamada_agendamento: restaurante ? "Faça sua reserva ou consulte a disponibilidade diretamente pelo WhatsApp." : focoAgendamento ? "Consulte os horários disponíveis e fale com a equipe para agendar seu atendimento." : "Entre em contato para saber mais e consultar as opções disponíveis.",
     tema,
     seo_descricao: `${nome}${categoria ? ` em ${categoria}` : ""}${local ? ` em ${local}` : ""}. Consulte informações e entre em contato diretamente com a empresa.`.slice(0, 160),
     tipo_negocio: restaurante ? "restaurante" : "servicos",
