@@ -69,7 +69,7 @@ export function ForgotPasswordPage() {
               <Input id="forgot-email" type="email" autoComplete="email" autoFocus placeholder="voce@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
             </div>
           </div>
-          <SubmitButton busy={busy || emailConfigurado === null} busyLabel="Enviando...">
+          <SubmitButton busy={busy} disabled={emailConfigurado !== true || busy} busyLabel="Enviando...">
             Enviar link
           </SubmitButton>
         </form>
