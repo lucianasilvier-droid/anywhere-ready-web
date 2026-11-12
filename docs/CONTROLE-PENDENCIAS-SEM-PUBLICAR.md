@@ -391,3 +391,11 @@ Arquivos principais: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fn
 Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e src/components/crm/CrmLeads.jsx.
 
 **Validação:** revisão estática das regras de busca, enriquecimento, leitura do banco, gravação e interface. Não foram executadas buscas reais, consultas a sites, testes, build ou deploy.
+## Página inicial, serviços e imagens — revisão estática de 12/11/2026
+
+- A imagem principal da página inicial está configurada como a placa NFC do Google (PLATE_IMAGE_URL), não como a arte de Perfil do Google.
+- A arte de serviço Google Maps (SERVICE_IMAGE_URL) está configurada nas páginas Perfil do Google e Gestão de Perfil, conforme a orientação anterior.
+- A página de produtos apresenta imagens separadas para a placa Google e o display Instagram. O texto foi corrigido para deixar explícito que são produtos individuais, vendidos separadamente, sem kit ou combo.
+- A página de criação de site ainda não tem uma imagem própria de serviço configurada. Não reutilizar a arte do Google Maps nessa página; falta inserir a arte específica aprovada para criação de site.
+- O catálogo de contingência contém somente a placa Google NFC, o display Instagram NFC e o serviço Perfil da Empresa no Google. Confirmar a lista completa de produtos/serviços cadastrados antes de declarar catálogo e imagens completos; não inventar itens nem criar combos.
+- As imagens não foram geradas ou substituídas nesta revisão; qualquer nova arte deve ser apresentada uma por vez para aprovação antes de entrar no site.
