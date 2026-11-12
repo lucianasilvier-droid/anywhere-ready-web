@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth-middleware";
 import {
   erro,
   promptParaClaudeGratuito,
+  gerarConteudoSiteAutomatico,
   validarConteudoSite,
   sitePorLead,
   sitePublico,
@@ -91,7 +92,6 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
     z.object({
       leadId: z.string().min(1),
       orientacoes: z.string().trim().max(600).optional().default(""),
-      conteudoManual: z.string().trim().min(2).max(30000),
       extras: z
         .object({
           logo: z.boolean().optional(),
@@ -122,14 +122,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      let objetoManual;
-      try {
-        const texto = data.conteudoManual.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-        objetoManual = JSON.parse(texto);
-      } catch {
-        throw erro("Não consegui ler o JSON. Cole a resposta completa do Claude, sem alterar o conteúdo.", 422);
-      }
-      const conteudo = validarConteudoSite(objetoManual);
+      const conteudo = validarConteudoSite(gerarConteudoSiteAutomatico(lead));
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
@@ -149,7 +142,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         whatsapp: existente?.whatsapp || lead.telefone || "",
         conteudo,
         orientacoes: data.orientacoes || "",
-        modelo: "claude-web-gratuito",
+        modelo: "gerador-automatico-sem-api",
         gerado_em: agora,
         gerado_por: context.user?.email || "",
         valor_calculado: preco.valor_calculado,
@@ -194,9 +187,9 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         empresa: lead.empresa,
         tipo: "ia",
         mensagem: existente
-          ? "Site de demonstração atualizado com conteúdo do Claude gratuito."
-          : "Site de demonstração criado com conteúdo do Claude gratuito (Google Maps + agendamento por WhatsApp).",
-        autor: "Claude gratuito",
+          ? "Site de demonstração atualizado pelo gerador automático sem API paga."
+          : "Site de demonstração criado automaticamente a partir dos dados do CRM.",
+        autor: "Gerador automático",
         detalhe: `Endereço: /site/${site.slug}${rep ? ` · criado pelo representante ${rep.nome || ""}` : ""}`,
       });
 
