@@ -2,6 +2,7 @@
 // no Claude gratuito pelo navegador, validado no servidor e guardado em SiteCliente.
 import { listar } from "@/lib/representantes.server";
 import { slugify } from "@/lib/landing-representante.server";
+import { iaJSON } from "@/lib/integrations.server";
 
 export const TEMAS = ["esmeralda", "oceano", "terracota", "vinho", "grafite", "solar", "lavanda", "floresta"];
 export const ICONES = [
@@ -160,6 +161,73 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
     cardapio,
   };
 }
+/**
+ * Gera o conteúdo com a IA já configurada no sistema (API Roq/Groq; Claude como reserva).
+ * Não faz chamada até o usuário solicitar a criação/atualização do site.
+ */
+export async function gerarConteudoSiteComIA(lead, orientacoes = "", credenciais = {}) {
+  const base = gerarConteudoSiteAutomatico(lead, orientacoes);
+  const fotosDisponiveis = Array.isArray(lead.fotos_google) ? lead.fotos_google.length : 0;
+  const prompt = `Você é diretor de criação digital, UX writer e copywriter especializado em sites de alta conversão para pequenos negócios brasileiros.
+
+Crie o conteúdo de uma página de site com aparência premium, moderna e profissional. O conteúdo será aplicado a um layout responsivo já existente, com hero, serviços, diferenciais, perguntas frequentes, contato, mapa e galeria de fotos reais do Google quando disponíveis.
+
+OBJETIVOS:
+- Fazer o site parecer feito sob medida para esta empresa, nunca um modelo genérico.
+- Usar psicologia das cores: escolha uma paleta coerente com o ramo, o público e a sensação que a marca deve transmitir.
+- Criar título e subtítulo fortes, benefício claro e chamadas para ação objetivas.
+- Usar linguagem natural, convincente e acolhedora em português do Brasil.
+- Valorizar localização, reputação e características reais do estabelecimento sem exagerar.
+- Aproveitar a análise comercial como contexto para entender o negócio e destacar os serviços mais relevantes.
+- O sistema exibirá automaticamente as fotos reais do Google que estiverem cadastradas; não invente descrições de imagens.
+
+DADOS DO ESTABELECIMENTO:
+${briefing(lead, orientacoes)}
+
+FOTOS REAIS DO GOOGLE DISPONÍVEIS: ${fotosDisponiveis}. Elas serão exibidas automaticamente pelo sistema.
+
+REGRAS DE CONFIABILIDADE:
+- Não invente preços, promoções, horários, certificações, prêmios, anos de experiência, quantidade de clientes, depoimentos, nomes de funcionários ou resultados.
+- Não afirme que a empresa oferece um serviço específico se isso não estiver confirmado. Quando faltarem detalhes, descreva opções típicas do ramo de forma cuidadosa e convide o visitante a confirmar com a equipe.
+- Não copie a análise interna literalmente para o site público; use-a apenas para orientar a hierarquia e o foco do conteúdo.
+- Não inclua instruções internas, observações privadas ou informações de prospecção no texto público.
+- Não crie endereço, telefone, e-mail, redes sociais ou links. Esses dados são inseridos pelo sistema.
+- Se houver cardápio cadastrado, o sistema o incluirá separadamente; não invente pratos nem preços.
+
+FORMATO:
+- slogan: frase de impacto curta.
+- titulo: título principal específico para a empresa.
+- subtitulo: proposta de valor clara, com referência local quando disponível.
+- sobre: texto humano e confiável, em dois parágrafos curtos.
+- servicos: de 3 a 6 itens relevantes, cada um com nome, descrição e ícone permitido.
+- diferenciais: de 3 a 4 pontos objetivos, sem alegações não comprovadas.
+- perguntas: de 3 a 5 perguntas frequentes úteis.
+- chamada_agendamento: chamada para contato ou agendamento sem inventar disponibilidade.
+- tema: escolha exatamente uma opção da lista.
+- seo_descricao: descrição local natural, sem repetição artificial de palavras-chave.
+
+Escolha de tema permitida: ${TEMAS.join(", ")}.
+Ícones permitidos: ${ICONES.join(", ")}.
+
+Entregue somente um JSON válido, sem Markdown, sem comentários e sem texto antes ou depois.`;
+  const schemaHint = `{"slogan":"string","titulo":"string","subtitulo":"string","sobre":"string","servicos":[{"nome":"string","descricao":"string","icone":"string"}],"diferenciais":[{"titulo":"string","texto":"string"}],"perguntas":[{"pergunta":"string","resposta":"string"}],"chamada_agendamento":"string","tema":"string","seo_descricao":"string"}.`;
+  const resposta = await iaJSON(prompt, schemaHint, credenciais);
+  if (!resposta?.ok || !resposta?.data) {
+    throw erro(
+      resposta?.error || "A IA não conseguiu gerar o conteúdo do site. Confira as integrações de IA no painel e tente novamente.",
+      502,
+    );
+  }
+  const conteudo = validarConteudoSite({
+    ...base,
+    ...resposta.data,
+    tipo_negocio: base.tipo_negocio,
+    observacao_operador: base.observacao_operador,
+    cardapio: base.cardapio,
+  });
+  return { conteudo, modelo: resposta.modelo || "ia" };
+}
+
 /** O conteúdo é produzido no Claude gratuito pelo navegador e validado antes de salvar. */
 export function validarConteudoSite(d) {
   if (!d || typeof d !== "object" || !Array.isArray(d.servicos) || d.servicos.length < 3 || !String(d.titulo || "").trim()) {
