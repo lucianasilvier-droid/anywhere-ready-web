@@ -43,22 +43,29 @@ export default function PaymentPanel({ codigo, inicial = null, onAtualizar }) {
   useEffect(() => {
     let cancelado = false;
 
+    let timer;
     async function buscar(verificar) {
       try {
         const resposta = await consultar({ data: { codigo, verificar } });
-        if (cancelado || !resposta?.ok) return;
+        if (cancelado) return;
+        if (!resposta?.ok || !resposta?.pagamento) {
+          // Código inexistente/inválido não deve provocar consultas repetidas ao servidor.
+          statusRef.current = "nao_encontrado";
+          if (timer) clearInterval(timer);
+          return;
+        }
         statusRef.current = resposta.pagamento.status;
         setPagamento(resposta.pagamento);
         onAtualizar?.(resposta.pagamento);
       } catch {
-        /* tentaremos novamente no próximo ciclo */
+        /* Falhas transitórias podem ser consultadas novamente no próximo ciclo. */
       } finally {
         if (!cancelado) setCarregando(false);
       }
     }
 
     buscar(true);
-    const timer = setInterval(() => {
+    timer = setInterval(() => {
       if (!cancelado && statusRef.current === "pendente") buscar(false);
     }, 6000);
 
