@@ -429,3 +429,22 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 **Estado:** implementação registrada na branch de trabalho; revisão estática confirmou a presença da coleta, persistência, exposição pública e renderização. Ainda não foi possível validar o carregamento visual real nem executar testes locais. O status de verificação da Vercel retornou falha por limite de build do plano (`build-rate-limit`); não há confirmação de preview pronto. Produção não foi publicada.
 
 **Próximas verificações:** gerar novamente a demonstração da Barbearia da Vinci com o lead correto; conferir se o campo `site` contém o domínio oficial e se o `place_id` corresponde ao perfil correto do Google; confirmar que as imagens realmente carregam no navegador antes de marcar como testado.
+
+## Proposta específica — Barbearia da Vinci (12/11/2026)
+
+**Implementado na branch de trabalho, sem publicação:**
+- Criada a página dedicada `/proposta-barbearia-da-vinci`, sem depender de registro de lead ou dados fictícios no banco.
+- Direção visual própria: grafite, tons de areia e dourado envelhecido; identidade de barbearia clássica com apresentação editorial e foco em agendamento.
+- Hero com foto real do acervo oficial, navegação responsiva, CTA de agendamento e botão flutuante de WhatsApp.
+- Seções: diferenciais, experiência, serviços e preços, visagismo com as três opções, galeria filtrável, equipe, localização com mapa e perguntas frequentes.
+- Fotos de galeria e retratos da equipe apontam diretamente para arquivos do domínio oficial. Os quatro retratos da equipe foram abertos e conferidos no domínio oficial durante esta rodada.
+- Links de agendamento, WhatsApp e endereço usam os destinos divulgados pela própria empresa.
+- Página marcada com `noindex,nofollow` enquanto for proposta privada, para não indexar conteúdo de demonstração.
+
+**Arquivos alterados:**
+- `src/routes/proposta-barbearia-da-vinci.jsx`
+- `src/routeTree.gen.ts`
+
+**Conferência de conteúdo:** dados institucionais, endereço, horários, serviços e preços foram comparados com o site oficial. O site original apresenta algumas linhas de preço/combos com formatação ambígua; os valores de combos devem ser confirmados com a empresa antes de qualquer publicação comercial.
+
+**Status real:** código e registro da rota confirmados no GitHub. Fotos de equipe verificadas por abertura dos arquivos oficiais. Ainda não foi executado build, teste de navegação, conferência visual em navegador ou publicação. Portanto, a proposta está implementada no código, mas não pode ser chamada de visualmente aprovada/pronta para apresentação até uma prévia ser aberta e revisada. Nenhum build ou deploy da Vercel foi iniciado.
