@@ -242,3 +242,10 @@ Arquivos alterados:
 
 **Limitação:** o SMTP continua sem credenciais reais no ambiente; a recuperação por e-mail só ficará operacional após configurar SMTP_HOST, SMTP_PORT, SMTP_FROM e, quando exigido pelo provedor, SMTP_USER/SMTP_PASS. Nenhuma credencial foi inventada ou alterada.
 **Validação:** inspeção estática e confirmação dos commits no GitHub; nenhum e-mail foi enviado e nenhum teste/build/deploy foi executado.
+
+
+## Loja — preço da vitrine — 12/11/2026
+
+- Removido o preço fixo "Comprar por R$ 55,00" do destaque inicial de placas NFC.
+- O catálogo de contingência não tem preço confirmado (valores zerados) e o preço real deve vir do cadastro atual do produto. O botão agora diz "Ver placas e preços" e leva à loja, evitando divulgar valor incorreto.
+- Não foram alterados preços cadastrados, links de checkout ou valores de pagamentos.
