@@ -13,8 +13,8 @@ const STATUS = {
 };
 
 /**
- * Cartão "Site para o cliente" no painel do representante. O representante cria até
- * 2 demonstrações locais por dia, apenas para os próprios clientes, e compartilha o link.
+ * Cartão "Site para o cliente" no painel do representante. A IA cria até
+ * 2 demonstrações por dia, apenas para os próprios clientes, e o representante compartilha o link.
  * Preço, custos e status do site continuam com o administrador.
  */
 export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado }) {
@@ -91,7 +91,7 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             ) : (
               <><strong className="text-white">Esta empresa não tem site.</strong> </>
             )}
-            O sistema monta automaticamente uma demonstração com os dados cadastrados, localização, informações do segmento e contato pelo WhatsApp. Nenhuma API paga é utilizada.
+            O Cloud AI usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para criar um site personalizado. A geração acontece somente quando você clicar e pode consumir a cota da integração de IA configurada pelo administrador.
           </p>
           <textarea
             value={orientacoes}
@@ -107,7 +107,7 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-50"
           >
             {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerarAutomatico.isPending ? "Criando demonstração..." : "Criar site automaticamente"}
+            {mGerarAutomatico.isPending ? "Criando site com Cloud AI..." : "Criar site com Cloud AI"}
           </button>
           <p className={`text-[11px] ${esgotado ? "text-red-300" : "text-white/40"}`}>
             {esgotado
