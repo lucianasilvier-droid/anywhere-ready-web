@@ -330,3 +330,11 @@ Arquivos alterados:
 - [ ] Implementar/validar tratamento administrativo de estornos manuais e definir fluxo para estorno parcial.
 - [ ] Validar a coleta de fotos Google em ambiente controlado, observando cota e cobrança do Places API.
 - [ ] Revisar SEO, links públicos, formulários e painel do representante após a publicação.
+
+
+## Pagamentos — parar consultas repetidas para código inexistente — 12/11/2026
+
+- Na revisão estática da página pública de acompanhamento, identifiquei que `PaymentPanel` continuava agendando uma consulta a cada seis segundos mesmo quando `getPaymentFn` retornava `ok: false` para um código inexistente.
+- Corrigido em `src/components/store/PaymentPanel.jsx`: quando o servidor informa que o código não corresponde a um pagamento, o polling é interrompido. Falhas transitórias de rede continuam podendo ser consultadas novamente.
+- A mensagem amigável de pagamento não encontrado já existia e foi mantida.
+- **Status:** correção implementada na branch de trabalho; não houve teste, build, consulta a provedor ou deploy.
