@@ -2,6 +2,8 @@
 import { env } from "@/lib/env.server";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 
 export function readSecret(name) {
   try {
@@ -128,23 +130,65 @@ async function hostPublico(hostname) {
   }
 }
 
-async function lerHtmlLimitado(response, maxBytes = 350000) {
-  if (!response.body?.getReader) return (await response.text()).slice(0, maxBytes);
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let texto = "";
-  let total = 0;
-  while (true) {
-    const parte = await reader.read();
-    if (parte.done) break;
-    total += parte.value.byteLength;
-    texto += decoder.decode(parte.value, { stream: true });
-    if (total >= maxBytes) {
-      await reader.cancel().catch(() => {});
-      break;
-    }
+async function requisitarHtmlComDnsFixado(url) {
+  const host = url.hostname.replace(/^\[|\]$/g, "");
+  let enderecos;
+  try {
+    enderecos = await lookup(host, { all: true, verbatim: true });
+  } catch {
+    return null;
   }
-  return texto + decoder.decode();
+  if (!enderecos.length || !enderecos.every((item) => ipPublico(item.address))) return null;
+  const destino = enderecos[0];
+  const requestFn = url.protocol === "https:" ? httpsRequest : httpRequest;
+
+  return new Promise((resolve) => {
+    let finalizado = false;
+    const concluir = (valor) => {
+      if (finalizado) return;
+      finalizado = true;
+      resolve(valor);
+    };
+    const req = requestFn({
+      protocol: url.protocol,
+      hostname: host,
+      port: url.port || (url.protocol === "https:" ? 443 : 80),
+      path: url.pathname + url.search,
+      method: "GET",
+      agent: false,
+      servername: url.protocol === "https:" ? host : undefined,
+      lookup: (_hostname, _options, callback) => callback(null, destino.address, destino.family),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; GoogleNFCConnectContactFinder/1.0)",
+        Accept: "text/html,application/xhtml+xml",
+      },
+    }, (response) => {
+      const chunks = [];
+      let total = 0;
+      response.on("data", (chunk) => {
+        total += chunk.length;
+        if (total <= 350000) chunks.push(chunk);
+        if (total >= 350000) {
+          concluir({
+            status: response.statusCode || 0,
+            headers: response.headers,
+            body: Buffer.concat(chunks).toString("utf8"),
+          });
+          response.destroy();
+        }
+      });
+      response.on("end", () => concluir({
+        status: response.statusCode || 0,
+        headers: response.headers,
+        body: Buffer.concat(chunks).toString("utf8"),
+      }));
+      response.on("error", () => concluir(null));
+    });
+    const timeout = setTimeout(() => req.destroy(new Error("timeout")), 1800);
+    req.on("close", () => clearTimeout(timeout));
+    req.on("error", () => concluir(null));
+    req.end();
+  });
 }
 
 async function buscarHtmlPublico(urlInicial, hostBase) {
@@ -158,36 +202,23 @@ async function buscarHtmlPublico(urlInicial, hostBase) {
     if (!["https:", "http:"].includes(atual.protocol)) return "";
     if (atual.username || atual.password || (atual.port && !["80", "443"].includes(atual.port))) return "";
     if (!mesmoHost(atual.hostname, hostBase) || !(await hostPublico(atual.hostname))) return "";
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1600);
-    try {
-      const response = await fetch(atual.toString(), {
-        redirect: "manual",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; GoogleNFCConnectContactFinder/1.0)",
-          Accept: "text/html,application/xhtml+xml",
-        },
-      });
-      if (response.status >= 300 && response.status < 400) {
-        const location = response.headers.get("location");
-        if (!location) return "";
-        try {
-          const destino = new URL(location, atual);
-          if (!mesmoHost(destino.hostname, hostBase)) return "";
-          atual = destino;
-          continue;
-        } catch {
-          return "";
-        }
+    const response = await requisitarHtmlComDnsFixado(atual);
+    if (!response) return "";
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.location;
+      if (!location) return "";
+      try {
+        const destino = new URL(location, atual);
+        if (!mesmoHost(destino.hostname, hostBase)) return "";
+        atual = destino;
+        continue;
+      } catch {
+        return "";
       }
-      if (!response.ok || !/text\/html|application\/xhtml\+xml/i.test(response.headers.get("content-type") || "")) return "";
-      return await lerHtmlLimitado(response);
-    } catch {
-      return "";
-    } finally {
-      clearTimeout(timeout);
     }
+    if (response.status < 200 || response.status >= 300 ||
+        !/text\/html|application\/xhtml\+xml/i.test(String(response.headers["content-type"] || ""))) return "";
+    return response.body || "";
   }
   return "";
 }
