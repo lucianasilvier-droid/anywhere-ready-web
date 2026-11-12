@@ -7,11 +7,11 @@ import { whatsappLink } from "@/lib/site-content";
 export const Route = createFileRoute("/_site/servicos/placa-nfc")({
   head: () => ({
     meta: [
-      { title: "Placa NFC de Avaliação Google e Instagram — R$ 55,00" },
+      { title: "Placas NFC individuais Google ou Instagram — a partir de R$ 55,00" },
       {
         name: "description",
         content:
-          "Placa NFC que leva o cliente direto à avaliação no Google e ao seu Instagram. Personalizada com a sua marca, a partir de R$ 55,00.",
+          "Placas NFC individuais para avaliação no Google ou acesso ao Instagram. Cada unidade é personalizada com a sua marca e vendida separadamente, a partir de R$ 55,00.",
       },
     ],
   }),
@@ -40,9 +40,7 @@ function PlacaNfcPage() {
               <span className="text-gradient-gold">Sua avaliação no Google.</span>
             </h1>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/60">
-              Placa física com chip NFC que abre o link de avaliação da sua empresa no
-              Google e o seu perfil do Instagram. Cada placa tem um endereço exclusivo, com os
-              links configurados e testados antes da entrega.
+              Placa física com chip NFC que abre o link de avaliação da sua empresa no Google. Também temos um modelo individual para acesso ao Instagram. Cada produto é vendido separadamente, com o link escolhido configurado e testado antes da entrega.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
