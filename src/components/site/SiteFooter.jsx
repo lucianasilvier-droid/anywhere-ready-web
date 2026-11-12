@@ -29,6 +29,7 @@ export default function SiteFooter() {
             <li><Link to="/servicos/placa-nfc" className="hover:text-white">Placa NFC de avaliação</Link></li>
             <li><Link to="/servicos/criacao-site" className="hover:text-white">Criação de site</Link></li>
             <li><Link to="/loja" className="hover:text-white">Loja de placas</Link></li>
+            <li><Link to="/conteudos" className="hover:text-white">Guias e conteúdos</Link></li>
           </ul>
         </div>
 
