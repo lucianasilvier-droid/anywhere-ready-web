@@ -181,3 +181,14 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - Identificado que a confirmação conferia o valor, mas não validava a referência externa do pagamento contra o número do pedido.
 - Incluída validação obrigatória de external_reference antes de aplicar qualquer status do Mercado Pago. Uma transação válida de outro pedido, mesmo com o mesmo valor, não pode ser reaproveitada para aprovar este pedido.
 - Se a referência estiver ausente ou divergente, a transação permanece sem aprovação e o motivo é registrado no pagamento.
+
+
+## Auditoria de pagamentos — continuidade — 12/11/2026
+
+- Mercado Pago: validação HMAC não aceita mais webhook sem Webhook Secret configurado.
+- Mercado Pago: a confirmação agora exige que external_reference recebido da API corresponda exatamente ao número do pedido associado ao registro de pagamento, além da conferência de valor já existente.
+- InfinitePay: eventos refunded/canceled sem assinatura não alteram mais o status final. O endpoint continua consultando payment_check antes de aceitar aprovação.
+- O webhook InfinitePay não usa mais import da rotina de atualização de status removida.
+- Nenhuma credencial, pagamento ou configuração externa foi alterada.
+
+**Limitação ainda pendente:** revisar a autorização do início do checkout para pedidos de clientes autenticados e convidados. A função de criação recebe pedido_id e usa acesso privilegiado ao registro; a estratégia de token público/identidade do cliente deve ser confirmada no fluxo completo antes de restringir ou modificar, para não quebrar checkout de convidados. Também permanece a conferência de erros 404 nos registros reais.
