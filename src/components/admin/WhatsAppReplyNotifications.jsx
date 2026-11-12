@@ -122,8 +122,8 @@ export default function WhatsAppReplyNotifications() {
       </button>
 
       {aberto && (
-        <div className="absolute right-0 top-11 z-[70] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-white/10 bg-[#0b1426] shadow-2xl shadow-black/50">
-          <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3">
+        <div className="fixed left-1/2 top-[4.25rem] z-[100] flex max-h-[calc(100dvh-5.25rem)] w-[calc(100vw-1.5rem)] max-w-[390px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1426] shadow-2xl shadow-black/50 lg:absolute lg:left-auto lg:right-0 lg:top-11 lg:max-h-[min(65vh,560px)] lg:w-[390px] lg:translate-x-0">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3">
             <div>
               <p className="text-[12px] font-bold text-white">Respostas dos clientes</p>
               <p className="text-[10.5px] text-white/40">{naoLidas} não lida(s) · atualização automática</p>
@@ -143,7 +143,7 @@ export default function WhatsAppReplyNotifications() {
             </div>
           </div>
           {erro && <p className="px-4 py-2 text-[11px] text-red-300">{erro}</p>}
-          <div className="max-h-[min(65vh,480px)] overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
             {items.length === 0 ? (
               <p className="px-3 py-8 text-center text-[12px] text-white/35">Nenhuma resposta recebida ainda.</p>
             ) : items.map((item) => {
@@ -153,11 +153,11 @@ export default function WhatsAppReplyNotifications() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className={`text-[11.5px] font-bold ${tipo.classe}`}>{tipo.titulo}</p>
-                      <p className="mt-0.5 truncate text-[12px] font-semibold text-white">{item.empresa || "Estabelecimento"}</p>
+                      <p className="mt-0.5 break-words text-[12px] font-semibold text-white">{item.empresa || "Estabelecimento"}</p>
                     </div>
                     {!item.notificacao_lida && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-[11.5px] text-white/65">“{item.mensagem || "Mensagem sem texto"}”</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-[11.5px] leading-relaxed text-white/70">“{item.mensagem || "Mensagem sem texto"}”</p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[10px] text-white/35">{dataHora(item.recebido_em || item.created_date)}</span>
                     <div className="flex items-center gap-2">
