@@ -249,7 +249,12 @@ async function repWrite(entity, kind, current, patch, rep, user) {
     return Object.fromEntries(Object.entries(patch).filter(([k]) => !REP_PROTECTED_LEAD_FIELDS.includes(k)));
   }
   if (entity === "LeadInteraction" && kind === "create" && (await leadDoRepresentante(patch.lead_id, rep.id))) {
-    return { ...patch, autor_email: norm(user.email) };
+    return {
+      ...patch,
+      autor_email: norm(user.email),
+      representante_nome: rep.nome || "",
+      notificacao_lida: false,
+    };
   }
   if (entity === "LeadInteraction" && kind === "update" && (await leadDoRepresentante(current?.lead_id, rep.id))) {
     const { lead_id, ...rest } = patch;
