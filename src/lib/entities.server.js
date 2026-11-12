@@ -104,25 +104,7 @@ function buildWhere(entity, filter, params) {
       conds.push(`data @> $${params.length}::jsonb`);
     }
   }
-  if (entity === "Lead") {
-    const telefone = (campo) => "regexp_replace(COALESCE(data->>'" + campo + "', ''), '[^0-9]', '', 'g')";
-    const tel = [telefone("telefone"), telefone("whatsapp")];
-    const emailValidoSql = (campo) => {
-      const email = "lower(COALESCE(data->>'" + campo + "', ''))";
-      return "(" + email + " ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'" +
-        " AND " + email + " !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'" +
-        " AND split_part(" + email + ", '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$')";
-    };
-    conds.push("(" +
-      "length(" + tel[0] + ") IN (10, 11)" +
-      " OR (left(" + tel[0] + ", 2) = '55' AND length(" + tel[0] + ") IN (12, 13))" +
-      " OR length(" + tel[1] + ") IN (10, 11)" +
-      " OR (left(" + tel[1] + ", 2) = '55' AND length(" + tel[1] + ") IN (12, 13))" +
-      " OR " + emailValidoSql("email") +
-      " OR " + emailValidoSql("email_contato") +
-      " OR " + emailValidoSql("email_publico") +
-    ")");
-  }
+  if (entity === "Lead") conds.push(VALID_LEAD_CONTACT_SQL);
   return conds;
 }
 
@@ -223,10 +205,28 @@ function repCondition(entity, repId, params) {
 
 const START_OF_TODAY = `(date_trunc('day', now() AT TIME ZONE '${FUSO_CRM}') AT TIME ZONE '${FUSO_CRM}')`;
 
+const phoneContactSql = (field) => {
+  const digits = "regexp_replace(COALESCE(data->>'" + field + "', ''), '[^0-9]', '', 'g')";
+  return "(length(" + digits + ") IN (10, 11) OR (left(" + digits + ", 2) = '55' AND length(" + digits + ") IN (12, 13)))";
+};
+const emailContactSql = (field) => {
+  const email = "lower(COALESCE(data->>'" + field + "', ''))";
+  return "(" + email + " ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'" +
+    " AND " + email + " !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'" +
+    " AND split_part(" + email + ", '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$')";
+};
+const VALID_LEAD_CONTACT_SQL = "(" + [
+  phoneContactSql("telefone"),
+  phoneContactSql("whatsapp"),
+  emailContactSql("email"),
+  emailContactSql("email_contato"),
+  emailContactSql("email_publico"),
+].join(" OR ") + ")";
+
 /** How many leads the representative added today (Brasília time) and how many are left. */
 export async function limiteLeadsHoje(repId) {
   const rows = await query(
-    `SELECT count(*)::int AS n FROM records WHERE entity = 'Lead' AND data->>'representante_id' = $1 AND created_date >= ${START_OF_TODAY}`,
+    `SELECT count(*)::int AS n FROM records WHERE entity = 'Lead' AND data->>'representante_id' = $1 AND created_date >= ${START_OF_TODAY} AND ${VALID_LEAD_CONTACT_SQL}`,
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
@@ -246,7 +246,8 @@ export async function limiteLeadsHoje(repId) {
 /** How many demo sites the representative created today (Brasília time) and how many are left. */
 export async function limiteSitesHoje(repId) {
   const rows = await query(
-    `SELECT count(*)::int AS n FROM records WHERE entity = 'SiteCliente' AND data->>'criado_por_representante_id' = $1 AND created_date >= ${START_OF_TODAY}`,
+    `SELECT count(*)::int AS n FROM records WHERE entity = 'SiteCliente' AND data->>'criado_por_representante_id' = $1 AND created_date >= ${START_OF_TODAY}
+                  AND ${VALID_LEAD_CONTACT_SQL}`,
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
