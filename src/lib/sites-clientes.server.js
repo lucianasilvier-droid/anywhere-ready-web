@@ -1,5 +1,5 @@
-// Sites de demonstração para empresas prospectadas no CRM. O conteúdo é preparado
-// no Claude gratuito pelo navegador, validado no servidor e guardado em SiteCliente.
+// Sites de demonstração para empresas prospectadas no CRM. O conteúdo é gerado
+// pela IA configurada no sistema, validado no servidor e guardado em SiteCliente.
 import { listar } from "@/lib/representantes.server";
 import { slugify } from "@/lib/landing-representante.server";
 import { iaJSON } from "@/lib/integrations.server";
@@ -22,37 +22,6 @@ export function whatsappDe(telefone) {
   if (!n) return "";
   if (n.length <= 11) n = `55${n}`;
   return n;
-}
-
-/** Monta as instruções para usar o Claude gratuito, sem chave ou chamada de API. */
-export function promptParaClaudeGratuito(lead, orientacoes = "") {
-  return `Crie o conteúdo completo de um site de demonstração profissional para esta empresa. Não use API, não tente executar ferramentas e não publique nada. Responda somente com um objeto JSON válido, sem Markdown e sem blocos de código.
-
-DADOS DA EMPRESA:
-${briefing(lead, orientacoes)}
-
-REGRAS:
-- Escreva em português do Brasil, com linguagem clara, acolhedora e comercial, adequada ao ramo.
-- Não invente preços, prêmios, anos de experiência, clientes, certificações, depoimentos ou horários.
-- Use somente dados reais da empresa. Não invente telefone, endereço ou redes sociais.
-- Crie de 3 a 6 serviços, 3 a 4 diferenciais e 3 a 5 perguntas frequentes.
-- O campo tema deve ser exatamente um destes: esmeralda, oceano, terracota, vinho, grafite, solar, lavanda, floresta.
-- Cada ícone de serviço deve ser exatamente um destes: estrela, coracao, tesoura, dente, carro, comida, cafe, casa, ferramenta, saude, beleza, pet, escudo, relogio, folha, presente, livro, musica, raio, check.
-- Respeite os limites: slogan 90 caracteres; titulo 120; subtitulo 260; sobre 1400; nome de serviço 60; descrição de serviço 220; chamada_agendamento 180; seo_descricao 160.
-- O JSON deve conter exatamente esta estrutura:
-{
-  "slogan": "frase curta",
-  "titulo": "título principal",
-  "subtitulo": "frase de apoio",
-  "sobre": "apresentação da empresa em dois parágrafos",
-  "servicos": [{"nome":"Serviço","descricao":"Descrição objetiva","icone":"check"}],
-  "diferenciais": [{"titulo":"Diferencial","texto":"Explicação breve"}],
-  "perguntas": [{"pergunta":"Pergunta frequente?","resposta":"Resposta objetiva"}],
-  "chamada_agendamento": "Convite para contato pelo WhatsApp",
-  "tema": "oceano",
-  "seo_descricao": "Descrição para mecanismos de busca"
-}
-Entregue apenas o JSON, sem comentários antes ou depois.`;
 }
 
 function briefing(lead, orientacoes) {
@@ -228,7 +197,7 @@ Entregue somente um JSON válido, sem Markdown, sem comentários e sem texto ant
   return { conteudo, modelo: resposta.modelo || "ia" };
 }
 
-/** O conteúdo é produzido no Claude gratuito pelo navegador e validado antes de salvar. */
+/** Valida e normaliza o conteúdo retornado pela IA antes de salvar. */
 export function validarConteudoSite(d) {
   if (!d || typeof d !== "object" || !Array.isArray(d.servicos) || d.servicos.length < 3 || !String(d.titulo || "").trim()) {
     throw erro("O JSON retornado pelo Claude está incompleto. Confira o conteúdo e tente novamente.", 422);
