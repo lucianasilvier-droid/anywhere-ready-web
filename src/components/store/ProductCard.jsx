@@ -10,7 +10,6 @@ export default function ProductCard({ produto }) {
     <Link to="/loja/$slug" params={{ slug: produto.slug || produto.id }} className="block">
       <div className="relative flex aspect-[4/5] max-h-[330px] items-center justify-center overflow-hidden bg-gradient-to-b from-[#172238] to-[#0d1422] p-3 sm:p-4">
         {imagem ? <img src={imagem} alt={produto.nome} loading="lazy" className={`h-full w-full transition-transform duration-500 group-hover:scale-[1.025] ${produto.imagem_fit === "contain" ? "object-contain" : "object-cover"}`} /> : <div className="w-full"><PlateVisual nome={produto.modelo ? produto.modelo.toUpperCase() : "Sua Empresa"} /></div>}
-        {produto.slug === "kit-google-instagram" && <span className="absolute left-4 top-4 rounded-full border border-[#f4ca72]/40 bg-[#161b2a]/90 px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[.15em] text-[#f4ca72]">Duas placas no kit</span>}
       </div>
       <div className="px-5 pb-2 pt-4"><h3 className="font-heading text-[15px] font-bold leading-snug text-white">{produto.nome}</h3><p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-[12.5px] leading-relaxed text-white/55">{produto.descricao_curta}</p></div>
     </Link>
