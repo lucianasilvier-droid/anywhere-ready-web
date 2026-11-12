@@ -32,6 +32,7 @@ const repInput = z.object({
   comissao_perfil: z.number().min(0).max(10000).optional(),
   comissao_mensalidade: z.number().min(0).max(10000).optional(),
   comissao_placa: z.number().min(0).max(10000).optional(),
+  limite_leads_dia: z.number().int().min(1).max(10000).optional().default(20),
   observacoes: z.string().trim().max(1000).optional().default(""),
   convidar: z.boolean().optional().default(false),
 });
@@ -177,6 +178,7 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       comissao_perfil: Number(data.comissao_perfil) || 100,
       comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
       comissao_placa: Number(data.comissao_placa) || 20,
+      limite_leads_dia: Number(data.limite_leads_dia) || 20,
       observacoes: data.observacoes || "",
     };
 
