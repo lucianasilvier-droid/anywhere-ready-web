@@ -464,7 +464,7 @@ export const integrationStatusFn = createServerFn({ method: "GET" })
       {
         tipo: "whatsapp",
         nome: "WhatsApp Business",
-        campos: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_VERIFY_TOKEN"],
+        campos: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_VERIFY_TOKEN", "WHATSAPP_APP_SECRET"],
       },
     ];
 
