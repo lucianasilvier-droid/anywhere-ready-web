@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, MapPin, Phone, Star, Check, Target, X, CalendarClock } from "lucide-react";
+import { Search, Loader2, Plus, MapPin, Phone, Mail, Star, Check, Target, X, CalendarClock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { searchPlacesFn } from "@/lib/admin-fns";
 import { meuLimiteCrmFn } from "@/lib/representantes-fns";
@@ -13,6 +13,22 @@ import EmptyState from "@/components/admin/EmptyState";
 import { STATUS_CONSENT } from "@/lib/format";
 import { useAuth } from "@/lib/AuthContext";
 import RepresentanteDoLead from "@/components/crm/RepresentanteDoLead";
+
+const digitsOnly = (value) => String(value || "").replace(/[^0-9]/g, "");
+const telefoneValido = (value) => {
+  const digits = digitsOnly(value);
+  return digits.length === 10 || digits.length === 11 ||
+    (digits.startsWith("55") && (digits.length === 12 || digits.length === 13));
+};
+const emailValido = (value) => {
+  const email = String(value || "").trim().toLowerCase();
+  const domain = email.split("@")[1] || "";
+  return email.length <= 254 &&
+    /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
+    !/(^|\.)(example|invalid|localhost|test)$/i.test(domain) &&
+    !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
+};
+const temContatoValido = (place) => telefoneValido(place?.telefone) || telefoneValido(place?.whatsapp) || emailValido(place?.email);
 
 /**
  * CRM · prospecção e lista de leads. Usado no painel do administrador (base "/admin")
@@ -145,6 +161,7 @@ export default function CrmLeads({ base = "/admin" }) {
   }
 
   async function salvarLead(place) {
+    if (!temContatoValido(place)) return toast.error("Empresa sem WhatsApp/telefone válido ou e-mail válido. Ela não pode ser salva no CRM.");
     setSalvando(place.place_id);
     try {
       await base44.entities.Lead.create({
@@ -172,8 +189,8 @@ export default function CrmLeads({ base = "/admin" }) {
   }
 
   async function salvarTodosResultados() {
-    const pendentes = resultados.filter((place) => place.place_id && !jaRegistrados(place));
-    if (!pendentes.length) return toast.info("Todos os resultados já estão no CRM.");
+    const pendentes = resultados.filter((place) => place.place_id && !jaRegistrados(place) && temContatoValido(place));
+    if (!pendentes.length) return toast.info("Não há novos resultados com contato válido para adicionar.");
     const permitidos = representante && limite
       ? pendentes.slice(0, Math.max(0, limite.restantes))
       : pendentes;
@@ -213,6 +230,7 @@ export default function CrmLeads({ base = "/admin" }) {
   async function criarManual(e) {
     e.preventDefault();
     if (novo.empresa.trim().length < 2) return toast.error("Informe o nome da empresa.");
+    if (!temContatoValido(novo)) return toast.error("Informe um WhatsApp/telefone válido ou um e-mail válido. Sem um desses contatos, o lead não pode ser criado.");
     try {
       await base44.entities.Lead.create({
         ...novo,
@@ -303,11 +321,12 @@ export default function CrmLeads({ base = "/admin" }) {
       {manual && !esgotado && (
         <form onSubmit={criarManual} className="grid gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:grid-cols-5">
           <input value={novo.empresa} onChange={(e) => setNovo({ ...novo, empresa: e.target.value })} placeholder="Empresa *" className={inputCls} />
-          <input value={novo.telefone} onChange={(e) => setNovo({ ...novo, telefone: e.target.value })} placeholder="Telefone" className={inputCls} />
-          <input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} placeholder="E-mail (opcional)" className={inputCls} />
+          <input value={novo.telefone} onChange={(e) => setNovo({ ...novo, telefone: e.target.value })} placeholder="WhatsApp/telefone válido" className={inputCls} />
+          <input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} placeholder="E-mail válido (alternativa)" className={inputCls} />
           <input value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} placeholder="Cidade" className={inputCls} />
           <input value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} placeholder="Categoria" className={inputCls} />
-          <button type="submit" className="rounded-lg bg-primary px-3 py-2 text-[12.5px] font-bold text-[#0a1128]">
+          <p className="text-[10.5px] leading-relaxed text-white/45 sm:col-span-4">Obrigatório informar pelo menos um contato válido: WhatsApp/telefone ou e-mail. Sem contato, a empresa não entra no CRM.</p>
+          <button type="submit" disabled={!temContatoValido(novo)} className="rounded-lg bg-primary px-3 py-2 text-[12.5px] font-bold text-[#0a1128] disabled:opacity-50">
             Salvar
           </button>
         </form>
@@ -409,6 +428,7 @@ export default function CrmLeads({ base = "/admin" }) {
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
                       <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
                       {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}
+                      {place.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email}</span>}
                       {place.nota_google != null && (
                         <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{place.nota_google} ({place.total_avaliacoes || 0})</span>
                       )}
