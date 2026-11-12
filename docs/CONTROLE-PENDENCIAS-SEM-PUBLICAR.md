@@ -296,3 +296,37 @@ Arquivos alterados:
 - Atribuições de autoria são exibidas quando fornecidas pelo Google.
 - A alteração foi revisada estaticamente pelos arquivos de integração, geração do site, página pública, proxy de fotos e mensagem do CRM.
 - Nenhum build, teste automatizado, teste na Vercel, deploy ou publicação foi executado. A branch `main` e a produção permanecem intocadas.
+
+
+## Publicação solicitada — 12/11/2026 (bloqueada pelo limite da Vercel)
+
+- O usuário autorizou expressamente publicar as correções e implementações na produção.
+- Verificação do GitHub: a branch `work/pendencias-sem-publicar-2026-11-12` está 73 commits à frente e 0 atrás da `main`, com HEAD `b17583576f950b04e81ba7115c29b7b1cb2dad15`. A `main` permanece em `bb2794505db5935c66ece3e568a8168c92c4e5dd`.
+- Verificação da Vercel: o projeto `google-nfc-connect` aponta para o deploy de produção `dpl_3Gv86XRRihR8tjJLeKVm7RUJPA8a`, estado READY, criado a partir do commit atual da `main`.
+- O histórico do GitHub contém notificações do Vercel Bot de 11/11/2026 informando bloqueio por limite gratuito: `api-deployments-free-per-day`, mais de 100 implantações no período de 24 horas, com orientação para tentar novamente após 24 horas.
+- Por esse motivo, nenhuma mesclagem na `main`, criação de deploy, promoção ou alteração de domínio foi executada nesta rodada. Evitou-se disparar mais uma tentativa automática de build/deploy enquanto o limite está ativo.
+- A branch de trabalho foi preservada. A produção continua servindo o deploy anterior.
+- Existe uma PR separada (#13), `fix/sync-analise-mensagens-personalizadas`, ainda em rascunho e fora da branch de trabalho. A revisão do diff encontrou trechos suspeitos com sequências literais `\\n` inseridas em código JavaScript, portanto ela não deve ser mesclada sem correção e revisão independente.
+- Não houve teste, build ou deploy nesta rodada. A inspeção de GitHub e Vercel foi somente leitura.
+
+### Próxima tentativa de publicação
+1. Aguardar o fim da janela de bloqueio da Vercel (a notificação indicou 24 horas a partir das tentativas de 11/11).
+2. Antes de publicar, revisar novamente o diff completo da branch e confirmar que a `main` não avançou.
+3. Integrar somente a branch de trabalho revisada; manter a PR #13 separada até corrigir seus trechos suspeitos e decidir se as mudanças são necessárias.
+4. Realizar uma única publicação de produção, sem deploys de preview repetidos.
+5. Confirmar o estado READY, commit implantado e domínio de produção; depois registrar a lista final de pendências.
+
+### Pendências operacionais após esta verificação
+- [ ] Aguardar liberação do limite de implantações da Vercel e repetir a conferência de disponibilidade.
+- [ ] Fazer revisão final de código antes de integrar os 73 commits da branch de trabalho.
+- [ ] Corrigir/revisar separadamente a PR #13 ou fechá-la se suas alterações já estiverem cobertas por outra solução.
+- [ ] Após publicação, validar com o usuário o criador de sites, fotos Google, links de autorização, CRM/funil, loja, pagamentos e integrações, sem fazer operações financeiras reais.
+- [ ] Configurar credenciais reais e não fornecidas: SMTP, WhatsApp Cloud API e segredos de webhook do Mercado Pago.
+- [ ] Resolver armazenamento persistente de fotos de representantes sem assumir custos de Blob/S3.
+- [ ] Investigar erros 404 restantes em rotas e registros reais; distinguir IDs inexistentes de restrições de acesso.
+- [ ] Conferir dados reais da loja, slugs, preços e links de checkout.
+- [ ] Executar fluxo CRM com duas contas e conferir permissões do representante.
+- [ ] Revisar checkout de convidados e autenticação/autorização de pedidos.
+- [ ] Implementar/validar tratamento administrativo de estornos manuais e definir fluxo para estorno parcial.
+- [ ] Validar a coleta de fotos Google em ambiente controlado, observando cota e cobrança do Places API.
+- [ ] Revisar SEO, links públicos, formulários e painel do representante após a publicação.
