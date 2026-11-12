@@ -210,3 +210,19 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - A criação de cobrança agora recusa pedidos com status cancelado/reembolsado e pedidos cujo total não seja numérico, finito e maior que zero.
 - Pedido já pago continua retornando o estado já pago sem criar nova cobrança.
 - Não foi alterado o fluxo de pedidos aguardando pagamento nem a modalidade de checkout de convidados.
+
+
+## CRM — link do perfil do representante na solicitação de autorização — 12/11/2026
+
+- Ao gerar a mensagem pelo botão **Pedir autorização**, o servidor consulta o representante vinculado ao lead.
+- Quando o representante está ativo, tem página pública ativada e possui slug, acrescenta ao final da mensagem o link absoluto `APP_URL/r/<pagina_slug>`, com uma frase curta apresentando o perfil comercial.
+- O link é acrescentado deterministicamente pelo servidor após a geração por IA; portanto não depende da IA inventar ou escolher o endereço.
+- A primeira mensagem continua sem preços, catálogo ou vídeo. A única exceção de link é o perfil público do representante responsável.
+- Se o lead estiver sem representante ou a página do representante não estiver ativa/configurada, a mensagem continua sendo gerada e o painel apresenta um aviso em vez de inserir um link quebrado.
+- O link é incluído no texto usado tanto para copiar quanto para abrir/enviar pelo WhatsApp, pois ambas as ações usam o mesmo campo de mensagem.
+
+Arquivos alterados:
+- `src/lib/admin-fns.js`
+- `src/components/crm/CrmLeadDetalhe.jsx`
+
+**Validação:** inspeção estática dos arquivos e confirmação dos commits no GitHub. Não foi gerada mensagem real com IA, não foi enviado WhatsApp e não houve build, teste ou deploy.
