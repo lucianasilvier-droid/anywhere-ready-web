@@ -58,3 +58,34 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 3. Teste local ou por revisão de código, sem Vercel, quando possível.
 4. Teste funcional real somente quando houver ambiente apropriado e sem consumir créditos da Vercel.
 5. Publicação permanece bloqueada até autorização expressa do usuário.
+
+
+## Auditoria estática adicional — 12/11/2026
+
+### Armazenamento de fotos
+- `src/lib/storage.server.js` oferece somente os drivers `local` e `s3`.
+- O driver local grava em disco (`STORAGE_DIR` ou `./storage`), o que não garante persistência entre execuções/instâncias serverless.
+- O driver S3 exige bucket, access key e secret próprios. Não foi configurada nem aprovada uma alternativa gratuita persistente nesta rodada.
+- **Decisão segura:** não migrar automaticamente para Blob/S3 nem armazenar fotos em JSONB sem avaliar limites, custo, tamanho e impacto no banco. Item continua pendente de solução aprovada.
+
+### WhatsApp Cloud API
+- `sendWhatsappText` usa apenas Access Token e Phone Number ID para envio de texto.
+- O mapa atual `CREDENTIAL_KEYS.whatsapp` contempla Access Token, Phone Number ID e Verify Token; não contempla App Secret nem prefixo de templates.
+- O envio atual é de mensagem de texto livre; não há, neste método, seleção/envio de template aprovado.
+- Portanto, os campos App Secret e prefixo de template pedidos anteriormente ainda não estão conectados ao fluxo de envio. Webhook também precisa ser auditado separadamente antes de declarar a integração completa.
+
+### SMTP / e-mail
+- O módulo de integrações auditado não apresenta driver SMTP nem leitura de `SMTP_HOST` / `SMTP_PASS`. A configuração de e-mail deve ser rastreada no módulo próprio antes de qualquer correção; credenciais não serão inventadas.
+
+### IA / rótulo API Roq
+- O nome de interface “API Roq” é apenas o rótulo comercial; a implementação chama a API Groq e lê `GROQ_API_KEY`.
+- A implementação usa `openai/gpt-oss-120b` como modelo principal e `openai/gpt-oss-20b` como reserva.
+- A tela e o status de integração ainda precisam ser revisados para garantir que o usuário veja somente as integrações solicitadas (Google Places, API Roq e WhatsApp), sem campos redundantes de provedores não utilizados.
+
+### CRM — risco remanescente
+- A verificação de duplicidade na busca automática usa acesso privilegiado e retorna apenas booleano, como planejado.
+- O cadastro manual não tem `place_id` obrigatório e, por isso, não se beneficia da mesma chave de deduplicação.
+- A proteção de duplicidade do representante consulta antes do INSERT, mas não é uma garantia atômica contra duas criações simultâneas. Não foi alterada a estrutura da tabela nem criado índice único porque isso exige auditoria de duplicados históricos e migração segura.
+- O teste funcional com duas contas continua pendente e não será executado na Vercel.
+
+**Validação desta auditoria:** leitura estática dos arquivos `src/lib/storage.server.js`, `src/lib/integrations.server.js`, `src/lib/admin-fns.js` e `src/lib/entities.server.js`. Nenhum teste, build ou deploy foi executado.
