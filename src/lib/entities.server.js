@@ -189,13 +189,13 @@ export async function limiteLeadsHoje(repId) {
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
-  // O administrador configura o limite em Configurações. Mantém 20 como padrão
-  // para instalações que ainda não possuem esse registro.
-  const config = await query(
-    `SELECT data->>'valor' AS valor FROM records WHERE entity = 'Configuracao' AND data->>'chave' = $1 ORDER BY updated_date DESC LIMIT 1`,
-    ["limite_leads_dia_representante"],
+  // O limite é individual e fica salvo no cadastro de cada representante.
+  // Mantém 20 como padrão para cadastros antigos sem limite definido.
+  const cadastro = await query(
+    `SELECT data->>'limite_leads_dia' AS valor FROM records WHERE entity = 'Representante' AND id = $1 LIMIT 1`,
+    [String(repId)],
   );
-  const valorConfigurado = Number(config[0]?.valor);
+  const valorConfigurado = Number(cadastro[0]?.valor);
   const limite = Number.isSafeInteger(valorConfigurado) && valorConfigurado > 0
     ? Math.min(valorConfigurado, 10000)
     : LIMITE_LEADS_DIA_REPRESENTANTE;
