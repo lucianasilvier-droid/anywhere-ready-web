@@ -245,7 +245,7 @@ export const refundPaymentFn = createServerFn({ method: "POST" })
 
     // Nunca marque como reembolsado sem confirmação do provedor.
     // A API de estorno atualmente cobre apenas pagamentos MP com ID numérico.
-    if (pagamento.provedor !== "mercadopago" || !/^\\d+$/.test(String(pagamento.provedor_payment_id || ""))) {
+    if (pagamento.provedor !== "mercadopago" || !/^\d+$/.test(String(pagamento.provedor_payment_id || ""))) {
       throw Object.assign(
         new Error("O estorno automático ainda não está disponível para esta modalidade. O pagamento permanece como reembolso solicitado; conclua o estorno diretamente no provedor e atualize o registro após confirmar."),
         { status: 400 },
