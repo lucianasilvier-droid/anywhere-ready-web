@@ -357,3 +357,16 @@ Arquivos alterados:
 Arquivos alterados nesta revisão: src/components/admin/representantes/RepForm.jsx, src/lib/representantes-fns.js, src/lib/entities.server.js.
 
 Status: implementação de código na branch de trabalho e revisão estática dos trechos alterados. Nenhum build, teste automatizado, teste funcional, chamada externa ou deploy foi executado.
+## Sites — geração personalizada com Cloud AI — revisão de 12/11/2026
+
+- Foi identificada uma divergência importante: o botão existente chamava um gerador local de textos padronizados, apesar de a tarefa exigir criação personalizada com IA.
+- A geração foi conectada à função de IA já existente no sistema: API Roq/Groq como principal e Claude como reserva, usando credenciais já configuradas no painel/ambiente. Nenhuma nova dependência ou serviço foi adicionado.
+- O prompt agora considera dados reais do estabelecimento, categoria/localização, reputação Google, resumo e oportunidades da análise comercial, proposta salva e orientações do operador.
+- As instruções pedem conteúdo moderno, específico e orientado à conversão, com escolha de paleta por psicologia das cores, sem inventar preços, horários, certificações, depoimentos ou resultados.
+- As fotos reais do Google continuam sendo carregadas pelo fluxo de Places e exibidas no site; a geração de texto recebe a quantidade disponível como contexto, mas não inventa conteúdo visual.
+- Os painéis administrativo e do representante passaram a identificar a ação como Criar site com Cloud AI e informam que a geração pode consumir cota da IA e, para leads antigos sem fotos, da Google Places API.
+- A geração continua ocorrendo somente por clique explícito. Não há criação automática de sites ao detectar que o lead não possui site.
+
+Arquivos alterados: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fns.js, src/components/admin/SiteDoLead.jsx e src/components/crm/SiteDoLeadRepresentante.jsx.
+
+**Validação:** revisão estática dos fluxos, imports, credenciais, prompt, validação do conteúdo e persistência. Nenhuma chamada à IA, Google Places, build, teste automatizado, teste funcional ou deploy foi executado. O funcionamento real depende de credenciais válidas de API Roq/Groq ou Claude no ambiente/painel.
