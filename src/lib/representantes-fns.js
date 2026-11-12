@@ -378,7 +378,7 @@ export const meuLimiteCrmFn = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const base44 = context.getBase44().asServiceRole;
     const rep = await representanteDoUsuario(base44, context.user);
-    if (!rep || rep.status !== "ativo") return { liberado: false };
+    if (!rep || (rep.status || "ativo") !== "ativo") return { liberado: false };
     const { limiteLeadsHoje } = await import("@/lib/entities.server");
     return { liberado: true, representante: { id: rep.id, nome: rep.nome }, ...(await limiteLeadsHoje(rep.id)) };
   });
