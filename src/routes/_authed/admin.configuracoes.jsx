@@ -19,6 +19,14 @@ const CAMPOS = [
   { chave: "instagram", label: "Instagram", descricao: "Link do perfil da empresa" },
   { chave: "cidade_atendimento", label: "Cidade / região de atendimento", descricao: "" },
   { chave: "horario_atendimento", label: "Horário de atendimento", descricao: "" },
+  {
+    chave: "limite_leads_dia_representante",
+    label: "Limite diário de clientes por representante",
+    descricao: "Quantidade máxima de clientes que cada representante pode adicionar por dia. Padrão: 20.",
+    tipo: "number",
+    min: 1,
+    max: 10000,
+  },
 ];
 
 function ConfiguracoesPage() {
@@ -38,20 +46,28 @@ function ConfiguracoesPage() {
   async function salvar(campo) {
     setSalvando(campo.chave);
     try {
+      let valor = valores[campo.chave] || "";
+      if (campo.chave === "limite_leads_dia_representante") {
+        const numero = Number(valor);
+        if (!Number.isSafeInteger(numero) || numero < 1 || numero > 10000) {
+          throw new Error("Informe um limite inteiro entre 1 e 10.000 clientes por dia.");
+        }
+        valor = String(numero);
+      }
       const existente = items.find((i) => i.chave === campo.chave);
       if (existente) {
-        await base44.entities.Configuracao.update(existente.id, { valor: valores[campo.chave] || "" });
+        await base44.entities.Configuracao.update(existente.id, { valor });
       } else {
         await base44.entities.Configuracao.create({
           chave: campo.chave,
-          valor: valores[campo.chave] || "",
+          valor: valor || "",
           descricao: campo.descricao,
         });
       }
       await base44.entities.AtividadeLog.create({
         acao: "Configuração atualizada",
         entidade: "Configuracao",
-        detalhe: `${campo.chave} = ${valores[campo.chave] || "(vazio)"}`,
+        detalhe: `${campo.chave} = ${valor || "(vazio)"}`,
       });
       toast.success("Configuração salva.");
       await reload();
@@ -84,7 +100,11 @@ function ConfiguracoesPage() {
                   <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/40">{campo.label}</label>
                   <div className="mt-1 flex gap-2">
                     <input
-                      value={valores[campo.chave] || ""}
+                      type={campo.tipo || "text"}
+                      min={campo.min}
+                      max={campo.max}
+                      step={campo.tipo === "number" ? "1" : undefined}
+                      value={valores[campo.chave] ?? (campo.chave === "limite_leads_dia_representante" ? "20" : "")}
                       onChange={(e) => setValores({ ...valores, [campo.chave]: e.target.value })}
                       placeholder={campo.descricao}
                       className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12.5px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
