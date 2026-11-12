@@ -175,3 +175,9 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - Estorno/cancelamento precisa ser reconciliado por consulta/ação administrativa segura; não pode ser declarado apenas pelo conteúdo do webhook.
 
 **Validação:** inspeção estática e confirmação dos commits no GitHub. Nenhuma API de pagamento foi chamada, nenhum pagamento foi criado/alterado, nenhum teste/build/deploy foi executado.
+
+
+### Mercado Pago — vínculo entre pagamento e pedido
+- Identificado que a confirmação conferia o valor, mas não validava a referência externa do pagamento contra o número do pedido.
+- Incluída validação obrigatória de external_reference antes de aplicar qualquer status do Mercado Pago. Uma transação válida de outro pedido, mesmo com o mesmo valor, não pode ser reaproveitada para aprovar este pedido.
+- Se a referência estiver ausente ou divergente, a transação permanece sem aprovação e o motivo é registrado no pagamento.
