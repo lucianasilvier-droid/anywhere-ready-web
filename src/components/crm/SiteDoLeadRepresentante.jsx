@@ -91,7 +91,7 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             ) : (
               <><strong className="text-white">Esta empresa não tem site.</strong> </>
             )}
-            O Cloud AI usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para criar um site personalizado. A geração acontece somente quando você clicar e pode consumir a cota da integração de IA configurada pelo administrador.
+            O Cloud AI usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para criar um site personalizado. A geração acontece somente quando você clicar e pode consumir a cota da IA e, para leads antigos sem fotos, da Google Places API.
           </p>
           <textarea
             value={orientacoes}
