@@ -22,9 +22,11 @@ const MAX_LIMIT = 1000;
 const norm = (v) => String(v ?? "").trim().toLowerCase();
 
 function leadTemContatoValido(record) {
-  const telefone = String(record?.telefone || record?.whatsapp || "").replace(/[^0-9]/g, "");
-  const telefoneValido = telefone.length === 10 || telefone.length === 11 ||
-    (telefone.startsWith("55") && (telefone.length === 12 || telefone.length === 13));
+  const telefones = [record?.telefone, record?.whatsapp].map((v) => String(v || "").replace(/[^0-9]/g, ""));
+  const telefoneValido = telefones.some((telefone) =>
+    telefone.length === 10 || telefone.length === 11 ||
+    (telefone.startsWith("55") && (telefone.length === 12 || telefone.length === 13))
+  );
   const email = norm(record?.email);
   const emailValido = email.length <= 254 &&
     /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
@@ -101,15 +103,18 @@ function buildWhere(entity, filter, params) {
     }
   }
   if (entity === "Lead") {
-    const telefone = "regexp_replace(COALESCE(NULLIF(data->>'telefone', ''), NULLIF(data->>'whatsapp', ''), ''), '[^0-9]', '', 'g')";
+    const telefone = (campo) => "regexp_replace(COALESCE(data->>'" + campo + "', ''), '[^0-9]', '', 'g')";
     const email = "lower(COALESCE(data->>'email', ''))";
+    const tel = [telefone("telefone"), telefone("whatsapp")];
     conds.push(`(
-      length(${telefone}) IN (10, 11)
-      OR (left(${telefone}, 2) = '55' AND length(${telefone}) IN (12, 13))
+      length(${tel[0]}) IN (10, 11)
+      OR (left(${tel[0]}, 2) = '55' AND length(${tel[0]}) IN (12, 13))
+      OR length(${tel[1]}) IN (10, 11)
+      OR (left(${tel[1]}, 2) = '55' AND length(${tel[1]}) IN (12, 13))
       OR (
-        ${email} ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}
+        ${email} ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'
         AND ${email} !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'
-        AND split_part(${email}, '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)
+        AND split_part(${email}, '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$'
       )
     )`);
   }
