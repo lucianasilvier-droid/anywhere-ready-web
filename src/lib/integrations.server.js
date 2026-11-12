@@ -509,6 +509,64 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
   }
 }
 
+/**
+ * Extrai imagens públicas do site oficial informado no CRM.
+ * Só aceita HTTPS, não segue redirecionamentos e mantém imagens no mesmo domínio
+ * para evitar buscar recursos de terceiros ou transformar o CRM em proxy aberto.
+ */
+export async function fetchOfficialWebsitePhotos(siteUrl, limite = 12) {
+  try {
+    const url = new URL(String(siteUrl || "").trim());
+    if (url.protocol !== "https:" || !url.hostname || url.hostname === "localhost" ||
+      /^\d{1,3}(?:\.\d{1,3}){3}$/.test(url.hostname) ||
+      !url.hostname.includes(".")) return [];
+    const response = await fetch(url.toString(), {
+      headers: { "User-Agent": "GoogleNFCConnect-SitePreview/1.0", Accept: "text/html" },
+      redirect: "error",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok || !String(response.headers.get("content-type") || "").includes("text/html")) return [];
+    const html = (await response.text()).slice(0, 2_000_000);
+    const encontrados = [];
+    const adicionar = (valor) => {
+      const bruto = String(valor || "").replace(/&amp;/g, "&").trim();
+      if (!bruto || /^(data:|blob:|javascript:)/i.test(bruto)) return;
+      try {
+        const imagem = new URL(bruto, url);
+        if (imagem.protocol !== "https:" || imagem.hostname !== url.hostname) return;
+        if (/\.(svg|ico)(?:$|\?)/i.test(imagem.pathname)) return;
+        if (/(logo|icon|favicon|sprite|pixel|tracking|avatar)/i.test(imagem.pathname)) return;
+        imagem.hash = "";
+        const normalizada = imagem.toString();
+        if (!encontrados.includes(normalizada)) encontrados.push(normalizada);
+      } catch { /* URL inválida */ }
+    };
+    const metas = [...html.matchAll(/<meta\b[^>]*(?:property|name)=["'](?:og:image|twitter:image)["'][^>]*>/gi)];
+    for (const [tag] of metas) {
+      const content = tag.match(/content=["']([^"']+)["']/i)?.[1];
+      adicionar(content);
+    }
+    const imgs = [...html.matchAll(/<img\b[^>]*>/gi)];
+    for (const [tag] of imgs) {
+      const src = tag.match(/(?:src|data-src|data-lazy-src)=["']([^"']+)["']/i)?.[1];
+      adicionar(src);
+      const srcset = tag.match(/srcset=["']([^"']+)["']/i)?.[1];
+      if (srcset) {
+        const maior = srcset.split(",").map((item) => item.trim().split(/\s+/)[0]).filter(Boolean).at(-1);
+        adicionar(maior);
+      }
+      if (encontrados.length >= limite) break;
+    }
+    return encontrados.slice(0, Math.max(1, Math.min(Number(limite) || 12, 20))).map((url_imagem, index) => ({
+      url: url_imagem,
+      origem: "site_oficial",
+      ordem: index,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /** Busca fotos e atribuições de um Place ID já salvo no CRM (usado ao gerar sites de leads antigos). */
 export async function fetchGooglePlacePhotos(placeId, values = {}) {
   const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
