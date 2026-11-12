@@ -377,3 +377,9 @@ Arquivos alterados: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fns
 - A regra comercial confirmada é vender as placas individualmente; não reintroduzir kits, combos ou conjuntos no catálogo, na vitrine, no checkout ou nas artes.
 - O catálogo de contingência da branch ativa contém duas placas individuais (Google NFC e Instagram NFC) e o serviço de Perfil da Empresa no Google. Ele não deve ser considerado catálogo completo até a conferência da lista oficial de todos os serviços e produtos cadastrados no sistema.
 - A branch de preparação recebeu manualmente as correções do limite individual de leads e a conexão da geração de sites à IA existente; as alterações não foram publicadas.
+## CRM — remoção de “Registrar resposta recebida” — 12/11/2026
+
+- Removido do detalhe do lead no painel do representante o bloco inteiro “Registrar resposta recebida”, incluindo texto explicativo, seletor de resposta, campo de mensagem e botão “Registrar resposta e notificar administrador”.
+- Removidos também o handler e os estados exclusivos dessa funcionalidade; não ficou apenas escondido na interface.
+- Mantidos os controles de autorização existentes e o histórico de interações que não dependem desse formulário.
+- Revisão estática confirmou que o título, handler e estados removidos não aparecem mais em CrmLeadDetalhe.jsx. Sem build, testes ou publicação.
