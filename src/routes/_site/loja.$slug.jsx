@@ -76,7 +76,7 @@ function ProdutoPage() {
     );
   }
 
-  const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
+  const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
 
   function adicionar(irParaCarrinho) {
     cart.add(produto, quantidade);
