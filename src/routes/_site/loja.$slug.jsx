@@ -8,7 +8,7 @@ import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
 
 export const Route = createFileRoute("/_site/loja/$slug")({
-  head: () => ({ meta: [{ title: "Produto — Loja Google NFC Connect" }] }),
+  head: () => ({ meta: [{ title: "Placas NFC personalizadas para empresas | Google NFC Connect" }, { name: "description", content: "Conheça placas NFC personalizadas para facilitar o acesso dos clientes à avaliação no Google e aos canais digitais da sua empresa." }] }),
   component: ProdutoPage,
 });
 
