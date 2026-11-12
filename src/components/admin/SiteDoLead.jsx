@@ -292,21 +292,33 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <PrecoDoSite site={site} salvando={mAtualizar.isPending} onSalvar={(patch) => mAtualizar.mutate(patch)} />
 
-          <div className="rounded-xl border border-white/[0.07] p-3">
-            <p className="text-[11.5px] font-semibold text-white/55">Atualizar demonstração</p>
+          <details className="rounded-xl border border-white/[0.07] p-3">
+            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Atualizar com Claude gratuito</summary>
             <textarea
               value={orientacoes}
               onChange={(e) => setOrientacoes(e.target.value)}
               rows={2}
               maxLength={600}
-              placeholder="Orientações opcionais para a atualização"
+              placeholder="O que mudar? Destaque serviços reais, cores ou informações confirmadas."
               className={`${inputCls} mt-2`}
             />
-            <button onClick={() => mGerarAutomatico.mutate()} disabled={mGerarAutomatico.isPending} className={`${btnCls} mt-2`}>
-              {mGerarAutomatico.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              Atualizar com Cloud AI
+            <button onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }} disabled={mPrepararGratis.isPending} className={`${btnCls} mt-2`}>
+              {mPrepararGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Preparar atualização no Claude gratuito
             </button>
-          </div>
+            {promptClaude && (
+              <div className="mt-2 space-y-2">
+                <p className="text-[10.5px] text-white/45">Cole o pedido no Claude gratuito, copie o JSON completo da resposta e retorne aqui.</p>
+                <textarea readOnly value={promptClaude} rows={3} className={inputCls} />
+                <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={5} maxLength={30000} placeholder="Cole aqui o JSON retornado pelo Claude gratuito" className={inputCls} />
+                <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className={btnCls}>
+                  {mSalvarGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                  Validar e salvar atualização
+                </button>
+              </div>
+            )}
+            <p className="mt-1.5 text-[10.5px] text-white/30">O endereço, o WhatsApp e o status continuam os mesmos. Nenhuma chave de API é necessária.</p>
+          </details>
         </div>
       )}
     </section>
