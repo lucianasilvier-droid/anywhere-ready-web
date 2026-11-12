@@ -136,6 +136,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         bairro: lead.bairro || "",
         estado: lead.estado || "",
         place_id: lead.place_id || "",
+        fotos_google: (Array.isArray(lead.fotos_google) ? lead.fotos_google : []).slice(0, 5),
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
