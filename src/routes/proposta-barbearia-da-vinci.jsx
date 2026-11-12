@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Coffee, MapPin, Menu, MessageCircle, ParkingCircle, Scissors, Sparkles, Star, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Coffee, MapPin, Menu, MessageCircle, ParkingCircle, Scissors, Sparkles, X } from "lucide-react";
 
 export const Route = createFileRoute("/proposta-barbearia-da-vinci")({
   head: () => ({
@@ -84,7 +84,7 @@ function PropostaBarbeariaDaVinci() {
       </header>
 
       <section id="inicio" className="relative isolate min-h-[620px] overflow-hidden bg-[#171512] text-white sm:min-h-[700px]">
-        <Img src={fotos[0].src} alt={fotos[0].alt} className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45"/>
+        <Img src={fotos[0].src} alt={fotos[0].alt} eager className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45"/>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#171512] via-[#171512]/85 to-[#171512]/25"/>
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#171512]/75 via-transparent to-[#171512]/10"/>
         <div className="mx-auto flex min-h-[620px] max-w-7xl items-center px-5 py-20 sm:min-h-[700px] lg:px-8">
