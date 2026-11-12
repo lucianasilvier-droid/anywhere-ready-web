@@ -189,7 +189,16 @@ export async function limiteLeadsHoje(repId) {
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
-  const limite = LIMITE_LEADS_DIA_REPRESENTANTE;
+  // O limite é individual e fica salvo no cadastro de cada representante.
+  // Mantém o padrão de 20 para cadastros antigos sem limite definido.
+  const cadastro = await query(
+    `SELECT data->>'limite_leads_dia' AS valor FROM records WHERE entity = 'Representante' AND id = $1 LIMIT 1`,
+    [String(repId)],
+  );
+  const valorConfigurado = Number(cadastro[0]?.valor);
+  const limite = Number.isSafeInteger(valorConfigurado) && valorConfigurado > 0
+    ? Math.min(valorConfigurado, 10000)
+    : LIMITE_LEADS_DIA_REPRESENTANTE;
   return { usados, limite, restantes: Math.max(limite - usados, 0) };
 }
 
