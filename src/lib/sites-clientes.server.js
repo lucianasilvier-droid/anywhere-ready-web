@@ -84,6 +84,10 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
   const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
   const ramo = `${categoria} ${nome}`.toLowerCase();
   const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
+  const beleza = /beleza|barbearia|sal[aã]o|est[eé]tica|moda|unha/.test(ramo);
+  const pet = /pet|veterin/.test(ramo);
+  const saude = /sa[uú]de|cl[ií]nica|dent|odonto|terapia|fisioter/.test(ramo);
+  const automotivo = /auto|carro|mec[aâ]nic|oficina|pneu/.test(ramo);
   const tema = /pet|veterin/.test(ramo) ? "floresta"
     : /beleza|barbearia|sal[aã]o|est[eé]tica|moda|unha/.test(ramo) ? "terracota"
     : /sa[uú]de|cl[ií]nica|dent|odonto|terapia|fisioter/.test(ramo) ? "esmeralda"
