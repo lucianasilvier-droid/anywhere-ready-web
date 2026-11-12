@@ -404,3 +404,8 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 - O PR #13 foi revisado e não deve ser mesclado: o diff contém sequências de quebra de linha inseridas literalmente em código e uma tentativa de buscar e-mail em URL de site sem proteção suficiente contra SSRF/redirecionamento.
 - O fluxo manual do Claude gratuito foi portado seletivamente para a branch de trabalho atual, preservando o armazenamento de fotos Google, as permissões por representante e os limites diários existentes.
 - Não foi mesclado nenhum PR, não houve merge para main e nenhuma branch de produção foi alterada.
+## Segurança de conteúdo dos sites — revisão de 12/11/2026
+
+- Identificado que observacao_operador (orientações internas usadas para guiar o Claude) era enviado na resposta pública e também aparecia na exportação ZIP.
+- Corrigido: sitePublico agora remove observacao_operador antes de devolver o conteúdo; a página pública não renderiza esse campo; o ZIP exportado também o remove do HTML e do site.json.
+- A observação continua armazenada no registro interno para contexto administrativo, mas não deve aparecer ao visitante.
