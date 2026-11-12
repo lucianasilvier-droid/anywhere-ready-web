@@ -151,3 +151,12 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - O armazenamento persistente em produção continua dependendo do Blob ou de um driver S3 externo. Não foi ativado nenhum serviço pago nem alterada a configuração de armazenamento.
 
 **Validação:** revisão estática dos arquivos alterados e confirmação das alterações pela API do GitHub. Nenhum build, teste automatizado, chamada SMTP, chamada Meta, acesso a banco de produção ou deploy foi executado.
+
+
+### CRM — ficha do lead e sincronização
+- A ficha individual do lead agora limpa a mensagem de erro ao tentar carregar novamente e atualiza os dados quando o administrador/representante retorna à aba ou quando a página volta a ficar visível.
+- O polling contínuo de 5 segundos das listas e do funil foi mantido; a ficha individual usa atualização por foco/visibilidade para evitar consultas constantes desnecessárias.
+
+### Integrações — escopo do painel
+- O painel administrativo de integrações agora exibe somente Google Maps / Places, API Roq e WhatsApp Business.
+- As funções internas que dependem de Claude/OpenAI continuam podendo usar credenciais de ambiente ou configurações já existentes, mas esses provedores não aparecem como cartões de configuração nesta tela.
