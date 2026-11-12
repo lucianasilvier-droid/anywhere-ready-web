@@ -4,7 +4,9 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import {
   erro,
-  gerarConteudoSiteComIA,
+  promptParaClaudeGratuito,
+  gerarConteudoSiteAutomatico,
+  validarConteudoSite,
   sitePorLead,
   sitePublico,
   slugUnico,
@@ -67,12 +69,35 @@ export const siteDoLeadFn = createServerFn({ method: "POST" })
     return { site: siteParaRepresentante(site), limite: await limiteSitesHoje(rep.id) };
   });
 
+export const prepararSiteGratuitoFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({
+    leadId: z.string().min(1),
+    orientacoes: z.string().trim().max(600).optional().default(""),
+  }))
+  .handler(async ({ data, context }) => {
+    const { rep, lead: leadDoRep } = await acessoAoSite(context, data.leadId);
+    const base44 = rep ? context.getBase44().asServiceRole : context.getBase44();
+    const lead = leadDoRep || await base44.entities.Lead.get(data.leadId);
+    if (rep) {
+      if (await sitePorLead(base44, lead.id)) {
+        throw erro("Este cliente já tem um site. Para ajustar, fale com o administrador.", 409);
+      }
+      const limite = await limiteSitesHoje(rep.id);
+      if (limite.restantes <= 0) {
+        throw erro(`Você já criou ${limite.limite} sites hoje. Amanhã poderá criar mais.`, 429);
+      }
+    }
+    return { prompt: promptParaClaudeGratuito(lead, data.orientacoes) };
+  });
+
 export const gerarSiteFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(
     z.object({
       leadId: z.string().min(1),
       orientacoes: z.string().trim().max(600).optional().default(""),
+      conteudoManual: z.string().trim().min(2).max(30000),
       extras: z
         .object({
           logo: z.boolean().optional(),
@@ -117,16 +142,21 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const credencialBase = base44.asServiceRole || base44;
-      const [credenciaisRoq, credenciaisClaude] = await Promise.all([
-        resolveCredentials(credencialBase, "groq"),
-        resolveCredentials(credencialBase, "claude"),
-      ]);
-      const geracao = await gerarConteudoSiteComIA(lead, data.orientacoes, {
-        ...credenciaisRoq.values,
-        ...credenciaisClaude.values,
+      let objetoManual;
+      try {
+        const texto = data.conteudoManual.replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, "");
+        objetoManual = JSON.parse(texto);
+      } catch {
+        throw erro("Não consegui ler o JSON. Cole a resposta completa do Claude, sem alterar o conteúdo.", 422);
+      }
+      const baseConteudo = gerarConteudoSiteAutomatico(lead, data.orientacoes);
+      const conteudo = validarConteudoSite({
+        ...baseConteudo,
+        ...objetoManual,
+        tipo_negocio: baseConteudo.tipo_negocio,
+        observacao_operador: baseConteudo.observacao_operador,
+        cardapio: baseConteudo.cardapio,
       });
-      const conteudo = geracao.conteudo;
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
@@ -147,7 +177,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         whatsapp: existente?.whatsapp || lead.telefone || "",
         conteudo,
         orientacoes: data.orientacoes || "",
-        modelo: `cloud-ai:${geracao.modelo}`,
+        modelo: "claude-web-gratuito",
         gerado_em: agora,
         gerado_por: context.user?.email || "",
         valor_calculado: preco.valor_calculado,
