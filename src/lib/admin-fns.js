@@ -211,9 +211,8 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
     const catalogoFallback = [
-      { nome: "Placa Google NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", descricao: "Acesso direto à página de avaliação do Google." },
-      { nome: "Placa Instagram NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", descricao: "Acesso direto ao Instagram do estabelecimento." },
-      { nome: "Kit Google + Instagram", preco: "R$ 95,00", url: "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram", descricao: "Duas placas para divulgar os dois canais." },
+      { nome: "Placa Google NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", descricao: "Placa individual com acesso à página de avaliação do Google." },
+      { nome: "Placa Instagram NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", descricao: "Placa individual com acesso ao Instagram do estabelecimento." },
     ];
     let catalogo = catalogoFallback;
     try {
@@ -221,7 +220,8 @@ export const draftMessageFn = createServerFn({ method: "POST" })
       const page = await svc.entities.Produto.filter({ ativo: true }, { limit: 30 });
       const produtos = (Array.isArray(page) ? page : page?.items || [])
         .filter((p) => Number(p.preco) > 0)
-        .filter((p) => /nfc|placa|google|instagram/i.test(p.nome || ""));
+        .filter((p) => /nfc|placa|google|instagram/i.test(p.nome || ""))
+        .filter((p) => !/kit|combo|conjunto/i.test(p.nome || ""));
       if (produtos.length) {
         const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://anywhere-ready-web-lucianasilvier-droid.vercel.app").replace(/\/$/, "");
         catalogo = produtos.slice(0, 6).map((p) => ({
@@ -278,8 +278,8 @@ Devolva {"mensagem": string}.`,
         "🌐 Conheça o Google NFC CONNECT:",
         "https://google-nfc-connect.vercel.app",
       ];
-      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
       if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\n" + videoDemoUrl);
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
       materiais.push("🛍️ CATÁLOGO NFC");
       for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
       mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
