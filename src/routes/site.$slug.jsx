@@ -152,7 +152,7 @@ function SiteCliente({ site }) {
         </div>
       </header>
 
-      <section id="topo" className="relative overflow-hidden">
+      <section id="topo" style={{ backgroundImage: "linear-gradient(135deg, var(--soft) 0%, transparent 62%)" }} className="relative overflow-hidden">
         <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-[var(--soft)] opacity-80" />
         <div className="absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[var(--soft)] opacity-50" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.2fr_0.8fr] md:py-24">
