@@ -8,7 +8,15 @@ import { env, envFlag } from "@/lib/env.server";
 let transport;
 
 export function smtpConfigured() {
-  return !!env("SMTP_HOST");
+  const host = String(env("SMTP_HOST") || "").trim();
+  const user = String(env("SMTP_USER") || "").trim();
+  const pass = String(env("SMTP_PASS") || "").trim();
+  const from = String(env("SMTP_FROM") || user).trim();
+  const rawPort = env("SMTP_PORT");
+  const port = rawPort === undefined ? 587 : Number(rawPort);
+  // Auth credentials must be supplied as a pair. An unauthenticated relay
+  // is allowed only when a sender address is explicitly configured.
+  return !!host && !!from && Number.isInteger(port) && port > 0 && port <= 65535 && (!!user === !!pass);
 }
 
 function getTransport() {
@@ -27,7 +35,9 @@ function getTransport() {
 /** Sends an e-mail. Resolves to { delivered } — false when only logged. */
 export async function sendMail({ to, subject, text, html }) {
   if (!smtpConfigured()) {
-    console.info(`[mail] SMTP não configurado — mensagem para ${to}\n  Assunto: ${subject}\n  ${text}`);
+    // Never log the body: confirmation and password-reset messages contain
+    // one-time secrets in their URLs.
+    console.warn("[mail] SMTP ausente ou incompleto; mensagem transacional não enviada.");
     return { delivered: false };
   }
   await getTransport().sendMail({
