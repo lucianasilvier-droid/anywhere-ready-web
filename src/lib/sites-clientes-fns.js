@@ -14,7 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
-import { fetchGooglePlacePhotos, resolveCredentials } from "@/lib/integrations.server";
+import { fetchGooglePlacePhotos, fetchOfficialWebsitePhotos, resolveCredentials } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -117,6 +117,16 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
     try {
       const lead = await base44.entities.Lead.get(data.leadId);
       let fotosGoogle = Array.isArray(lead.fotos_google) ? lead.fotos_google.slice(0, 5) : [];
+      // Busca também fotos públicas do domínio oficial informado no cadastro do lead.
+      // A coleta não bloqueia a geração se o site não responder ou não tiver imagens elegíveis.
+      let fotosSite = Array.isArray(lead.fotos_site) ? lead.fotos_site.slice(0, 12) : [];
+      if (!fotosSite.length && lead.site) {
+        fotosSite = await fetchOfficialWebsitePhotos(lead.site, 12);
+        if (fotosSite.length) {
+          lead.fotos_site = fotosSite;
+          await base44.entities.Lead.update(lead.id, { fotos_site: fotosSite }).catch(() => {});
+        }
+      }
       // Leads importados antes da coleta de fotos recebem uma busca sob demanda ao gerar a demonstração.
       if (!fotosGoogle.length && lead.place_id && !String(lead.place_id).startsWith("osm:")) {
         try {
@@ -179,6 +189,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         estado: lead.estado || "",
         place_id: lead.place_id || "",
         fotos_google: fotosGoogle,
+        fotos_site: fotosSite,
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
