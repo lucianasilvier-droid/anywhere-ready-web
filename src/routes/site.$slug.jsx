@@ -123,6 +123,16 @@ function SiteCliente({ site }) {
     } : undefined,
   };
 
+  const fotosSite = Array.isArray(site.fotos_site) ? site.fotos_site : [];
+  const fotosGoogle = Array.isArray(site.fotos_google) ? site.fotos_google : [];
+  const fotoDestaque = fotosSite[0]
+    ? { origem: "site_oficial", url: fotosSite[0].url }
+    : fotosGoogle[0]?.name ? { origem: "google", ...fotosGoogle[0] } : null;
+  const fotosGaleria = [
+    ...fotosSite.slice(fotoDestaque?.origem === "site_oficial" ? 1 : 0).map((foto) => ({ origem: "site_oficial", url: foto.url })),
+    ...fotosGoogle.slice(fotoDestaque?.origem === "google" ? 1 : 0).map((foto) => ({ origem: "google", ...foto })),
+  ].slice(0, 12);
+
   return (
     <div data-estilo={estiloVisual} style={{ ...vars, backgroundColor: "var(--bg)", color: "var(--ink)" }} className="min-h-screen font-sans antialiased">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados).replace(/</g, "\\u003c") }} />
@@ -197,21 +207,20 @@ function SiteCliente({ site }) {
           </div>
 
           <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
-            {site.fotos_google?.[0]?.name && (
+            {fotoDestaque && (
               <div className="mb-5 overflow-hidden rounded-2xl">
                 <img
-                  src={`/api/google-place-photo?name=${encodeURIComponent(site.fotos_google[0].name)}`}
+                  src={fotoDestaque.origem === "site_oficial"
+                    ? fotoDestaque.url
+                    : `/api/google-place-photo?name=${encodeURIComponent(fotoDestaque.name)}`}
                   alt={`Foto real de ${site.empresa}`}
                   loading="eager"
+                  referrerPolicy="no-referrer"
                   className="h-56 w-full object-cover sm:h-64"
                 />
-                {site.fotos_google[0].autor && (
-                  <p className="bg-[var(--soft)] px-3 py-1.5 text-[10px] text-[var(--muted)]">
-                    Foto: {site.fotos_google[0].autor_uri ? (
-                      <a href={site.fotos_google[0].autor_uri} target="_blank" rel="noreferrer" className="underline">{site.fotos_google[0].autor}</a>
-                    ) : site.fotos_google[0].autor}
-                  </p>
-                )}
+                <p className="bg-[var(--soft)] px-3 py-1.5 text-[10px] text-[var(--muted)]">
+                  Imagem {fotoDestaque.origem === "site_oficial" ? "do site oficial" : "do perfil no Google"}
+                </p>
               </div>
             )}
             {site.nota_google != null && (
@@ -243,25 +252,28 @@ function SiteCliente({ site }) {
         </div>
       </section>
 
-      {site.fotos_google?.length > 1 && (
+      {fotosGaleria.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 pb-6 pt-2">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Conheça o espaço</p>
-              <h2 style={serif} className="mt-1 text-2xl font-bold">Fotos do estabelecimento</h2>
+              <h2 style={serif} className="mt-1 text-2xl font-bold">Fotos reais do estabelecimento</h2>
             </div>
-            <span className="text-xs text-[var(--muted)]">Imagens do perfil no Google</span>
+            <span className="text-xs text-[var(--muted)]">Site oficial e perfil no Google</span>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {site.fotos_google.slice(1, 5).map((foto, index) => (
-              <figure key={foto.name} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)] shadow-sm">
+            {fotosGaleria.map((foto, index) => (
+              <figure key={foto.url || foto.name} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)] shadow-sm">
                 <img
-                  src={`/api/google-place-photo?name=${encodeURIComponent(foto.name)}`}
-                  alt={`Foto ${index + 2} de ${site.empresa}`}
+                  src={foto.origem === "site_oficial"
+                    ? foto.url
+                    : `/api/google-place-photo?name=${encodeURIComponent(foto.name)}`}
+                  alt={`Foto real ${index + 1} de ${site.empresa}`}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                   className="h-36 w-full object-cover transition-transform duration-500 hover:scale-105 sm:h-48"
                 />
-                {foto.autor && (
+                {foto.origem === "google" && foto.autor && (
                   <figcaption className="px-2.5 py-2 text-[10px] text-[var(--muted)]">
                     Foto: {foto.autor_uri ? <a href={foto.autor_uri} target="_blank" rel="noreferrer" className="underline">{foto.autor}</a> : foto.autor}
                   </figcaption>
