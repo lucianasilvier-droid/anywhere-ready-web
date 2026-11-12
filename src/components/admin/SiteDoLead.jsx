@@ -86,7 +86,7 @@ const STATUS = {
 };
 
 /**
- * Cartão do CRM: cria e atualiza sites personalizados com a IA já configurada no sistema.
+ * Cartão do CRM: prepara sites com o Claude gratuito no navegador e salva o JSON validado no CRM.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
