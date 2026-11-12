@@ -126,3 +126,28 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - O formulário de cadastro/edição de produtos não expunha os campos `checkout_url` e `checkout_label`, embora a página pública de detalhe dependesse deles para apresentar o link correto de compra/atendimento.
 - Incluídos os dois campos no formulário administrativo, permitindo configurar o destino e o texto do botão por produto.
 - **Status:** alteração de código registrada; ainda depende de inserir e conferir os links reais de cada produto no painel depois da publicação. Não foi feito teste de interface.
+
+
+## Continuação da auditoria — CRM, SMTP e administração — 12/11/2026
+
+### CRM — prevenção atômica de duplicidade
+- A checagem anterior consultava place_id antes do INSERT, mas duas requisições simultâneas ainda podiam passar pela consulta e criar duplicados.
+- Incluída uma trava consultiva transacional do PostgreSQL (pg_advisory_xact_lock) junto da verificação final e do INSERT, serializando cadastros com o mesmo place_id.
+- A proteção cobre leads com place_id (Google Places / identificador OSM). Cadastro manual sem place_id continua sem uma chave de identidade confiável; não foi criada deduplicação aproximada por nome para evitar bloquear empresas diferentes.
+- Não foi criada migration nem índice único, evitando risco com dados históricos duplicados.
+
+### SMTP e convites
+- smtpConfigured() agora só considera o SMTP disponível quando host, remetente, porta válida e par de autenticação consistente estão configurados. Relay sem autenticação continua permitido se houver remetente explícito.
+- Removido o registro do corpo do e-mail nos logs quando SMTP não está configurado/incompleto. Isso evita que tokens de confirmação e recuperação de senha apareçam nos logs.
+- O formulário Equipe e permissões agora diferencia convite entregue de usuário criado sem e-mail entregue. Quando SMTP não está pronto, mostra orientação das variáveis necessárias em vez de afirmar que o convite foi enviado.
+- Nenhuma credencial SMTP foi criada ou alterada.
+
+### Painel de integrações
+- Reduzida a lista de integrações configuráveis no painel para as três integrações operacionais solicitadas: Google Maps / Places, API Roq e WhatsApp Business.
+- As integrações internas Claude/OpenAI ainda podem ser resolvidas por variáveis de ambiente ou configurações já existentes no servidor; apenas deixam de ser expostas como cartões configuráveis nesta tela.
+
+### Fotos de representantes
+- Corrigida a ordem de substituição: a referência no banco é atualizada antes de remover a foto antiga. Se a gravação do registro falhar, a foto atual não é apagada.
+- O armazenamento persistente em produção continua dependendo do Blob ou de um driver S3 externo. Não foi ativado nenhum serviço pago nem alterada a configuração de armazenamento.
+
+**Validação:** revisão estática dos arquivos alterados e confirmação das alterações pela API do GitHub. Nenhum build, teste automatizado, chamada SMTP, chamada Meta, acesso a banco de produção ou deploy foi executado.
