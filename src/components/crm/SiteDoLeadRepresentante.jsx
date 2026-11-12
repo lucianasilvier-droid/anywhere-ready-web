@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Wand2 } from "lucide-react";
+import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Save, Wand2 } from "lucide-react";
 import { gerarSiteFn, prepararSiteGratuitoFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { LIMITE_SITES_DIA_REPRESENTANTE } from "@/lib/crm-limites";
 
