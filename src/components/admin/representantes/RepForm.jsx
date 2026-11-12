@@ -15,6 +15,7 @@ const VAZIO = {
   comissao_perfil: 100,
   comissao_mensalidade: 50,
   comissao_placa: 20,
+  limite_leads_dia: 20,
   observacoes: "",
   convidar: true,
 };
@@ -34,6 +35,7 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
             comissao_perfil: Number(representante.comissao_perfil) || 100,
             comissao_mensalidade: 50,
             comissao_placa: Number(representante.comissao_placa) || 20,
+            limite_leads_dia: Number(representante.limite_leads_dia) || 20,
             convidar: false,
           }
         : VAZIO,
@@ -63,6 +65,7 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
           comissao_perfil: Number(form.comissao_perfil) || 0,
           comissao_mensalidade: Number(form.comissao_mensalidade) || 0,
           comissao_placa: Number(form.comissao_placa) || 0,
+          limite_leads_dia: Number(form.limite_leads_dia) || 20,
           observacoes: form.observacoes,
           convidar: !!form.convidar,
         },
@@ -128,6 +131,16 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
             value={form.comissao_mensalidade}
             onChange={set("comissao_mensalidade")}
             hint="R$ 50,00 por mês pago. O sistema executa a administração do perfil e fica com R$ 100,00."
+          />
+          <AdminField
+            label="Limite diário de clientes/leads"
+            type="number"
+            min="1"
+            max="10000"
+            step="1"
+            value={form.limite_leads_dia}
+            onChange={set("limite_leads_dia")}
+            hint="Limite individual deste representante. Padrão: 20 clientes por dia."
           />
           <AdminField
             label="Comissão por placa NFC (R$)"
