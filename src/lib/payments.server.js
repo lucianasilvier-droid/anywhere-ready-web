@@ -330,7 +330,7 @@ export function mapMercadoPagoStatus(status, detail) {
 
 /** Assinatura oficial: manifest id:<data.id>;request-id:<x-request-id>;ts:<ts>; com HMAC-SHA256. */
 export async function verifyMercadoPagoSignature({ header, requestId, dataId, secret }) {
-  if (!secret) return { valido: true, motivo: "sem_secret_configurado" };
+  if (!String(secret || "").trim()) return { valido: false, motivo: "webhook_secret_nao_configurado" };
   if (!header) return { valido: false, motivo: "assinatura_ausente" };
   const parts = {};
   for (const pedaco of String(header).split(",")) {
