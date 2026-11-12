@@ -268,3 +268,13 @@ Arquivos alterados:
 - Nenhuma regra de permissão ou semântica global de `get()` foi alterada.
 
 **Validação:** revisão estática e atualização confirmada no GitHub. Não houve teste, build ou deploy; a Vercel não foi acessada.
+
+
+## Pagamentos — validação do ID numérico para estorno Mercado Pago — 12/11/2026
+
+- Corrigida a expressão regular que valida `provedor_payment_id` antes de chamar o estorno oficial do Mercado Pago.
+- A expressão anterior continha escape duplicado e não reconhecia corretamente IDs compostos por dígitos, podendo impedir o caminho automático de estorno mesmo com um ID válido.
+- A validação agora exige um ou mais dígitos (`/^\\d+$/`), mantendo a restrição de que somente pagamentos do Mercado Pago com ID numérico podem seguir para a API oficial.
+- Não foi ampliado o suporte de estorno para InfinitePay, não foi alterado o critério de confirmação e nenhum estorno real foi solicitado.
+
+**Validação:** inspeção estática da expressão no código e confirmação da alteração no GitHub. Nenhuma chamada ao provedor, teste, build ou deploy foi executado.
