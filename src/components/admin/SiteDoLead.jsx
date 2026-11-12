@@ -17,6 +17,7 @@ function escaparHtml(valor) {
 
 function exportarSiteZip(site) {
   const conteudo = site.conteudo || {};
+  const { observacao_operador: _observacaoInterna, ...conteudoPublico } = conteudo;
   const publico = {
     slug: site.slug,
     empresa: site.empresa,
@@ -29,7 +30,7 @@ function exportarSiteZip(site) {
     whatsapp: site.whatsapp || "",
     instagram: site.instagram || "",
     horario: site.horario || "",
-    conteudo,
+    conteudo: conteudoPublico,
   };
   const servicos = (conteudo.servicos || []).map((item) =>
     "<article><h3>" + escaparHtml(item.nome) + "</h3><p>" + escaparHtml(item.descricao) + "</p></article>"
@@ -54,7 +55,7 @@ function exportarSiteZip(site) {
     "<main><section class='hero'><p class='eyebrow'>" + escaparHtml(conteudo.slogan) + "</p><h1>" + escaparHtml(conteudo.titulo || site.empresa) + "</h1><p>" + escaparHtml(conteudo.subtitulo) + "</p>" + (wa ? "<a class='button' href='" + wa + "'>Falar pelo WhatsApp</a>" : "") + "</section>",
     "<section id='servicos'><h2>Serviços</h2><div class='grid'>" + servicos + "</div></section>",
     cardapio ? "<section id='cardapio'><h2>Cardápio</h2><div class='grid'>" + cardapio + "</div></section>" : "",
-    "<section id='sobre'><h2>Sobre " + escaparHtml(site.empresa) + "</h2><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + (conteudo.observacao_operador ? "<p>" + escaparHtml(conteudo.observacao_operador) + "</p>" : "") + "</section>",
+    "<section id='sobre'><h2>Sobre " + escaparHtml(site.empresa) + "</h2><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + "</section>",
     "<section><h2>Perguntas frequentes</h2>" + perguntas + "</section>",
     "<section id='local'><h2>Localização</h2><p>" + escaparHtml(local) + "</p><iframe title='Mapa' loading='lazy' src='" + mapa + "'></iframe></section>",
     "</main><footer>" + escaparHtml(site.empresa) + "</footer></body></html>",
