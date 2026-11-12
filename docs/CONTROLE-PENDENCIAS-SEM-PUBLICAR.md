@@ -387,7 +387,7 @@ Arquivos principais: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fn
 - A camada de gravação bloqueia criação e atualização que deixem um lead sem telefone/WhatsApp ou e-mail válido; o formulário manual também valida antes de enviar.
 - A tela de busca exibe o e-mail encontrado e o telefone disponível; a tela de detalhe já oferece a ação Abrir e-mail quando há endereço cadastrado.
 - A validação do telefone verifica o formato e a quantidade de dígitos; ela não confirma se o número está efetivamente registrado no WhatsApp. A confirmação de conta WhatsApp exigiria uma verificação externa autorizada.
-- A leitura de sites usa HTTPS/HTTP público, sem credenciais, validação de host/IP, redirecionamentos restritos ao mesmo domínio, timeout e limite de conteúdo. Se o site bloquear a leitura ou não expuser e-mail, a empresa é descartada se também não houver telefone válido.
+- A leitura de sites usa HTTP/HTTPS público, sem credenciais; resolve DNS, rejeita IPs privados/reservados e fixa o IP público validado na conexão, restringe redirecionamentos ao mesmo domínio, aplica timeout e limita o tamanho do HTML. Se o site bloquear a leitura ou não expuser e-mail, a empresa é descartada se também não houver telefone válido.
 
 Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e src/components/crm/CrmLeads.jsx.
 
