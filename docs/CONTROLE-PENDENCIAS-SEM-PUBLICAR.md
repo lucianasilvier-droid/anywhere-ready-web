@@ -357,26 +357,20 @@ Arquivos alterados:
 Arquivos alterados nesta revisão: src/components/admin/representantes/RepForm.jsx, src/lib/representantes-fns.js, src/lib/entities.server.js.
 
 Status: implementação de código na branch de trabalho e revisão estática dos trechos alterados. Nenhum build, teste automatizado, teste funcional, chamada externa ou deploy foi executado.
-## Sites — geração personalizada com Cloud AI — revisão de 12/11/2026
+## Sites — Claude gratuito no navegador — revisão de 12/11/2026
 
-- Foi identificada uma divergência importante: o botão existente chamava um gerador local de textos padronizados, apesar de a tarefa exigir criação personalizada com IA.
-- A geração foi conectada à função de IA já existente no sistema: API Roq/Groq como principal e Claude como reserva, usando credenciais já configuradas no painel/ambiente. Nenhuma nova dependência ou serviço foi adicionado.
-- O prompt agora considera dados reais do estabelecimento, categoria/localização, reputação Google, resumo e oportunidades da análise comercial, proposta salva e orientações do operador.
-- As instruções pedem conteúdo moderno, específico e orientado à conversão, com escolha de paleta por psicologia das cores, sem inventar preços, horários, certificações, depoimentos ou resultados.
-- As fotos reais do Google continuam sendo carregadas pelo fluxo de Places e exibidas no site; a geração de texto recebe a quantidade disponível como contexto, mas não inventa conteúdo visual.
-- Os painéis administrativo e do representante passaram a identificar a ação como Criar site com Cloud AI e informam que a geração pode consumir cota da IA e, para leads antigos sem fotos, da Google Places API.
-- A geração continua ocorrendo somente por clique explícito. Não há criação automática de sites ao detectar que o lead não possui site.
+- A orientação correta do usuário é gerar sites com o Claude gratuito pelo navegador, sem chave Anthropic, sem API paga e sem cobrança da Anthropic.
+- Fluxo obrigatório: o representante/administrador clica em preparar; o sistema abre claude.ai e copia/prepara o prompt; o usuário cola no Claude e solicita o JSON; retorna ao CRM, cola o JSON, valida e salva; depois abre o site salvo.
+- O prompt usa os dados reais do CRM, resumo, oportunidades, abordagem e proposta da análise comercial, localização, reputação Google, fotos reais disponíveis e orientações do operador.
+- O prompt exige conteúdo personalizado, moderno e persuasivo, escolha de paleta por psicologia das cores e proíbe inventar preços, horários, certificações, depoimentos ou resultados.
+- As fotos reais do Google continuam sendo salvas no SiteCliente e exibidas na página pública. Leads antigos sem fotos podem acionar uma busca sob demanda no Google Places quando o site for salvo.
+- O endpoint de geração valida o JSON retornado pelo Claude no servidor e só então salva/atualiza SiteCliente. O fluxo deve ser verificado tanto no painel administrativo quanto no painel do representante.
+- Não usar API Roq/Groq ou Anthropic API para criar o site. A geração de conteúdo do site não deve depender de chaves de IA.
 
-Arquivos alterados: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fns.js, src/components/admin/SiteDoLead.jsx e src/components/crm/SiteDoLeadRepresentante.jsx.
+Arquivos principais: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fns.js, src/components/admin/SiteDoLead.jsx e src/components/crm/SiteDoLeadRepresentante.jsx.
 
-**Validação:** revisão estática dos fluxos, imports, credenciais, prompt, validação do conteúdo e persistência. Nenhuma chamada à IA, Google Places, build, teste automatizado, teste funcional ou deploy foi executado. O funcionamento real depende de credenciais válidas de API Roq/Groq ou Claude no ambiente/painel.
-## Integridade de branches e catálogo — 12/11/2026
+**Validação atual:** revisão estática do fluxo de preparação, clipboard, campo JSON, validação e persistência. Não foi aberto o Claude, não foi gerado JSON real, não foi salvo um site de teste, não foi feito build, teste automatizado, teste funcional ou deploy. A conclusão depende da verificação real do fluxo em ambiente de teste, nos dois perfis.
 
-- Branch ativa de preparação: work/pendencias-sem-publicar-2026-11-12. Ela contém a trilha mais completa de trabalho e não é a branch de produção.
-- Não mesclar integralmente main nem ajustes-pendentes-sem-publicar sem revisão: essas branches têm alterações de catálogo/loja que incluem o item combinado “Placa Google + Instagram” e link de checkout de kit.
-- A regra comercial confirmada é vender as placas individualmente; não reintroduzir kits, combos ou conjuntos no catálogo, na vitrine, no checkout ou nas artes.
-- O catálogo de contingência da branch ativa contém duas placas individuais (Google NFC e Instagram NFC) e o serviço de Perfil da Empresa no Google. Ele não deve ser considerado catálogo completo até a conferência da lista oficial de todos os serviços e produtos cadastrados no sistema.
-- A branch de preparação recebeu manualmente as correções do limite individual de leads e a conexão da geração de sites à IA existente; as alterações não foram publicadas.
 ## CRM — remoção de “Registrar resposta recebida” — 12/11/2026
 
 - Removido do detalhe do lead no painel do representante o bloco inteiro “Registrar resposta recebida”, incluindo texto explicativo, seletor de resposta, campo de mensagem e botão “Registrar resposta e notificar administrador”.
