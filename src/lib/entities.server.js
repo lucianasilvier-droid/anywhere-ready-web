@@ -380,71 +380,28 @@ function entityHandle(entity, access) {
     async create(input) {
       const data = await requireWrite("create", null, stripSystemFields(input));
       const user = await access.user();
-      if (entity === "Lead" && data.representante_id) {
-        // Serializa o limite diário por representante e, quando houver place_id,
-        // a deduplicação do estabelecimento no mesmo INSERT protegido.
-        const repId = String(data.representante_id);
-        const placeId = String(data.place_id || "");
+      if (entity === "Lead" && data.place_id) {
+        // The preliminary duplicate check in repWrite gives a friendly error,
+        // but two simultaneous requests can pass it together. Serialize the
+        // final check + insert for this Google/OSM place id in one SQL statement.
         const rows = await query(
-          `WITH daily_lock AS MATERIALIZED (
-             SELECT pg_advisory_xact_lock(hashtextextended(
-               'google-nfc-lead-daily:' || $1 || ':' || (now() AT TIME ZONE '${FUSO_CRM}')::date::text, 0
-             ))
-           ),
-           place_lock AS MATERIALIZED (
-             SELECT pg_advisory_xact_lock(hashtextextended('google-nfc-lead-place:' || $2, 0))
-              WHERE $2 <> ''
+          `WITH lead_lock AS MATERIALIZED (
+             SELECT pg_advisory_xact_lock(hashtextextended('google-nfc-lead-place:' || $1, 0))
            ),
            duplicate AS MATERIALIZED (
              SELECT r.id
-               FROM records r CROSS JOIN place_lock
-              WHERE $2 <> '' AND r.entity = 'Lead' AND r.data->>'place_id' = $2
+               FROM records r CROSS JOIN lead_lock
+              WHERE r.entity = 'Lead' AND r.data->>'place_id' = $1
               LIMIT 1
-           ),
-           rep_limit AS MATERIALIZED (
-             SELECT CASE
-               WHEN jsonb_typeof(data->'limite_leads_dia') = 'number'
-                 AND (data->>'limite_leads_dia')::numeric BETWEEN 1 AND 10000
-                 AND trunc((data->>'limite_leads_dia')::numeric) = (data->>'limite_leads_dia')::numeric
-                 THEN (data->>'limite_leads_dia')::int
-               ELSE ${LIMITE_LEADS_DIA_REPRESENTANTE}
-             END AS n
-               FROM records
-              WHERE entity = 'Representante' AND id = $1
-              LIMIT 1
-           ),
-           usage AS MATERIALIZED (
-             SELECT count(*)::int AS n
-               FROM records r CROSS JOIN daily_lock
-              WHERE r.entity = 'Lead'
-                AND r.data->>'representante_id' = $1
-                AND r.created_date >= ${START_OF_TODAY}
            )
            INSERT INTO records (id, entity, data, created_by, created_by_id)
-           SELECT $3, $4, $5::jsonb, $6, $7
-             FROM daily_lock CROSS JOIN usage
-            WHERE usage.n < COALESCE((SELECT n FROM rep_limit), ${LIMITE_LEADS_DIA_REPRESENTANTE})
-              AND NOT EXISTS (SELECT 1 FROM duplicate)
+           SELECT $2, $3, $4::jsonb, $5, $6
+             FROM lead_lock
+            WHERE NOT EXISTS (SELECT 1 FROM duplicate)
            RETURNING *`,
-          [repId, placeId, newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
+          [String(data.place_id), newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
         );
-        if (!rows[0]) {
-          const limite = await limiteLeadsHoje(repId);
-          if (limite.restantes <= 0) {
-            throw httpError(
-              `Você já adicionou ${limite.limite} clientes ao CRM hoje, que é o limite diário. Amanhã você pode adicionar mais.`,
-              429,
-            );
-          }
-          if (placeId) {
-            const duplicado = await query(
-              `SELECT 1 FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 LIMIT 1`,
-              [placeId],
-            );
-            if (duplicado[0]) throw httpError("Esta empresa já está no CRM. Atualize a lista antes de cadastrar novamente.", 409);
-          }
-          throw httpError("Não foi possível adicionar este cliente ao CRM. Atualize a lista e tente novamente.", 409);
-        }
+        if (!rows[0]) throw httpError("Esta empresa já está no CRM. Atualize a lista antes de cadastrar novamente.", 409);
         return toRecord(rows[0]);
       }
       const rows = await query(
