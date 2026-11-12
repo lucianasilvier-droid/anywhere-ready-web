@@ -53,6 +53,18 @@ export default function CrmLeads({ base = "/admin" }) {
   const esgotado = representante && limite && limite.restantes <= 0;
 
   const { user } = useAuth();
+  const [representantesDisponiveis, setRepresentantesDisponiveis] = useState([]);
+  useEffect(() => {
+    if (representante) return;
+    let ativo = true;
+    base44.entities.Representante.filter({ status: "ativo" }, { limit: 300 })
+      .then((page) => {
+        if (!ativo) return;
+        setRepresentantesDisponiveis(Array.isArray(page) ? page : page?.items || []);
+      })
+      .catch((e) => toast.error(e?.message || "Não foi possível carregar os representantes."));
+    return () => { ativo = false; };
+  }, [representante]);
   const buscar = useServerFn(searchPlacesFn);
   // CRM e funil leem a mesma base. Busca paginada evita o corte antigo de 300
   // registros e a atualização silenciosa mantém as telas sincronizadas entre usuários.
@@ -543,7 +555,7 @@ export default function CrmLeads({ base = "/admin" }) {
                       </td>
                       {!representante && (
                         <td className="max-w-[180px] px-4 py-2.5">
-                          <RepresentanteDoLead lead={lead} />
+                          <RepresentanteDoLead lead={lead} representantes={representantesDisponiveis} onAtualizado={reload} />
                         </td>
                       )}
                       <td className="max-w-[180px] px-4 py-2.5 text-white/55">
