@@ -28,7 +28,8 @@ const emailValido = (value) => {
     !/(^|\.)(example|invalid|localhost|test)$/i.test(domain) &&
     !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
 };
-const temContatoValido = (place) => telefoneValido(place?.telefone) || telefoneValido(place?.whatsapp) || emailValido(place?.email || place?.email_contato || place?.email_publico);
+const emailContatoParaExibir = (place) => [place?.email, place?.email_contato, place?.email_publico].find(emailValido) || "";
+const temContatoValido = (place) => telefoneValido(place?.telefone) || telefoneValido(place?.whatsapp) || Boolean(emailContatoParaExibir(place));
 
 /**
  * CRM · prospecção e lista de leads. Usado no painel do administrador (base "/admin")
@@ -428,7 +429,7 @@ export default function CrmLeads({ base = "/admin" }) {
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/40">
                       <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{place.endereco || "sem endereço"}</span>
                       {place.telefone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{place.telefone}</span>}
-                      {(place.email || place.email_contato || place.email_publico) && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{place.email || place.email_contato || place.email_publico}</span>}
+                      {emailContatoParaExibir(place) && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{emailContatoParaExibir(place)}</span>}
                       {place.nota_google != null && (
                         <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{place.nota_google} ({place.total_avaliacoes || 0})</span>
                       )}
