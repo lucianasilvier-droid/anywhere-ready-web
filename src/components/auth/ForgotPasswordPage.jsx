@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail } from "lucide-react";
-import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { authSettingsFn, recoverPasswordFn } from "@/lib/auth-fns";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthLink, SubmitButton } from "@/components/auth/parts";
 import { Input } from "@/components/ui/input";
@@ -14,12 +15,31 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [emailConfigurado, setEmailConfigurado] = useState(null);
+  const [erroConfiguracao, setErroConfiguracao] = useState(false);
+  const carregarConfiguracao = useServerFn(authSettingsFn);
+  const recuperarSenha = useServerFn(recoverPasswordFn);
+
+  useEffect(() => {
+    let ativo = true;
+    carregarConfiguracao()
+      .then((settings) => {
+        if (ativo) setEmailConfigurado(settings?.recoveryEmailConfigured === true);
+      })
+      .catch(() => {
+        if (ativo) {
+          setEmailConfigurado(false);
+          setErroConfiguracao(true);
+        }
+      });
+    return () => { ativo = false; };
+  }, [carregarConfiguracao]);
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     try {
-      await base44.auth.resetPasswordRequest(email);
+      await recuperarSenha({ data: { email } });
     } catch {
       // Same outcome either way.
     } finally {
@@ -33,6 +53,14 @@ export function ForgotPasswordPage() {
       {sent ? (
         <p className="text-center text-sm text-foreground">Se existir uma conta com esse e-mail, você receberá em instantes um link para redefinir a senha.</p>
       ) : (
+        <>
+        {emailConfigurado === false && (
+          <p role="status" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
+            {erroConfiguracao
+              ? "Não foi possível confirmar a configuração do serviço de e-mail. Tente novamente mais tarde ou fale com o administrador."
+              : "A recuperação por e-mail está temporariamente indisponível porque o envio de e-mails ainda não foi configurado. Fale com o administrador."}
+          </p>
+        )}
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="forgot-email">E-mail</Label>
@@ -41,10 +69,11 @@ export function ForgotPasswordPage() {
               <Input id="forgot-email" type="email" autoComplete="email" autoFocus placeholder="voce@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
             </div>
           </div>
-          <SubmitButton busy={busy} busyLabel="Enviando...">
+          <SubmitButton busy={busy || emailConfigurado === null} busyLabel="Enviando...">
             Enviar link
           </SubmitButton>
         </form>
+        </>
       )}
       <p className="mt-6 text-center text-sm text-muted-foreground">
         <AuthLink to="/login" returnTo={returnTo}>
