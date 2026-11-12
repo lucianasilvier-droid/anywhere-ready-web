@@ -28,7 +28,7 @@ const emailValido = (value) => {
     !/(^|\.)(example|invalid|localhost|test)$/i.test(domain) &&
     !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
 };
-const temContatoValido = (place) => telefoneValido(place?.telefone) || telefoneValido(place?.whatsapp) || emailValido(place?.email);
+const temContatoValido = (place) => telefoneValido(place?.telefone) || telefoneValido(place?.whatsapp) || emailValido(place?.email || place?.email_contato || place?.email_publico);
 
 /**
  * CRM · prospecção e lista de leads. Usado no painel do administrador (base "/admin")
