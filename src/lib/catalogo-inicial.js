@@ -49,6 +49,21 @@ export const CATALOGO_INICIAL = [
     checkout_url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
     checkout_label: "Comprar por R$ 55,00",
   },
+  {
+    id: "perfil-google-maps",
+    slug: "perfil-google-maps",
+    nome: "Google Maps + Placa Google NFC grátis",
+    descricao_curta: "Criação ou configuração do Perfil da Empresa no Google com uma Placa Google NFC de cortesia.",
+    descricao: "Serviço de criação e configuração do Perfil da Empresa no Google. Inclui uma Placa Google NFC de cortesia, configurada com o link de avaliação do estabelecimento.",
+    preco: 150,
+    modelo: "servico",
+    imagens: ["/images/divulgacao/google-maps-perfil-empresa.jpeg"],
+    imagem_fit: "contain",
+    itens_inclusos: ["Criação ou configuração do Perfil da Empresa no Google", "1 Placa Google NFC grátis"],
+    ativo: true,
+    checkout_url: "https://wa.me/5511913290911?text=Quero%20contratar%20Google%20Maps%20com%20placa%20Google%20NFC%20gratis%20por%20R%24%20150",
+    checkout_label: "Solicitar por R$ 150,00",
+  },
 ];
 
 function textoNormalizado(value) {
@@ -60,7 +75,8 @@ export function produtoCanonico(produtoOuSlug) {
     ? produtoOuSlug
     : [produtoOuSlug?.slug, produtoOuSlug?.id, produtoOuSlug?.nome].filter(Boolean).join(" ");
   const texto = textoNormalizado(value).replace(/[^a-z0-9]+/g, " ");
-  if (/kit/.test(texto) && /google/.test(texto) && /instagram/.test(texto) || /google.*instagram|instagram.*google/.test(texto)) {
+  if (/maps|perfil.*empresa|empresa.*google/.test(texto)) return CATALOGO_INICIAL[3];
+  if ((/kit/.test(texto) && /google/.test(texto) && /instagram/.test(texto)) || /google.*instagram|instagram.*google/.test(texto)) {
     return CATALOGO_INICIAL[0];
   }
   if (/instagram/.test(texto)) return CATALOGO_INICIAL[2];
