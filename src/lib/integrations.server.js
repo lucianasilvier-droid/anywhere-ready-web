@@ -160,9 +160,8 @@ async function buscarHtmlPublico(urlInicial, hostBase) {
     if (!mesmoHost(atual.hostname, hostBase) || !(await hostPublico(atual.hostname))) return "";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 1600);
-    let response;
     try {
-      response = await fetch(atual.toString(), {
+      const response = await fetch(atual.toString(), {
         redirect: "manual",
         signal: controller.signal,
         headers: {
@@ -170,33 +169,28 @@ async function buscarHtmlPublico(urlInicial, hostBase) {
           Accept: "text/html,application/xhtml+xml",
         },
       });
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) return "";
+        try {
+          const destino = new URL(location, atual);
+          if (!mesmoHost(destino.hostname, hostBase)) return "";
+          atual = destino;
+          continue;
+        } catch {
+          return "";
+        }
+      }
+      if (!response.ok || !/text\/html|application\/xhtml\+xml/i.test(response.headers.get("content-type") || "")) return "";
+      return await lerHtmlLimitado(response);
     } catch {
       return "";
     } finally {
       clearTimeout(timeout);
     }
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location) return "";
-      try {
-        const destino = new URL(location, atual);
-        if (!mesmoHost(destino.hostname, hostBase)) return "";
-        atual = destino;
-        continue;
-      } catch {
-        return "";
-      }
-    }
-    if (!response.ok || !/text\/html|application\/xhtml\+xml/i.test(response.headers.get("content-type") || "")) return "";
-    try {
-      return await lerHtmlLimitado(response);
-    } catch {
-      return "";
-    }
   }
   return "";
 }
-
 function emailsDaPagina(html, hostBase) {
   const limpo = String(html || "")
     .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
@@ -205,7 +199,10 @@ function emailsDaPagina(html, hostBase) {
   const mailto = [...limpo.matchAll(/mailto:([^"'?\s<>]+)/gi)].map((m) => m[1]);
   const visiveis = limpo.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [];
   const siteHost = String(hostBase || "").toLowerCase().replace(/^www\./, "");
-  const unicos = [...new Set([...mailto, ...visiveis].map((v) => decodeURIComponent(String(v).split("?")[0]).trim().toLowerCase()))]
+  const unicos = [...new Set([...mailto, ...visiveis].map((v) => {
+      try { return decodeURIComponent(String(v).split(/[?&]/)[0]).trim().toLowerCase(); }
+      catch { return ""; }
+    }))]
     .filter(validarEmailContato);
   return unicos.sort((a, b) => {
     const da = a.split("@")[1] || "";
