@@ -223,7 +223,7 @@ export const draftMessageFn = createServerFn({ method: "POST" })
         .filter((p) => /nfc|placa|google|instagram/i.test(p.nome || ""))
         .filter((p) => !/kit|combo|conjunto/i.test(p.nome || ""));
       if (produtos.length) {
-        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://anywhere-ready-web-lucianasilvier-droid.vercel.app").replace(/\/$/, "");
+        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
         catalogo = produtos.slice(0, 6).map((p) => ({
           nome: p.nome,
           preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(p.preco)),
