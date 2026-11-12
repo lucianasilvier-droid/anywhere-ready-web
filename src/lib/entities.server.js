@@ -452,7 +452,10 @@ function entityHandle(entity, access) {
 
     async bulkCreate(list = []) {
       const out = [];
-      for (const item of list) out.push(await this.create(item));
+      for (const item of list) {
+        if (entity === "Lead" && !leadTemContatoValido(stripSystemFields(item))) continue;
+        out.push(await this.create(item));
+      }
       return out;
     },
 
