@@ -14,6 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
+import { fetchGooglePlacePhotos, resolveCredentials } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -110,6 +111,20 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
     const base44 = rep ? context.getBase44().asServiceRole : context.getBase44();
     try {
       const lead = await base44.entities.Lead.get(data.leadId);
+      let fotosGoogle = Array.isArray(lead.fotos_google) ? lead.fotos_google.slice(0, 5) : [];
+      // Leads importados antes da coleta de fotos recebem uma busca sob demanda ao gerar a demonstração.
+      if (!fotosGoogle.length && lead.place_id && !String(lead.place_id).startsWith("osm:")) {
+        try {
+          const credenciais = await resolveCredentials(base44.asServiceRole || base44, "google_places");
+          fotosGoogle = await fetchGooglePlacePhotos(lead.place_id, credenciais.values);
+          if (fotosGoogle.length) {
+            lead.fotos_google = fotosGoogle;
+            await base44.entities.Lead.update(lead.id, { fotos_google: fotosGoogle });
+          }
+        } catch {
+          // A ausência de fotos não impede a criação do site.
+        }
+      }
       if (rep) {
         if (await sitePorLead(base44, lead.id)) {
           throw erro("Este cliente já tem um site. Para recriar ou ajustar, fale com o administrador.", 409);
@@ -136,7 +151,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         bairro: lead.bairro || "",
         estado: lead.estado || "",
         place_id: lead.place_id || "",
-        fotos_google: (Array.isArray(lead.fotos_google) ? lead.fotos_google : []).slice(0, 5),
+        fotos_google: fotosGoogle,
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
