@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { LayoutDashboard, ReceiptText, Wallet, LogOut, Home, Globe, Target, LayoutGrid } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,6 +20,26 @@ const TABS = [
 
 function RepresentanteLayout() {
   const { user } = useAuth();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  useEffect(() => {
+    if (!user?.email) return undefined;
+    const registrar = (tipo, mensagem) => {
+      base44.entities.AtividadeLog.create({
+        tipo,
+        mensagem,
+        pagina: pathname,
+        detalhe: `Área acessada: ${pathname}`,
+        criado_em: new Date().toISOString(),
+      }).catch(() => {});
+    };
+    registrar("navegacao", "Representante abriu uma área do sistema.");
+    const aoRetornar = () => {
+      if (document.visibilityState === "visible") registrar("retorno_aba", "Representante voltou para a janela do sistema.");
+    };
+    document.addEventListener("visibilitychange", aoRetornar);
+    return () => document.removeEventListener("visibilitychange", aoRetornar);
+  }, [pathname, user?.email]);
 
   async function sair() {
     try {
