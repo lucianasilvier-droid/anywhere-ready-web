@@ -72,9 +72,10 @@ function briefing(lead, orientacoes) {
 const textoSeguro = (valor, limite = 220) => String(valor ?? "").trim().slice(0, limite);
 
 /** Gera conteúdo local a partir dos dados já cadastrados. Não chama IA externa nem inventa dados comerciais. */
-export function gerarConteudoSiteAutomatico(lead) {
+export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
   const nome = textoSeguro(lead.empresa || "Nossa empresa", 120);
   const categoria = textoSeguro(lead.categoria || "", 100);
+  const observacaoOperador = textoSeguro(orientacoes, 600);
   const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
   const ramo = `${categoria} ${nome}`.toLowerCase();
   const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
@@ -118,6 +119,7 @@ export function gerarConteudoSiteAutomatico(lead) {
     tema,
     seo_descricao: `${nome}${categoria ? ` em ${categoria}` : ""}${local ? ` em ${local}` : ""}. Consulte informações e entre em contato diretamente com a empresa.`.slice(0, 160),
     tipo_negocio: restaurante ? "restaurante" : "servicos",
+    observacao_operador: observacaoOperador,
     cardapio,
   };
 }
@@ -147,6 +149,7 @@ export function validarConteudoSite(d) {
     tema: TEMAS.includes(d.tema) ? d.tema : "oceano",
     seo_descricao: txt(d.seo_descricao, 160),
     tipo_negocio: d.tipo_negocio === "restaurante" ? "restaurante" : "servicos",
+    observacao_operador: txt(d.observacao_operador, 600),
     cardapio: (Array.isArray(d.cardapio) ? d.cardapio : []).slice(0, 80).map((item) => ({
       categoria: txt(item.categoria, 60), nome: txt(item.nome, 100), descricao: txt(item.descricao, 240),
       preco: txt(item.preco, 40), imagem_url: /^https:\/\//i.test(String(item.imagem_url || "")) ? String(item.imagem_url) : "",
