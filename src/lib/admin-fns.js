@@ -201,7 +201,7 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const lead = await base44.entities.Lead.get(data.leadId);
 
     const instrucoes = {
-      autorizacao: `Escreva a PRIMEIRA mensagem de WhatsApp (máx. 90 palavras). Abra com um elogio verdadeiro e específico, usando apenas dados reais do estabelecimento: categoria, bairro, nota/quantidade de avaliações ou algum detalhe disponível. Apresente as placas NFC para facilitar o acesso dos clientes à avaliação no Google. Se a empresa NÃO tem site e existe uma URL de prévia informada adiante, diga que preparamos uma prévia de um site moderno e bonito para valorizar o negócio e pergunte se podemos enviar. Peça resposta SIM. Não envie preços, links, vídeo nem material promocional nesta primeira mensagem. Não afirme que o site está pronto se não houver URL de prévia.`,
+      autorizacao: `Escreva a PRIMEIRA mensagem de WhatsApp (máx. 90 palavras). Abra com um elogio verdadeiro e específico, usando apenas dados reais do estabelecimento: categoria, bairro, nota/quantidade de avaliações ou algum detalhe disponível. Apresente as placas NFC para facilitar o acesso dos clientes à avaliação no Google. Se a empresa NÃO tem site e existe uma URL de prévia informada adiante, diga que preparamos uma prévia de um site moderno e bonito para valorizar o negócio e pergunte se podemos enviar. Peça resposta SIM. Não envie preços, catálogo, vídeo ou links promocionais nesta primeira mensagem. O sistema poderá acrescentar somente o link público do perfil do representante responsável pelo contato. Não afirme que o site está pronto se não houver URL de prévia.`,
       proposta: `Escreva a abertura de uma apresentação comercial curta para WhatsApp (máx. 90 palavras). IMPORTANTE: o cliente JÁ AUTORIZOU receber a proposta. Não peça autorização novamente, não pergunte se pode enviar materiais, não use frases como “posso enviar”, “gostaria de enviar” ou “aguardo sua autorização”. Fale como continuação natural da conversa, apresente os benefícios e convide o cliente a abrir os links e assistir ao vídeo que seguem abaixo. Não invente preços, produtos, links ou recursos.`,
       followup: `Escreva uma mensagem de acompanhamento (máx. 60 palavras) para um contato que já autorizou o recebimento de informações, retomando a conversa sem pressão e oferecendo ajuda.`,
       resposta_avaliacao: `Escreva uma sugestão de resposta pública a uma avaliação de cliente no Google (máx. 80 palavras), agradecendo, sendo cordial e convidando o cliente a continuar o contato. Não prometa nada em nome da empresa.`,
@@ -249,7 +249,7 @@ Regras obrigatórias:
 - Personalize de verdade para este estabelecimento: cite o nome dele e pelo menos um detalhe concreto dos dados abaixo
   (bairro/cidade, categoria, nota e avaliações no Google, ausência de site ou observações). Evite texto genérico que serviria para qualquer empresa.
 - A mensagem deve estar pronta para enviar, sem nenhuma edição.
-- Na primeira mensagem, nunca inclua catálogo, preços, vídeo ou links; apenas peça autorização.
+- Na primeira mensagem, nunca inclua catálogo, preços ou vídeo. O único link permitido é o perfil público do representante responsável, acrescentado pelo sistema depois da geração da mensagem.
 - Nunca diga que criou um site quando não houver URL de prévia disponível.
 - Se quem envia for representante comercial, assine com o primeiro nome dele; caso contrário, identifique apenas a empresa.
 
@@ -273,18 +273,30 @@ Devolva {"mensagem": string}.`,
       throw Object.assign(new Error(result.error), { status: 400 });
     }
     let mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
+    let aviso = "";
+    if (data.tipo === "autorizacao" && lead.representante_id) {
+      const svc = base44.asServiceRole || base44;
+      const rep = await svc.entities.Representante.get(lead.representante_id).catch(() => null);
+      if (rep?.status === "ativo" && rep.pagina_ativa === true && rep.pagina_slug) {
+        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\\/$/, "");
+        const perfilUrl = appUrl + "/r/" + encodeURIComponent(rep.pagina_slug);
+        mensagemFinal = (mensagemFinal + "\\n\\nConheça meu perfil de representante comercial e veja como posso ajudar seu negócio:\\n" + perfilUrl).slice(0, 1450);
+      } else {
+        aviso = "O representante responsável ainda não tem uma página pública ativa com link disponível. A mensagem foi criada sem esse link.";
+      }
+    }
     if (data.tipo === "proposta") {
       const materiais = [
         "🌐 Conheça o Google NFC CONNECT:",
         "https://google-nfc-connect.vercel.app",
       ];
-      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\n" + videoDemoUrl);
-      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
+      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\\n" + videoDemoUrl);
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\\n" + previewSiteUrl);
       materiais.push("🛍️ CATÁLOGO NFC");
-      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
-      mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
+      for (const item of catalogo) materiais.push("\\n" + item.nome + " — " + item.preco + "\\n" + item.descricao + "\\n" + item.url);
+      mensagemFinal = (mensagemFinal + "\\n\\n" + materiais.join("\\n")).slice(0, 1450);
     }
-    return { ok: true, mensagem: mensagemFinal };
+    return { ok: true, mensagem: mensagemFinal, ...(aviso ? { aviso } : {}) };
   });
 
 
