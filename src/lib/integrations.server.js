@@ -281,14 +281,15 @@ async function buscarEmailNoSite(site) {
 }
 
 async function enriquecerContato(place) {
-  const telefoneValido = validarTelefoneWhatsApp(place?.telefone);
-  let telefone = telefoneValido ? String(place.telefone).trim() : "";
+  const telefoneFonte = [place?.telefone, place?.whatsapp].find(validarTelefoneWhatsApp);
+  const telefone = telefoneFonte ? String(telefoneFonte).trim() : "";
   let email = validarEmailContato(place?.email) ? String(place.email).trim().toLowerCase() : "";
   if (!telefone && !email && place?.site) email = await buscarEmailNoSite(place.site);
   if (!telefone && !email) return null;
   return {
     ...place,
     telefone,
+    whatsapp: telefone,
     email,
     contato_tipo: telefone ? (email ? "whatsapp_e_email" : "whatsapp") : "email",
     contato_valido: true,
