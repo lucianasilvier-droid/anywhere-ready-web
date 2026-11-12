@@ -8,17 +8,17 @@ import FinalCta from "@/components/home/FinalCta";
 export const Route = createFileRoute("/_site/")({
   head: () => ({
     meta: [
-      { title: "Google NFC Connect — Seja encontrado no Google e receba mais avaliações" },
+      { title: "Google NFC Connect | Perfil da Empresa no Google, Placas NFC e Sites" },
       {
         name: "description",
         content:
-          "Criação e gestão do Perfil da Empresa no Google Maps e placas NFC para avaliações. Atendimento em todo o Brasil.",
+          "Atraia mais oportunidades para sua empresa com Perfil da Empresa no Google, gestão de presença local, placas NFC para avaliações e sites profissionais. Conheça as soluções.",
       },
-      { property: "og:title", content: "Google NFC Connect — Seja encontrado no Google e receba mais avaliações" },
+      { property: "og:title", content: "Google NFC Connect | Perfil no Google, Placas NFC e Sites" },
       {
         property: "og:description",
         content:
-          "Criação e gestão do Perfil da Empresa no Google Maps e placas NFC para avaliações. Atendimento em todo o Brasil.",
+          "Soluções para empresas que querem fortalecer sua presença digital: Perfil da Empresa no Google, placas NFC e sites profissionais.",
       },
     ],
   }),
