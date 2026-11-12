@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,7 +7,6 @@ import { Search, Loader2, Plus, MapPin, Phone, Star, Check, Target, X, CalendarC
 import { base44 } from "@/api/base44Client";
 import { searchPlacesFn } from "@/lib/admin-fns";
 import { meuLimiteCrmFn } from "@/lib/representantes-fns";
-import { useEntityList } from "@/hooks/useEntityList";
 import { FUNIL_STAGES } from "@/lib/site-content";
 import StatusPill from "@/components/admin/StatusPill";
 import EmptyState from "@/components/admin/EmptyState";
@@ -38,7 +37,63 @@ export default function CrmLeads({ base = "/admin" }) {
 
   const { user } = useAuth();
   const buscar = useServerFn(searchPlacesFn);
-  const { items: leads, loading, reload } = useEntityList("Lead", { arquivado: { $ne: true } }, { limit: 300 });
+  // CRM e funil leem a mesma base. Busca paginada evita o corte antigo de 300
+  // registros e a atualização silenciosa mantém as telas sincronizadas entre usuários.
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erroLeads, setErroLeads] = useState("");
+  const reload = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    try {
+      const todos = [];
+      let skip = 0;
+      const pageSize = 1000;
+      while (true) {
+        const page = await base44.entities.Lead.filter(
+          { arquivado: { $ne: true } },
+          { sort: "created_date", limit: pageSize, skip },
+        );
+        const registros = Array.isArray(page) ? page : page?.items || [];
+        todos.push(...registros);
+        if (registros.length < pageSize) break;
+        skip += registros.length;
+      }
+      setLeads(todos);
+      setErroLeads("");
+    } catch (e) {
+      setErroLeads(e?.message || "Não foi possível sincronizar os leads com o funil.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let ativo = true;
+    let buscando = false;
+    async function sincronizar(silent = true) {
+      if (!ativo || buscando || document.visibilityState !== "visible") return;
+      buscando = true;
+      try {
+        await reload({ silent });
+      } finally {
+        buscando = false;
+      }
+    }
+    sincronizar(false);
+    const intervalo = window.setInterval(() => sincronizar(true), 5000);
+    const aoFocar = () => sincronizar(true);
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") sincronizar(true);
+    };
+    window.addEventListener("focus", aoFocar);
+    document.addEventListener("visibilitychange", aoVoltar);
+    return () => {
+      ativo = false;
+      window.clearInterval(intervalo);
+      window.removeEventListener("focus", aoFocar);
+      document.removeEventListener("visibilitychange", aoVoltar);
+    };
+  }, [reload]);
   const [termo, setTermo] = useState("");
   const [local, setLocal] = useState("");
   const segmentosRepresentante = [
@@ -213,6 +268,12 @@ export default function CrmLeads({ base = "/admin" }) {
           <Plus className="h-3.5 w-3.5" /> {representante ? "Cliente manual" : "Lead manual"}
         </button>
       </header>
+
+      {erroLeads && (
+        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          Falha na sincronização do CRM: {erroLeads}
+        </p>
+      )}
 
       {representante && limite && (
         <div
