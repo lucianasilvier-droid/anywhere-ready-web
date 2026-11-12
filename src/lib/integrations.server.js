@@ -506,10 +506,14 @@ export async function searchPlaces(args, values = {}) {
   if (google.ok && Array.isArray(google.places)) {
     const places = await filtrarEmpresasComContato(google.places);
     if (places.length) {
+      const descartadas = Math.max(0, google.places.length - places.length);
       return {
         ...google,
         places,
-        descartadas_sem_contato: Math.max(0, google.places.length - places.length),
+        descartadas_sem_contato: descartadas,
+        aviso: descartadas
+          ? `${descartadas} empresa(s) sem WhatsApp/telefone ou e-mail válido foram excluídas automaticamente.`
+          : "",
       };
     }
   }
@@ -522,7 +526,8 @@ export async function searchPlaces(args, values = {}) {
       places,
       descartadas_sem_contato: Math.max(0, (osm.places || []).length - places.length),
       aviso: places.length
-        ? "Busca feita pelo OpenStreetMap. Só são exibidas empresas com WhatsApp/telefone válido ou e-mail válido."
+        ? "Busca feita pelo OpenStreetMap. Só são exibidas empresas com WhatsApp/telefone válido ou e-mail válido." +
+          (osm.places.length > places.length ? ` ${osm.places.length - places.length} empresa(s) sem contato foram excluídas.` : "")
         : "Nenhuma empresa encontrada com WhatsApp/telefone válido ou e-mail válido. Empresas sem contato foram descartadas automaticamente.",
     };
   }
