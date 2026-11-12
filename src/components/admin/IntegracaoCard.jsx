@@ -16,6 +16,7 @@ const CAMPO_LABEL = {
   WHATSAPP_ACCESS_TOKEN: "Access token (Meta for Developers)",
   WHATSAPP_PHONE_NUMBER_ID: "Phone number ID",
   WHATSAPP_VERIFY_TOKEN: "Verify token do webhook (você define)",
+  WHATSAPP_APP_SECRET: "App Secret (Meta for Developers) — valida assinatura do webhook",
 };
 
 const ORIGEM_LABEL = {
