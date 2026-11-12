@@ -502,6 +502,7 @@ export async function fetchGooglePlacePhotos(placeId, values = {}) {
 
 /** Tenta Google e OSM, mas só devolve empresas com WhatsApp/telefone válido ou e-mail válido. */
 export async function searchPlaces(args, values = {}) {
+  const limite = Math.min(Math.max(Number(args?.maxResultCount) || 10, 1), 20);
   const google = await searchGooglePlaces(args, values);
   if (google.ok && Array.isArray(google.places)) {
     const places = await filtrarEmpresasComContato(google.places);
@@ -509,7 +510,7 @@ export async function searchPlaces(args, values = {}) {
       const descartadas = Math.max(0, google.places.length - places.length);
       return {
         ...google,
-        places,
+        places: places.slice(0, limite),
         descartadas_sem_contato: descartadas,
         aviso: descartadas
           ? `${descartadas} empresa(s) sem WhatsApp/telefone ou e-mail válido foram excluídas automaticamente.`
@@ -523,7 +524,7 @@ export async function searchPlaces(args, values = {}) {
     const places = await filtrarEmpresasComContato(osm.places);
     return {
       ...osm,
-      places,
+      places: places.slice(0, limite),
       descartadas_sem_contato: Math.max(0, (osm.places || []).length - places.length),
       aviso: places.length
         ? "Busca feita pelo OpenStreetMap. Só são exibidas empresas com WhatsApp/telefone válido ou e-mail válido." +
