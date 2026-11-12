@@ -101,7 +101,6 @@ export default function CrmLeads({ base = "/admin" }) {
     "Cabeleireiro",
     "Salão de Beleza",
     "Clínica de Estética",
-    "Assistência Técnica",
     "Restaurantes",
     "Bares",
     "Imobiliária",
