@@ -29,26 +29,32 @@ function ProdutoPage() {
   useEffect(() => {
     let ativo = true;
     setCarregando(true);
-    base44.entities.Produto.filter({ slug }, { limit: 1 })
-      .then(async (page) => {
+    async function carregarProduto() {
+      let resultado = null;
+      try {
+        const page = await base44.entities.Produto.filter({ slug }, { limit: 1 });
         const lista = Array.isArray(page) ? page : page?.items || [];
-        if (lista[0]) return lista[0];
-
-        // Alguns cadastros antigos não têm slug consistente; procura pelo slug ou ID real.
-        const todos = await base44.entities.Produto.filter({ ativo: true }, { limit: 100 });
-        const produtos = Array.isArray(todos) ? todos : todos?.items || [];
-        const correspondente = produtos.find((item) =>
-          String(item.slug || "").trim() === slug || String(item.id || "").trim() === slug
-        );
-        if (correspondente) return correspondente;
-
+        resultado = lista[0] || null;
+      } catch {
+        // Continua para a busca de compatibilidade dos cadastros antigos.
+      }
+      if (!resultado) {
         try {
-          return await base44.entities.Produto.get(slug);
+          const todos = await base44.entities.Produto.filter({ ativo: true }, { limit: 100 });
+          const produtos = Array.isArray(todos) ? todos : todos?.items || [];
+          resultado = produtos.find((item) =>
+            String(item.slug || "").trim() === slug || String(item.id || "").trim() === slug
+          ) || null;
         } catch {
-          return null;
+          // Ainda tentamos localizar pelo ID abaixo.
         }
-      })
-      .then((resultado) => ativo && setProduto(resultado))
+      }
+      if (!resultado) {
+        try { resultado = await base44.entities.Produto.get(slug); } catch { resultado = null; }
+      }
+      if (ativo) setProduto(resultado);
+    }
+    carregarProduto()
       .catch(() => ativo && setProduto(null))
       .finally(() => ativo && setCarregando(false));
     return () => {
@@ -77,6 +83,7 @@ function ProdutoPage() {
   }
 
   const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
+  const checkoutWhatsApp = String(checkoutUrl || "").startsWith("https://wa.me/");
 
   function adicionar(irParaCarrinho) {
     cart.add(produto, quantidade);
@@ -129,7 +136,7 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          <div className="mt-6 flex items-center gap-3">
+          {!checkoutWhatsApp && <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
               <button
                 onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
@@ -159,7 +166,7 @@ function ProdutoPage() {
             >
               Comprar agora
             </button>
-          </div>
+          </div>}
 
           {checkoutUrl ? (
             <a
@@ -168,7 +175,7 @@ function ProdutoPage() {
               rel="noreferrer"
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128]"
             >
-              <ExternalLink className="h-4 w-4" /> {produto.checkout_label || "Ir para o checkout"}
+              <ExternalLink className="h-4 w-4" /> {produto.checkout_label || (checkoutWhatsApp ? "Solicitar pelo WhatsApp" : "Ir para o checkout")}
             </a>
           ) : (
             <p className="mt-5 text-[12px] text-white/40">
