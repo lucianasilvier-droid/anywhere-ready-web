@@ -43,9 +43,11 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
 
   async function carregar() {
     setCarregando(true);
+    setErro("");
     try {
       setLead(await base44.entities.Lead.get(leadId));
     } catch (e) {
+      setLead(null);
       setErro(e?.message || "Lead não encontrado.");
     } finally {
       setCarregando(false);
@@ -53,7 +55,18 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   }
 
   useEffect(() => {
+    let ativo = true;
+    const atualizarAoVoltar = () => {
+      if (ativo && document.visibilityState === "visible") carregar();
+    };
     carregar();
+    window.addEventListener("focus", atualizarAoVoltar);
+    document.addEventListener("visibilitychange", atualizarAoVoltar);
+    return () => {
+      ativo = false;
+      window.removeEventListener("focus", atualizarAoVoltar);
+      document.removeEventListener("visibilitychange", atualizarAoVoltar);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId]);
 
