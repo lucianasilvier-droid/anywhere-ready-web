@@ -268,6 +268,29 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
   }
 }
 
+/** Busca fotos e atribuições de um Place ID já salvo no CRM (usado ao gerar sites de leads antigos). */
+export async function fetchGooglePlacePhotos(placeId, values = {}) {
+  const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
+  if (!key || !placeId || /^osm:/i.test(String(placeId))) return [];
+  try {
+    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+      headers: {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "photos",
+      },
+    });
+    if (!response.ok) return [];
+    const payload = await response.json().catch(() => ({}));
+    return (Array.isArray(payload.photos) ? payload.photos : []).slice(0, 5).map((foto) => ({
+      name: String(foto?.name || ""),
+      autor: String(foto?.authorAttributions?.[0]?.displayName || ""),
+      autor_uri: String(foto?.authorAttributions?.[0]?.uri || ""),
+    })).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_=-]+$/.test(foto.name));
+  } catch {
+    return [];
+  }
+}
+
 /** Tenta o Google; se estiver bloqueado/sem chave, usa a busca reserva. */
 export async function searchPlaces(args, values = {}) {
   const google = await searchGooglePlaces(args, values);
