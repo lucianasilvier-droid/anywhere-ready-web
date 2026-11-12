@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
 import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
+import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
 
 export const Route = createFileRoute("/_site/loja/$slug")({
   head: () => ({ meta: [{ title: "Placas NFC personalizadas para empresas | Google NFC Connect" }, { name: "description", content: "Conheça placas NFC personalizadas para facilitar o acesso dos clientes à avaliação no Google e aos canais digitais da sua empresa." }] }),
@@ -13,7 +14,6 @@ export const Route = createFileRoute("/_site/loja/$slug")({
 });
 
 const CHECKOUTS_CONHECIDOS = {
-  "placa-google-instagram": "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram",
   "placa-instagram": "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
   "placa-google": "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc",
   "perfil-google-maps": "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google",
@@ -52,6 +52,13 @@ function ProdutoPage() {
       if (!resultado) {
         try { resultado = await base44.entities.Produto.get(slug); } catch { resultado = null; }
       }
+      // A vitrine usa um catálogo de contingência quando não há produtos ativos
+      // no banco. Sem este mesmo fallback, os cards aparecem mas o detalhe 404.
+      if (!resultado) {
+        resultado = CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null;
+      }
+      // Não permitir abrir diretamente um produto explicitamente desativado.
+      if (resultado?.ativo === false) resultado = null;
       if (ativo) setProduto(resultado);
     }
     carregarProduto()
