@@ -104,6 +104,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     onSuccess: (r) => {
       setMensagem(r?.mensagem || "");
       toast.success("Mensagem gerada. Revise antes de enviar.");
+      if (r?.aviso) toast.warning(r.aviso);
     },
     onError: (e) => toast.error(e?.message || "Não foi possível gerar a mensagem."),
   });
