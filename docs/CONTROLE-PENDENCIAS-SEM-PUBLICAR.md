@@ -258,3 +258,13 @@ Arquivos alterados:
 - Os demais segmentos e o funcionamento da busca não foram alterados.
 
 **Validação:** alteração estática confirmada no arquivo do GitHub. Nenhum teste, build ou deploy foi executado; a Vercel não foi acessada.
+
+
+## Painel admin — estado de carregamento do detalhe do cliente — 12/11/2026
+
+- Corrigido um estado de tela que podia ficar preso indefinidamente em “Carregando cliente...” quando a leitura de `Cliente.get(clientId)` falhava ou o registro não existia: o carregamento terminava, mas a tela tratava `form === null` como carregamento contínuo.
+- A página agora apresenta uma mensagem clara e um caminho de retorno para a lista de clientes quando não consegue carregar o registro.
+- O efeito limpa os dados anteriores ao trocar de ID e ignora respostas de uma requisição antiga após desmontagem/troca de cliente, evitando que uma resposta atrasada sobrescreva a tela atual.
+- Nenhuma regra de permissão ou semântica global de `get()` foi alterada.
+
+**Validação:** revisão estática e atualização confirmada no GitHub. Não houve teste, build ou deploy; a Vercel não foi acessada.
