@@ -14,7 +14,7 @@ import { brl } from "@/lib/format";
 import { whatsappLink } from "@/lib/site-content";
 
 export const Route = createFileRoute("/_site/carrinho")({
-  head: () => ({ meta: [{ title: "Carrinho e finalização — Google NFC Connect" }] }),
+  head: () => ({ meta: [{ title: "Carrinho e finalização — Google NFC Connect" }, { name: "robots", content: "noindex, nofollow" }] }),
   component: CarrinhoPage,
 });
 
