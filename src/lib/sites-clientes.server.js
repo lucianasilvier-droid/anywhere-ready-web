@@ -62,6 +62,8 @@ function briefing(lead, orientacoes) {
     `Cidade: ${lead.cidade || "não informada"}${lead.bairro ? `, bairro ${lead.bairro}` : ""}${lead.estado ? ` - ${lead.estado}` : ""}`,
     `Nota no Google: ${lead.nota_google ?? "sem dados"} (${lead.total_avaliacoes ?? 0} avaliações)`,
     lead.ai_resumo ? `Análise comercial já feita: ${lead.ai_resumo}` : "",
+    lead.ai_oportunidades ? `Oportunidades identificadas: ${lead.ai_oportunidades}` : "",
+    lead.ai_proposta ? `Direção de proposta: ${lead.ai_proposta}` : "",
     lead.observacoes ? `Observações do CRM: ${lead.observacoes}` : "",
     orientacoes ? `Pedidos do operador para este site: ${orientacoes}` : "",
   ]
@@ -197,7 +199,7 @@ export function sitePublico(site) {
     place_id: site.place_id || "",
     nota_google: site.nota_google ?? null,
     total_avaliacoes: site.total_avaliacoes ?? null,
-    fotos_google: (Array.isArray(site.fotos_google) ? site.fotos_google : []).slice(0, 5).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(String(foto?.name || ""))).map((foto) => ({ name: foto.name, autor: String(foto.autor || ""), autor_uri: String(foto.autor_uri || "") })),
+    fotos_google: (Array.isArray(site.fotos_google) ? site.fotos_google : []).slice(0, 5).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_=-]+$/.test(String(foto?.name || ""))).map((foto) => ({ name: foto.name, autor: String(foto.autor || ""), autor_uri: String(foto.autor_uri || "") })),
     whatsapp: whatsappDe(site.whatsapp),
     telefone: site.telefone || "",
     instagram: site.instagram || "",
