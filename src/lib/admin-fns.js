@@ -278,9 +278,9 @@ Devolva {"mensagem": string}.`,
       const svc = base44.asServiceRole || base44;
       const rep = await svc.entities.Representante.get(lead.representante_id).catch(() => null);
       if (rep?.status === "ativo" && rep.pagina_ativa === true && rep.pagina_slug) {
-        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\\/$/, "");
+        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
         const perfilUrl = appUrl + "/r/" + encodeURIComponent(rep.pagina_slug);
-        mensagemFinal = (mensagemFinal + "\\n\\nConheça meu perfil de representante comercial e veja como posso ajudar seu negócio:\\n" + perfilUrl).slice(0, 1450);
+        mensagemFinal = (mensagemFinal + "\n\nConheça meu perfil de representante comercial e veja como posso ajudar seu negócio:\n" + perfilUrl).slice(0, 1450);
       } else {
         aviso = "O representante responsável ainda não tem uma página pública ativa com link disponível. A mensagem foi criada sem esse link.";
       }
@@ -290,11 +290,11 @@ Devolva {"mensagem": string}.`,
         "🌐 Conheça o Google NFC CONNECT:",
         "https://google-nfc-connect.vercel.app",
       ];
-      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\\n" + videoDemoUrl);
-      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\\n" + previewSiteUrl);
+      if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\n" + videoDemoUrl);
+      if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
       materiais.push("🛍️ CATÁLOGO NFC");
-      for (const item of catalogo) materiais.push("\\n" + item.nome + " — " + item.preco + "\\n" + item.descricao + "\\n" + item.url);
-      mensagemFinal = (mensagemFinal + "\\n\\n" + materiais.join("\\n")).slice(0, 1450);
+      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
+      mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
     }
     return { ok: true, mensagem: mensagemFinal, ...(aviso ? { aviso } : {}) };
   });
