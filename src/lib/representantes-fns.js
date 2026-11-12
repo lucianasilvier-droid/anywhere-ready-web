@@ -32,6 +32,7 @@ const repInput = z.object({
   comissao_perfil: z.number().min(0).max(10000).optional(),
   comissao_mensalidade: z.number().min(0).max(10000).optional(),
   comissao_placa: z.number().min(0).max(10000).optional(),
+  limite_leads_dia: z.number().int().min(1).max(10000).optional().default(20),
   observacoes: z.string().trim().max(1000).optional().default(""),
   convidar: z.boolean().optional().default(false),
 });
@@ -177,6 +178,7 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       comissao_perfil: Number(data.comissao_perfil) || 100,
       comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
       comissao_placa: Number(data.comissao_placa) || 20,
+      limite_leads_dia: Number(data.limite_leads_dia) || 20,
       observacoes: data.observacoes || "",
     };
 
@@ -374,8 +376,9 @@ export const solicitarPagamentoFn = createServerFn({ method: "POST" })
 export const meuLimiteCrmFn = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .handler(async ({ context }) => {
-    const rep = await context.getBase44().representante();
-    if (!rep) return { liberado: false };
+    const base44 = context.getBase44().asServiceRole;
+    const rep = await representanteDoUsuario(base44, context.user);
+    if (!rep || rep.status !== "ativo") return { liberado: false };
     const { limiteLeadsHoje } = await import("@/lib/entities.server");
     return { liberado: true, representante: { id: rep.id, nome: rep.nome }, ...(await limiteLeadsHoje(rep.id)) };
   });
