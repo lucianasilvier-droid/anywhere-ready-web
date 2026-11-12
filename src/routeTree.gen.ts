@@ -27,6 +27,7 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiTimeRouteImport } from './routes/api/time'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as SiteSlugRouteImport } from './routes/site.$slug'
+import { Route as PropostaBarbeariaDaVinciRouteImport } from './routes/proposta-barbearia-da-vinci'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin.index'
 import { Route as AuthedAdminBackupRouteImport } from './routes/_authed/admin.backup'
 import { Route as AuthedAdminConfiguracoesRouteImport } from './routes/_authed/admin.configuracoes'
@@ -166,6 +167,11 @@ const RSlugRoute = RSlugRouteImport.update({
 const SiteSlugRoute = SiteSlugRouteImport.update({
   id: '/site/$slug',
   path: '/site/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropostaBarbeariaDaVinciRoute = PropostaBarbeariaDaVinciRouteImport.update({
+  id: '/proposta-barbearia-da-vinci',
+  path: '/proposta-barbearia-da-vinci',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
