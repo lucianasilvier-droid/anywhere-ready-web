@@ -27,7 +27,7 @@ function leadTemContatoValido(record) {
     telefone.length === 10 || telefone.length === 11 ||
     (telefone.startsWith("55") && (telefone.length === 12 || telefone.length === 13))
   );
-  const email = norm(record?.email);
+  const email = norm(record?.email || record?.email_contato || record?.email_publico);
   const emailValido = email.length <= 254 &&
     /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
     !/(^|\.)(example|invalid|localhost|test)$/i.test(email.split("@")[1] || "") &&
@@ -104,7 +104,7 @@ function buildWhere(entity, filter, params) {
   }
   if (entity === "Lead") {
     const telefone = (campo) => "regexp_replace(COALESCE(data->>'" + campo + "', ''), '[^0-9]', '', 'g')";
-    const email = "lower(COALESCE(data->>'email', ''))";
+    const email = "lower(COALESCE(NULLIF(data->>'email', ''), NULLIF(data->>'email_contato', ''), NULLIF(data->>'email_publico', ''), ''))";
     const tel = [telefone("telefone"), telefone("whatsapp")];
     conds.push(`(
       length(${tel[0]}) IN (10, 11)
