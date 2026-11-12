@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Wand2 } from "lucide-react";
-import { gerarSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
+import { gerarSiteFn, prepararSiteGratuitoFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { LIMITE_SITES_DIA_REPRESENTANTE } from "@/lib/crm-limites";
 
 const STATUS = {
@@ -20,10 +20,13 @@ const STATUS = {
 export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
   const gerar = useServerFn(gerarSiteFn);
+  const prepararGratis = useServerFn(prepararSiteGratuitoFn);
   const [site, setSite] = useState(null);
   const [limite, setLimite] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [orientacoes, setOrientacoes] = useState("");
+  const [promptClaude, setPromptClaude] = useState("");
+  const [jsonClaude, setJsonClaude] = useState("");
 
   useEffect(() => {
     let ativo = true;
@@ -42,19 +45,35 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lead.id]);
 
-  const mGerarAutomatico = useMutation({
-    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
+  const mPrepararGratis = useMutation({
+    mutationFn: () => prepararGratis({ data: { leadId: lead.id, orientacoes } }),
+    onSuccess: async (r) => {
+      setPromptClaude(r?.prompt || "");
+      try {
+        await navigator.clipboard.writeText(r.prompt);
+        toast.success("Instruções copiadas. Cole no Claude gratuito e peça o JSON.");
+      } catch {
+        toast.success("Instruções prontas. Copie o texto exibido abaixo.");
+      }
+    },
+    onError: (e) => toast.error(e?.message || "Não foi possível preparar as instruções."),
+  });
+
+  const mSalvarGratis = useMutation({
+    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes, conteudoManual: jsonClaude } }),
     onSuccess: (r) => {
       if (!r?.ok || !r?.site) {
-        toast.error("O CRM não confirmou a criação do site.");
+        toast.error("O CRM não confirmou o salvamento do site.");
         return;
       }
       setSite(r.site);
       if (r?.limite) setLimite(r.limite);
-      toast.success("Site de demonstração criado e salvo no CRM.");
+      setJsonClaude("");
+      setPromptClaude("");
+      toast.success("Site salvo no CRM usando o Claude gratuito.");
       onGerado?.();
     },
-    onError: (e) => toast.error(e?.message || "Não foi possível criar o site."),
+    onError: (e) => toast.error(e?.message || "Não foi possível validar e salvar o site."),
   });
 
   const total = limite?.limite ?? LIMITE_SITES_DIA_REPRESENTANTE;
@@ -87,28 +106,40 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
         <div className="mt-2.5 space-y-3">
           <p className="text-[12.5px] leading-relaxed text-white/65">
             {lead.site ? (
-              <>Esta empresa já tem um site próprio, mas você pode criar uma demonstração nova para oferecer. </>
+              <>Esta empresa já tem um site próprio. A criação de uma nova demonstração deve ser combinada com o administrador. </>
             ) : (
               <><strong className="text-white">Esta empresa não tem site.</strong> </>
             )}
-            O Cloud AI usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para criar um site personalizado. A geração acontece somente quando você clicar e pode consumir a cota da IA e, para leads antigos sem fotos, da Google Places API.
+            Prepare as instruções no sistema, abra o Claude gratuito, gere o JSON e cole a resposta aqui. Não precisa de chave de API nem gera cobrança da Anthropic. O site usa os dados do CRM e as fotos reais do Google disponíveis.
           </p>
           <textarea
             value={orientacoes}
             onChange={(e) => setOrientacoes(e.target.value)}
             rows={2}
             maxLength={600}
-            placeholder="Observação opcional que aparecerá no site (não inclua dados não confirmados)"
+            placeholder="Orientações para o Claude: destaque serviços reais e diferenciais confirmados."
             className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
           />
           <button
-            onClick={() => mGerarAutomatico.mutate()}
-            disabled={mGerarAutomatico.isPending || esgotado}
+            onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }}
+            disabled={mPrepararGratis.isPending || esgotado || !!lead.site}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-50"
           >
-            {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mGerarAutomatico.isPending ? "Criando site com Cloud AI..." : "Criar site com Cloud AI"}
+            {mPrepararGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {mPrepararGratis.isPending ? "Preparando instruções..." : "Preparar no Claude gratuito"}
           </button>
+          {promptClaude && (
+            <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+              <p className="text-[11.5px] leading-relaxed text-white/65">Cole as instruções no Claude gratuito, envie e depois copie a resposta JSON completa para o campo abaixo.</p>
+              <textarea readOnly value={promptClaude} rows={4} className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white" />
+              <label className="block text-[11px] font-semibold text-white/60">Cole aqui a resposta JSON do Claude</label>
+              <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={6} maxLength={30000} placeholder='{"slogan":"...","titulo":"...","servicos":[...]}' className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white" />
+              <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending || esgotado} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
+                {mSalvarGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                {mSalvarGratis.isPending ? "Validando e salvando..." : "Salvar site no CRM"}
+              </button>
+            </div>
+          )}
           <p className={`text-[11px] ${esgotado ? "text-red-300" : "text-white/40"}`}>
             {esgotado
               ? `Você já criou ${total} sites hoje, que é o limite diário. Amanhã você pode criar mais.`
