@@ -95,6 +95,7 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
         "places.userRatingCount",
         "places.primaryTypeDisplayName",
         "places.addressComponents",
+        "places.photos",
       ].join(","),
     },
     body: JSON.stringify({
@@ -143,6 +144,11 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
       categoria: p.primaryTypeDisplayName?.text || "",
       nota_google: typeof p.rating === "number" ? p.rating : null,
       total_avaliacoes: typeof p.userRatingCount === "number" ? p.userRatingCount : null,
+      fotos_google: (Array.isArray(p.photos) ? p.photos : []).slice(0, 5).map((foto) => ({
+        name: String(foto?.name || ""),
+        autor: String(foto?.authorAttributions?.[0]?.displayName || ""),
+        autor_uri: String(foto?.authorAttributions?.[0]?.uri || ""),
+      })).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(foto.name)),
     };
   });
 
