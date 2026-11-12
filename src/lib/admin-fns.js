@@ -459,8 +459,6 @@ export const integrationStatusFn = createServerFn({ method: "GET" })
     const defs = [
       { tipo: "google_places", nome: "Google Maps / Places", campos: ["GOOGLE_MAPS_API_KEY"] },
       { tipo: "groq", nome: "API Roq", campos: ["GROQ_API_KEY"] },
-      { tipo: "claude", nome: "Claude AI", campos: ["ANTHROPIC_API_KEY"] },
-      { tipo: "openai", nome: "ChatGPT (OpenAI)", campos: ["OPENAI_API_KEY"] },
       {
         tipo: "whatsapp",
         nome: "WhatsApp Business",
@@ -497,7 +495,7 @@ export const saveIntegrationKeysFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(
     z.object({
-      tipo: z.enum(["google_places", "groq", "claude", "openai", "whatsapp"]),
+      tipo: z.enum(["google_places", "groq", "whatsapp"]),
       valores: z.record(z.string(), z.string().max(600)),
     }),
   )
