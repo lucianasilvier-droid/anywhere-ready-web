@@ -417,3 +417,15 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 - O limite diário agora identifica o criador original do lead (criado_por_representante_id; para registros antigos, usa created_by/e-mail de acesso). Transferir um lead posteriormente não consome nem altera o limite diário do novo responsável.
 - Os campos de criador original são protegidos contra alteração pelo próprio representante.
 - O segmento Assistência Técnica foi preservado na lista de segmentos sugeridos para busca.
+
+## Sites de demonstração — fotos reais do site oficial e Google — 12/11/2026
+
+- Identificado o motivo da ausência das imagens do site oficial: o fluxo coletava fotos do Google Places, mas não extraía nem persistia as imagens do domínio oficial cadastrado no lead.
+- Adicionada coleta server-side das imagens públicas do site oficial: aceita somente HTTPS, não segue redirecionamentos, limita a extração ao mesmo domínio e filtra logos, ícones e recursos que não são fotografias.
+- Ao gerar a demonstração, o sistema tenta coletar até 12 fotos do site oficial e guardar no lead; mantém a coleta existente de até 5 fotos do Google Places.
+- O registro do site de demonstração passa a guardar as duas fontes, e a página pública prioriza uma foto do site oficial na capa e combina as demais com as imagens do Google na galeria, identificando a origem.
+- Arquivos alterados: `src/lib/integrations.server.js`, `src/lib/sites-clientes-fns.js`, `src/lib/sites-clientes.server.js`, `src/routes/site.$slug.jsx`.
+
+**Estado:** implementação registrada na branch de trabalho; revisão estática confirmou a presença da coleta, persistência, exposição pública e renderização. Ainda não foi possível validar o carregamento visual real nem executar testes locais. O status de verificação da Vercel retornou falha por limite de build do plano (`build-rate-limit`); não há confirmação de preview pronto. Produção não foi publicada.
+
+**Próximas verificações:** gerar novamente a demonstração da Barbearia da Vinci com o lead correto; conferir se o campo `site` contém o domínio oficial e se o `place_id` corresponde ao perfil correto do Google; confirmar que as imagens realmente carregam no navegador antes de marcar como testado.
