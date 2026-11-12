@@ -494,7 +494,7 @@ function entityHandle(entity, access) {
                     OR (COALESCE(data->>'criado_por_representante_id', '') = '' AND lower(COALESCE(created_by, '')) = lower($2))
                   )
                   AND created_date >= ${START_OF_TODAY}
-                  AND ${VALID_LEAD_CONTACT_SQL}
+                  AND ${VALID_LEAD_CONTACT_SQL}`,
               [repId, user?.email || ""],
             );
             const limite = Number(limites[0]?.n ?? LIMITE_LEADS_DIA_REPRESENTANTE);
