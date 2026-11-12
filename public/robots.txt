@@ -1,14 +1,14 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Areas restricted to customers and administrators; do not expose private workflows in search.
+Disallow: /painel
+Disallow: /admin
+Disallow: /login
+Disallow: /representante
+Disallow: /crm
+Disallow: /api/
+Disallow: /carrinho
+Disallow: /pagamento
+
+Sitemap: https://google-nfc-connect.vercel.app/sitemap.xml
