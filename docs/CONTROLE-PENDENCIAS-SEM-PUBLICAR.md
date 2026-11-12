@@ -344,3 +344,16 @@ Arquivos alterados:
 - Consulta somente de leitura ao histórico da equipe Vercel, com janela móvel de 24 horas, retornou 100 registros (limite máximo solicitado pela consulta): 68 associados a `anywhere-ready-web-s71m` e 32 a `google-nfc-connect`.
 - O registro mais recente retornado foi de 12/11/2026 15:15 UTC; o mais antigo, 11/11/2026 15:48 UTC. Como a consulta atingiu o teto de 100 resultados e já existe erro explícito `api-deployments-free-per-day`, o bloqueio deve ser tratado como ativo.
 - Branch de trabalho atualizada após a correção do polling: `26d3adeb1552014f6349bae74e7eadadfabcac27`. A `main` permaneceu em `bb2794505db5935c66ece3e568a8168c92c4e5dd`.
+
+## CRM — limite diário individual por representante — revisão de 12/11/2026
+
+- O limite foi incluído no formulário de edição/cadastro do representante (limite_leads_dia), com validação inteira entre 1 e 10.000 e padrão 20.
+- O servidor persiste o valor no registro Representante e limiteLeadsHoje() consulta esse cadastro, usando 20 apenas como fallback para registros antigos sem valor válido.
+- A consulta exibida ao representante usa a mesma resolução do registro pelo e-mail de login e respeita o status ativo (mantendo compatibilidade com cadastros antigos sem status explícito).
+- A tela de configurações gerais não deve voltar a oferecer um limite global: a configuração é individual por representante.
+- A validação do limite no servidor continua sendo a proteção efetiva; o bloqueio visual e o recorte da ação em lote no navegador são apenas conveniência de interface.
+- Limitação conhecida: a contagem é consultada antes da gravação; em duas requisições simultâneas, ainda existe uma pequena janela de concorrência que pode permitir ultrapassar o limite. Não declarar proteção atômica até implementar e validar uma reserva transacional apropriada.
+
+Arquivos alterados nesta revisão: src/components/admin/representantes/RepForm.jsx, src/lib/representantes-fns.js, src/lib/entities.server.js.
+
+Status: implementação de código na branch de trabalho e revisão estática dos trechos alterados. Nenhum build, teste automatizado, teste funcional, chamada externa ou deploy foi executado.
