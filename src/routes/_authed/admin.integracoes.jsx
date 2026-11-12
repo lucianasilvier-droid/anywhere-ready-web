@@ -28,16 +28,6 @@ const DESCRICOES = {
       "Usada pela IA Roq para analisar leads, sugerir abordagens, escrever mensagens e resumir históricos.",
     passos: ["Configure a chave da API Roq no painel de integrações", "Cole a chave no campo acima e salve"],
   },
-  claude: {
-    titulo: "Claude AI — criação de sites",
-    texto: "Gera e recria sites de demonstração para empresas do CRM. A chave também pode ser salva com segurança neste painel.",
-    passos: ["Crie uma chave no console da Anthropic", "Cole a chave no campo acima e salve", "Use Testar conexão para confirmar o acesso ao Claude"],
-  },
-  openai: {
-    titulo: "ChatGPT — OpenAI",
-    texto: "Ativa o assistente ChatGPT dentro do painel administrativo para ajudar a entender o sistema, CRM, integrações e rotinas.",
-    passos: ["Crie uma chave de API na plataforma OpenAI", "Cole a chave no campo acima e salve", "Use Testar conexão e depois abra Assistente ChatGPT no menu do painel"],
-  },
   whatsapp: {
     titulo: "WhatsApp Business",
     texto: "Envio de mensagens pelo botão do CRM, sempre com revisão do operador e autorização registrada.",
