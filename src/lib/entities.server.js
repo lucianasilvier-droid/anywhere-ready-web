@@ -3,7 +3,7 @@
 // pages and server functions keep working, but every record lives in the `records`
 // table (see db/schema.ts): one row per record, the fields as JSONB in `data`.
 import { getSessionUser, inviteAuthUser, setPasswordForEmail } from "@/lib/auth.server";
-import { query as dbQuery } from "@/lib/db.server";
+import { query as dbQuery, withTransaction } from "@/lib/db.server";
 import { env } from "@/lib/env.server";
 import { ENTITY_NAMES } from "@/lib/entity-names";
 import { FUSO_CRM, LIMITE_LEADS_DIA_REPRESENTANTE, LIMITE_SITES_DIA_REPRESENTANTE } from "@/lib/crm-limites";
@@ -424,29 +424,75 @@ function entityHandle(entity, access) {
       const data = await requireWrite("create", null, entrada);
       if (entity === "Lead") exigirContatoLead(data);
       const user = await access.user();
-      if (entity === "Lead" && data.place_id) {
-        // The preliminary duplicate check in repWrite gives a friendly error,
-        // but two simultaneous requests can pass it together. Serialize the
-        // final check + insert for this Google/OSM place id in one SQL statement.
-        const rows = await query(
-          `WITH lead_lock AS MATERIALIZED (
-             SELECT pg_advisory_xact_lock(hashtextextended('google-nfc-lead-place:' || $1, 0))
-           ),
-           duplicate AS MATERIALIZED (
-             SELECT r.id
-               FROM records r CROSS JOIN lead_lock
-              WHERE r.entity = 'Lead' AND r.data->>'place_id' = $1
-              LIMIT 1
-           )
-           INSERT INTO records (id, entity, data, created_by, created_by_id)
-           SELECT $2, $3, $4::jsonb, $5, $6
-             FROM lead_lock
-            WHERE NOT EXISTS (SELECT 1 FROM duplicate)
-           RETURNING *`,
-          [String(data.place_id), newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
-        );
-        if (!rows[0]) throw httpError("Esta empresa já está no CRM. Atualize a lista antes de cadastrar novamente.", 409);
-        return toRecord(rows[0]);
+      if (entity === "Lead") {
+        const placeId = String(data.place_id || "");
+        const repId = String(data.representante_id || "");
+        const record = await withTransaction(async (tx) => {
+          // Cada trava é adquirida em um comando separado. Assim, após aguardar
+          // outra transação, a próxima consulta recebe um snapshot atualizado.
+          if (placeId) {
+            await tx(
+              "SELECT pg_advisory_xact_lock(hashtextextended('google-nfc-lead-place:' || $1, 0))",
+              [placeId],
+            );
+          }
+          if (repId) {
+            await tx(
+              `SELECT pg_advisory_xact_lock(hashtextextended(
+                'google-nfc-lead-daily:' || $1 || ':' || (now() AT TIME ZONE '${FUSO_CRM}')::date::text, 0
+              ))`,
+              [repId],
+            );
+          }
+
+          if (placeId) {
+            const duplicado = await tx(
+              "SELECT id FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 LIMIT 1",
+              [placeId],
+            );
+            if (duplicado[0]) {
+              throw httpError("Esta empresa já está no CRM. Atualize a lista antes de cadastrar novamente.", 409);
+            }
+          }
+
+          if (repId) {
+            const limites = await tx(
+              `SELECT CASE
+                 WHEN jsonb_typeof(data->'limite_leads_dia') = 'number'
+                   AND (data->>'limite_leads_dia')::numeric BETWEEN 1 AND 10000
+                   AND trunc((data->>'limite_leads_dia')::numeric) = (data->>'limite_leads_dia')::numeric
+                   THEN (data->>'limite_leads_dia')::int
+                 ELSE ${LIMITE_LEADS_DIA_REPRESENTANTE}
+               END AS n
+                 FROM records
+                WHERE entity = 'Representante' AND id = $1
+                LIMIT 1`,
+              [repId],
+            );
+            const usados = await tx(
+              `SELECT count(*)::int AS n
+                 FROM records
+                WHERE entity = 'Lead'
+                  AND data->>'representante_id' = $1
+                  AND created_date >= ${START_OF_TODAY}`,
+              [repId],
+            );
+            const limite = Number(limites[0]?.n ?? LIMITE_LEADS_DIA_REPRESENTANTE);
+            if (Number(usados[0]?.n || 0) >= limite) {
+              throw httpError(
+                `Você já adicionou ${limite} clientes ao CRM hoje, que é o limite diário. Amanhã você pode adicionar mais.`,
+                429,
+              );
+            }
+          }
+
+          const inseridos = await tx(
+            "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, $2, $3::jsonb, $4, $5) RETURNING *",
+            [newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
+          );
+          return inseridos[0];
+        });
+        return toRecord(record);
       }
       const rows = await query(
         `INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, $2, $3::jsonb, $4, $5) RETURNING *`,
