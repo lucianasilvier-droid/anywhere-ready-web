@@ -48,9 +48,9 @@ function RepresentanteLayout() {
           <div className="flex items-center gap-2">
             <Link
               to="/"
-              className="hidden items-center gap-1 rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/60 hover:text-white sm:inline-flex"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold whitespace-nowrap text-white/70 hover:border-primary/40 hover:text-white sm:px-3 sm:text-[11.5px]"
             >
-              <Home className="h-3.5 w-3.5" /> Site
+              <Home className="h-3.5 w-3.5" /> Ver site
             </Link>
             <p className="hidden max-w-[180px] truncate text-[11.5px] text-white/35 md:block">{user?.email}</p>
             <button
