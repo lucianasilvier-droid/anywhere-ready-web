@@ -243,6 +243,7 @@ export async function sitePorLead(base44, leadId) {
 
 /** Somente o que pode aparecer na página pública. */
 export function sitePublico(site) {
+  const { observacao_operador: _observacaoInterna, ...conteudoPublico } = site.conteudo || {};
   return {
     slug: site.slug,
     status: site.status,
@@ -260,6 +261,6 @@ export function sitePublico(site) {
     telefone: site.telefone || "",
     instagram: site.instagram || "",
     horario: site.horario || "",
-    conteudo: site.conteudo || {},
+    conteudo: conteudoPublico,
   };
 }
