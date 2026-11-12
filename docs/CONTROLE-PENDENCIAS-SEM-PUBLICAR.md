@@ -399,3 +399,8 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 - A página de criação de site ainda não tem uma imagem própria de serviço configurada. Não reutilizar a arte do Google Maps nessa página; falta inserir a arte específica aprovada para criação de site.
 - O catálogo de contingência contém somente a placa Google NFC, o display Instagram NFC e o serviço Perfil da Empresa no Google. Confirmar a lista completa de produtos/serviços cadastrados antes de declarar catálogo e imagens completos; não inventar itens nem criar combos.
 - As imagens não foram geradas ou substituídas nesta revisão; qualquer nova arte deve ser apresentada uma por vez para aprovação antes de entrar no site.
+## Pull requests e branches auxiliares — cautela
+
+- O PR #13 foi revisado e não deve ser mesclado: o diff contém sequências de quebra de linha inseridas literalmente em código e uma tentativa de buscar e-mail em URL de site sem proteção suficiente contra SSRF/redirecionamento.
+- O fluxo manual do Claude gratuito foi portado seletivamente para a branch de trabalho atual, preservando o armazenamento de fotos Google, as permissões por representante e os limites diários existentes.
+- Não foi mesclado nenhum PR, não houve merge para main e nenhuma branch de produção foi alterada.
