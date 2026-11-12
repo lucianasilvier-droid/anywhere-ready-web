@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Minus, Plus, ShoppingCart, Check, ArrowLeft, Truck, ShieldCheck } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Check, ArrowLeft, Truck, ShieldCheck, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
@@ -26,6 +26,15 @@ function ProdutoPage() {
       .then(async (page) => {
         const lista = Array.isArray(page) ? page : page?.items || [];
         if (lista[0]) return lista[0];
+
+        // Alguns cadastros antigos não têm slug consistente; procura pelo slug ou ID real.
+        const todos = await base44.entities.Produto.filter({ ativo: true }, { limit: 100 });
+        const produtos = Array.isArray(todos) ? todos : todos?.items || [];
+        const correspondente = produtos.find((item) =>
+          String(item.slug || "").trim() === slug || String(item.id || "").trim() === slug
+        );
+        if (correspondente) return correspondente;
+
         try {
           return await base44.entities.Produto.get(slug);
         } catch {
@@ -142,6 +151,21 @@ function ProdutoPage() {
               Comprar agora
             </button>
           </div>
+
+          {produto.checkout_url ? (
+            <a
+              href={produto.checkout_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128]"
+            >
+              <ExternalLink className="h-4 w-4" /> {produto.checkout_label || "Ir para o checkout"}
+            </a>
+          ) : (
+            <p className="mt-5 text-[12px] text-white/40">
+              Para concluir a compra, entre em contato com nossa equipe.
+            </p>
+          )}
 
           {produto.descricao && (
             <div className="mt-7 border-t border-white/[0.07] pt-5">
