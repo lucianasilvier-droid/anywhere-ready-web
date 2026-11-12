@@ -67,24 +67,6 @@ export const siteDoLeadFn = createServerFn({ method: "POST" })
     return { site: siteParaRepresentante(site), limite: await limiteSitesHoje(rep.id) };
   });
 
-export const prepararSiteGratuitoFn = createServerFn({ method: "POST" })
-  .middleware([requireUser])
-  .validator(z.object({
-    leadId: z.string().min(1),
-    orientacoes: z.string().trim().max(600).optional().default(""),
-  }))
-  .handler(async ({ data, context }) => {
-    const { rep, lead: leadDoRep } = await acessoAoSite(context, data.leadId);
-    const base44 = rep ? context.getBase44().asServiceRole : context.getBase44();
-    const lead = leadDoRep || await base44.entities.Lead.get(data.leadId);
-    if (rep) {
-      if (await sitePorLead(base44, lead.id)) throw erro("Este cliente já tem um site. Para ajustar, fale com o administrador.", 409);
-      const limite = await limiteSitesHoje(rep.id);
-      if (limite.restantes <= 0) throw erro(`Você já criou ${limite.limite} sites hoje. Amanhã poderá criar mais.`, 429);
-    }
-    return { prompt: promptParaClaudeGratuito(lead, data.orientacoes) };
-  });
-
 export const gerarSiteFn = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .validator(
