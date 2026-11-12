@@ -1,5 +1,7 @@
 // Secrets come from the environment variables of the server (.env / host panel).
 import { env } from "@/lib/env.server";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 
 export function readSecret(name) {
   try {
@@ -64,6 +66,215 @@ export async function resolveCredentials(base44, tipo) {
     origem[campo] = painel ? "painel" : ambiente ? "ambiente" : null;
   }
   return { values, origem };
+}
+
+
+const digitsOnly = (value) => String(value || "").replace(/[^0-9]/g, "");
+
+export function validarTelefoneWhatsApp(value) {
+  const digits = digitsOnly(value);
+  return digits.length === 10 || digits.length === 11 ||
+    (digits.startsWith("55") && (digits.length === 12 || digits.length === 13));
+}
+
+export function validarEmailContato(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (email.length > 254 || !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email)) return false;
+  const domain = email.split("@")[1] || "";
+  if (/(^|\.)(example|invalid|localhost|test)$/i.test(domain)) return false;
+  if (/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email)) return false;
+  return true;
+}
+
+function ipPublico(ip) {
+  const tipo = isIP(ip);
+  if (tipo === 4) {
+    const p = ip.split(".").map(Number);
+    if (p.length !== 4 || p.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+    if (p[0] === 0 || p[0] === 10 || p[0] === 127 || p[0] >= 224) return false;
+    if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false;
+    if (p[0] === 169 && p[1] === 254) return false;
+    if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return false;
+    if (p[0] === 192 && p[1] === 168) return false;
+    if (p[0] === 192 && p[1] === 0 && (p[2] === 0 || p[2] === 2)) return false;
+    if (p[0] === 198 && (p[1] === 18 || p[1] === 19 || (p[1] === 51 && p[2] === 100))) return false;
+    if (p[0] === 203 && p[1] === 0 && p[2] === 113) return false;
+    return true;
+  }
+  if (tipo === 6) {
+    const s = ip.toLowerCase();
+    if (s === "::" || s === "::1" || s.startsWith("::ffff:")) return false;
+    if (/^(fc|fd|fe8|fe9|fea|feb|ff)/i.test(s)) return false;
+    if (/^(2001:db8:|2001:0000:|2002:)/i.test(s)) return false;
+    return true;
+  }
+  return false;
+}
+
+function mesmoHost(a, b) {
+  const normalizar = (host) => String(host || "").toLowerCase().replace(/^www\./, "");
+  return normalizar(a) === normalizar(b);
+}
+
+async function hostPublico(hostname) {
+  const host = String(hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
+  if (!host || /(^|\.)(localhost|local|internal|test|example|invalid|onion)$/i.test(host)) return false;
+  if (isIP(host)) return ipPublico(host);
+  try {
+    const enderecos = await lookup(host, { all: true, verbatim: true });
+    return enderecos.length > 0 && enderecos.every((item) => ipPublico(item.address));
+  } catch {
+    return false;
+  }
+}
+
+async function lerHtmlLimitado(response, maxBytes = 350000) {
+  if (!response.body?.getReader) return (await response.text()).slice(0, maxBytes);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let texto = "";
+  let total = 0;
+  while (true) {
+    const parte = await reader.read();
+    if (parte.done) break;
+    total += parte.value.byteLength;
+    texto += decoder.decode(parte.value, { stream: true });
+    if (total >= maxBytes) {
+      await reader.cancel().catch(() => {});
+      break;
+    }
+  }
+  return texto + decoder.decode();
+}
+
+async function buscarHtmlPublico(urlInicial, hostBase) {
+  let atual;
+  try {
+    atual = new URL(urlInicial);
+  } catch {
+    return "";
+  }
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    if (!["https:", "http:"].includes(atual.protocol)) return "";
+    if (atual.username || atual.password || (atual.port && !["80", "443"].includes(atual.port))) return "";
+    if (!mesmoHost(atual.hostname, hostBase) || !(await hostPublico(atual.hostname))) return "";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1600);
+    let response;
+    try {
+      response = await fetch(atual.toString(), {
+        redirect: "manual",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; GoogleNFCConnectContactFinder/1.0)",
+          Accept: "text/html,application/xhtml+xml",
+        },
+      });
+    } catch {
+      return "";
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return "";
+      try {
+        const destino = new URL(location, atual);
+        if (!mesmoHost(destino.hostname, hostBase)) return "";
+        atual = destino;
+        continue;
+      } catch {
+        return "";
+      }
+    }
+    if (!response.ok || !/text\/html|application\/xhtml\+xml/i.test(response.headers.get("content-type") || "")) return "";
+    try {
+      return await lerHtmlLimitado(response);
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+function emailsDaPagina(html, hostBase) {
+  const limpo = String(html || "")
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  const mailto = [...limpo.matchAll(/mailto:([^"'?\s<>]+)/gi)].map((m) => m[1]);
+  const visiveis = limpo.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [];
+  const siteHost = String(hostBase || "").toLowerCase().replace(/^www\./, "");
+  const unicos = [...new Set([...mailto, ...visiveis].map((v) => decodeURIComponent(String(v).split("?")[0]).trim().toLowerCase()))]
+    .filter(validarEmailContato);
+  return unicos.sort((a, b) => {
+    const da = a.split("@")[1] || "";
+    const db = b.split("@")[1] || "";
+    const ma = da === siteHost || da.endsWith("." + siteHost);
+    const mb = db === siteHost || db.endsWith("." + siteHost);
+    return Number(mb) - Number(ma);
+  });
+}
+
+async function buscarEmailNoSite(site) {
+  let inicio;
+  try {
+    inicio = new URL(String(site || ""));
+  } catch {
+    return "";
+  }
+  if (!["https:", "http:"].includes(inicio.protocol)) return "";
+  const host = inicio.hostname;
+  if (/facebook\.com$|instagram\.com$|linkedin\.com$|tiktok\.com$|youtube\.com$/i.test(host)) return "";
+  const html = await buscarHtmlPublico(inicio.toString(), host);
+  if (!html) return "";
+  const primeiro = emailsDaPagina(html, host)[0];
+  if (primeiro) return primeiro;
+
+  const links = [...html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
+    .map((m) => ({ href: m[1], texto: String(m[2] || "").replace(/<[^>]+>/g, " ") }))
+    .filter((item) => /contato|contact|fale|sobre|about|atendimento/i.test(item.href + " " + item.texto))
+    .map((item) => {
+      try { return new URL(item.href, inicio).toString(); } catch { return ""; }
+    })
+    .filter(Boolean);
+  const padroes = ["/contato", "/contact", "/fale-conosco", "/contact-us"];
+  const destinos = [...new Set([...links, ...padroes.map((p) => new URL(p, inicio).toString())])]
+    .filter((url) => {
+      try { return mesmoHost(new URL(url).hostname, host); } catch { return false; }
+    })
+    .slice(0, 2);
+  const paginas = await Promise.all(destinos.map((url) => buscarHtmlPublico(url, host)));
+  for (const pagina of paginas) {
+    const email = emailsDaPagina(pagina, host)[0];
+    if (email) return email;
+  }
+  return "";
+}
+
+async function enriquecerContato(place) {
+  const telefoneValido = validarTelefoneWhatsApp(place?.telefone);
+  let telefone = telefoneValido ? String(place.telefone).trim() : "";
+  let email = validarEmailContato(place?.email) ? String(place.email).trim().toLowerCase() : "";
+  if (!telefone && !email && place?.site) email = await buscarEmailNoSite(place.site);
+  if (!telefone && !email) return null;
+  return {
+    ...place,
+    telefone,
+    email,
+    contato_tipo: telefone ? (email ? "whatsapp_e_email" : "whatsapp") : "email",
+    contato_valido: true,
+  };
+}
+
+async function filtrarEmpresasComContato(places) {
+  const saida = [];
+  const lista = Array.isArray(places) ? places : [];
+  for (let i = 0; i < lista.length; i += 10) {
+    const grupo = await Promise.all(lista.slice(i, i + 10).map(enriquecerContato));
+    saida.push(...grupo.filter(Boolean));
+  }
+  return saida;
 }
 
 /* ----------------------------- Google Places ----------------------------- */
