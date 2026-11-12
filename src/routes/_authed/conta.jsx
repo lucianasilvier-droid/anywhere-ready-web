@@ -33,8 +33,14 @@ function ContaLayout() {
           <Link to="/" className="flex items-center gap-2 text-[12.5px] font-semibold text-white/60 hover:text-white">
             <Home className="h-4 w-4" /> Google NFC Connect
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <p className="hidden truncate text-[12px] text-white/40 sm:block">{user?.email}</p>
+            <Link
+              to="/"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/65 hover:border-primary/40 hover:text-white"
+            >
+              <Home className="h-3.5 w-3.5" /> Ver site
+            </Link>
             <button
               onClick={sair}
               className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-bold text-white/60 hover:border-red-400/40 hover:text-red-300"

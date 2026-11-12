@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { LayoutDashboard, ReceiptText, Wallet, LogOut, Home, Globe, Target, LayoutGrid } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,6 +20,26 @@ const TABS = [
 
 function RepresentanteLayout() {
   const { user } = useAuth();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  useEffect(() => {
+    if (!user?.email) return undefined;
+    const registrar = (tipo, mensagem) => {
+      base44.entities.AtividadeLog.create({
+        tipo,
+        mensagem,
+        pagina: pathname,
+        detalhe: `Área acessada: ${pathname}`,
+        criado_em: new Date().toISOString(),
+      }).catch(() => {});
+    };
+    registrar("navegacao", "Representante abriu uma área do sistema.");
+    const aoRetornar = () => {
+      if (document.visibilityState === "visible") registrar("retorno_aba", "Representante voltou para a janela do sistema.");
+    };
+    document.addEventListener("visibilitychange", aoRetornar);
+    return () => document.removeEventListener("visibilitychange", aoRetornar);
+  }, [pathname, user?.email]);
 
   async function sair() {
     try {
@@ -48,9 +69,9 @@ function RepresentanteLayout() {
           <div className="flex items-center gap-2">
             <Link
               to="/"
-              className="hidden items-center gap-1 rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/60 hover:text-white sm:inline-flex"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold whitespace-nowrap text-white/70 hover:border-primary/40 hover:text-white sm:px-3 sm:text-[11.5px]"
             >
-              <Home className="h-3.5 w-3.5" /> Site
+              <Home className="h-3.5 w-3.5" /> Ver site
             </Link>
             <p className="hidden max-w-[180px] truncate text-[11.5px] text-white/35 md:block">{user?.email}</p>
             <button

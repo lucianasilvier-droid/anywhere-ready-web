@@ -87,10 +87,42 @@ function SiteCliente({ site }) {
   }`;
   const wa = (texto) => (site.whatsapp ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(texto)}` : "");
   const waOla = wa(`Olá, ${site.empresa}! Vi o site de vocês e gostaria de mais informações.`);
+  const isRestaurante = c.tipo_negocio === "restaurante";
+  const waReserva = wa(`Olá, ${site.empresa}! Gostaria de fazer uma reserva. Poderiam me informar a disponibilidade?`);
   const serif = { fontFamily: "'Fraunces', Georgia, serif" };
+  const dadosEstruturados = {
+    "@context": "https://schema.org",
+    "@type": isRestaurante ? "Restaurant" : "LocalBusiness",
+    name: site.empresa,
+    description: c.seo_descricao || c.subtitulo || site.empresa,
+    telephone: site.telefone || undefined,
+    address: site.endereco || local ? {
+      "@type": "PostalAddress",
+      streetAddress: site.endereco || undefined,
+      addressLocality: site.cidade || undefined,
+      addressRegion: site.estado || undefined,
+      addressCountry: "BR",
+    } : undefined,
+    aggregateRating: site.nota_google != null && Number(site.total_avaliacoes) > 0 ? {
+      "@type": "AggregateRating",
+      ratingValue: site.nota_google,
+      reviewCount: site.total_avaliacoes,
+      bestRating: 5,
+    } : undefined,
+    servesCuisine: isRestaurante && site.categoria ? site.categoria : undefined,
+    hasMenu: isRestaurante && c.cardapio?.length ? {
+      "@type": "Menu",
+      hasMenuItem: c.cardapio.map((item) => ({
+        "@type": "MenuItem",
+        name: item.nome,
+        description: item.descricao || undefined,
+      })),
+    } : undefined,
+  };
 
   return (
     <div style={{ ...vars, backgroundColor: "var(--bg)", color: "var(--ink)" }} className="min-h-screen font-sans antialiased">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados).replace(/</g, "\\u003c") }} />
       {site.status === "demonstracao" && (
         <div className="bg-[var(--dark)] px-4 py-2 text-center text-[12px] text-white/80">
           Demonstração criada pela <strong className="text-white">Google NFC Connect</strong> para {site.empresa}.{" "}
@@ -114,8 +146,8 @@ function SiteCliente({ site }) {
             <a href="#localizacao" className="hover:text-[var(--ink)]">Como chegar</a>
             <a href="#agendar" className="hover:text-[var(--ink)]">Agendar</a>
           </nav>
-          <a href="#agendar" className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-[var(--accent-ink)] shadow-sm hover:opacity-90">
-            Agendar
+          <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-[var(--accent-ink)] shadow-sm hover:opacity-90">
+            {isRestaurante ? "Reserve já" : "Agendar"}
           </a>
         </div>
       </header>
@@ -135,8 +167,8 @@ function SiteCliente({ site }) {
             </h1>
             {c.subtitulo && <p className="mt-5 max-w-xl text-[16.5px] leading-relaxed text-[var(--muted)]">{c.subtitulo}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#agendar" className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90">
-                <Calendar className="h-4 w-4" /> Agendar pelo WhatsApp
+              <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90">
+                <Calendar className="h-4 w-4" /> {isRestaurante ? "Reserve já" : "Agendar pelo WhatsApp"}
               </a>
               <a href={linkRota} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--surface)] px-6 py-3.5 text-[14.5px] font-semibold hover:border-black/25">
                 <Navigation className="h-4 w-4" /> Como chegar
@@ -195,6 +227,35 @@ function SiteCliente({ site }) {
         </section>
       )}
 
+      {isRestaurante && c.cardapio?.length > 0 && (
+        <section id="cardapio" className="mx-auto max-w-6xl px-5 py-16">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Cardápio</p>
+          <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Conheça nossas opções</h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {c.cardapio.map((item, index) => (
+              <article key={`${item.nome}-${index}`} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)]">
+                {item.imagem_url && <img src={item.imagem_url} alt={item.nome} loading="lazy" className="h-44 w-full object-cover" />}
+                <div className="p-5">
+                  {item.categoria && <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)]">{item.categoria}</p>}
+                  <h3 className="mt-1 text-[16px] font-semibold">{item.nome}</h3>
+                  {item.descricao && <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--muted)]">{item.descricao}</p>}
+                  {item.preco && <p className="mt-3 font-bold text-[var(--accent)]">{item.preco}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {c.observacao_operador && (
+        <section className="mx-auto max-w-6xl px-5 py-10">
+          <div className="rounded-2xl border border-black/[0.07] bg-[var(--surface)] p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Informação adicional</p>
+            <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-[var(--muted)]">{c.observacao_operador}</p>
+          </div>
+        </section>
+      )}
+
       <section id="sobre" className="scroll-mt-20 bg-[var(--dark)] text-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2">
           <div>
@@ -219,8 +280,8 @@ function SiteCliente({ site }) {
       <section id="agendar" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
         <div className="grid gap-8 md:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Agendamento</p>
-            <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Agende em poucos cliques</h2>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{isRestaurante ? "Reservas" : "Agendamento"}</p>
+            <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">{isRestaurante ? "Reserve já pelo WhatsApp" : "Agende em poucos cliques"}</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-[var(--muted)]">
               {c.chamada_agendamento || "Escolha o serviço e o melhor dia. Sua solicitação chega direto no nosso WhatsApp."}
             </p>
@@ -228,7 +289,7 @@ function SiteCliente({ site }) {
               <MessageCircle className="h-4 w-4 text-[#25D366]" /> A confirmação do horário é feita pelo WhatsApp.
             </p>
           </div>
-          <Agendamento site={site} wa={wa} />
+          <Agendamento site={site} wa={wa} isRestaurante={isRestaurante} waReserva={waReserva} />
         </div>
       </section>
 
@@ -301,7 +362,8 @@ function SiteCliente({ site }) {
   );
 }
 
-function Agendamento({ site, wa }) {
+function Agendamento({ site, wa, isRestaurante = false, waReserva = "" }) {
+
   const servicos = useMemo(() => (site.conteudo?.servicos || []).map((s) => s.nome), [site]);
   const [f, setF] = useState({ nome: "", servico: servicos[0] || "", data: "", periodo: PERIODOS[0], obs: "" });
   const [erro, setErro] = useState("");
@@ -330,6 +392,19 @@ function Agendamento({ site, wa }) {
   }
 
   const campo = "w-full rounded-xl border border-black/10 bg-[var(--bg)] px-3.5 py-3 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--accent)]";
+
+  if (isRestaurante) {
+    return (
+      <div className="flex flex-col justify-center rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-8 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.4)]">
+        <p className="text-[15px] leading-relaxed text-[var(--muted)]">Entre em contato pelo WhatsApp para fazer sua reserva e confirmar a disponibilidade.</p>
+        {waReserva ? (
+          <a href={waReserva} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-[15px] font-semibold text-[#062b14] hover:brightness-95">
+            <MessageCircle className="h-5 w-5" /> Reserve já pelo WhatsApp
+          </a>
+        ) : <p className="mt-5 text-[13px] text-[var(--muted)]">O WhatsApp ainda não foi informado pela empresa.</p>}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={enviar} className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.4)]">

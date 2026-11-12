@@ -2,11 +2,82 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Plus, RefreshCw, Save, Server, Wand2 } from "lucide-react";
-import { atualizarSiteFn, gerarSiteFn, prepararSiteGratuitoFn, registrarVendaSiteFn, representantesParaSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
+import { zipSync, strToU8 } from "fflate";
+import { Copy, Download, ExternalLink, Globe, Loader2, MessageCircle, Plus, RefreshCw, Save, Server, Wand2 } from "lucide-react";
+import { atualizarSiteFn, gerarSiteFn, registrarVendaSiteFn, representantesParaSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { competenciaAtual } from "@/lib/representante-ui";
 import { MENSALIDADE_SITE, PRECO_SITE, custosDoSite, resumoFinanceiro } from "@/lib/preco-site";
 import { brl } from "@/lib/format";
+
+function escaparHtml(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, (caractere) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[caractere]);
+}
+
+function exportarSiteZip(site) {
+  const conteudo = site.conteudo || {};
+  const publico = {
+    slug: site.slug,
+    empresa: site.empresa,
+    categoria: site.categoria || "",
+    endereco: site.endereco || "",
+    cidade: site.cidade || "",
+    bairro: site.bairro || "",
+    estado: site.estado || "",
+    telefone: site.telefone || "",
+    whatsapp: site.whatsapp || "",
+    instagram: site.instagram || "",
+    horario: site.horario || "",
+    conteudo,
+  };
+  const servicos = (conteudo.servicos || []).map((item) =>
+    "<article><h3>" + escaparHtml(item.nome) + "</h3><p>" + escaparHtml(item.descricao) + "</p></article>"
+  ).join("");
+  const cardapio = (conteudo.cardapio || []).map((item) =>
+    "<article>" + (item.imagem_url ? '<img src="' + escaparHtml(item.imagem_url) + '" alt="' + escaparHtml(item.nome) + '">' : "") +
+    "<small>" + escaparHtml(item.categoria) + "</small><h3>" + escaparHtml(item.nome) + "</h3><p>" +
+    escaparHtml(item.descricao) + "</p><strong>" + escaparHtml(item.preco) + "</strong></article>"
+  ).join("");
+  const perguntas = (conteudo.perguntas || []).map((item) =>
+    "<details><summary>" + escaparHtml(item.pergunta) + "</summary><p>" + escaparHtml(item.resposta) + "</p></details>"
+  ).join("");
+  const local = [site.endereco, site.bairro, site.cidade, site.estado].filter(Boolean).join(", ");
+  const numero = String(site.whatsapp || site.telefone || "").replace(/\D/g, "");
+  const wa = numero ? "https://wa.me/" + (numero.length <= 11 ? "55" + numero : numero) + "?text=" + encodeURIComponent("Olá, " + site.empresa + "! Gostaria de mais informações.") : "";
+  const mapa = "https://www.google.com/maps?q=" + encodeURIComponent([site.empresa, local].filter(Boolean).join(", ")) + "&output=embed";
+  const html = [
+    "<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
+    "<title>" + escaparHtml(site.empresa) + (site.cidade ? " — " + escaparHtml(site.cidade) : "") + "</title>",
+    "<meta name='description' content='" + escaparHtml(conteudo.seo_descricao || conteudo.subtitulo || site.empresa) + "'><link rel='stylesheet' href='styles.css'></head><body>",
+    "<header><p>" + escaparHtml(site.empresa) + "</p><nav><a href='#servicos'>Serviços</a><a href='#sobre'>Sobre</a><a href='#local'>Localização</a></nav></header>",
+    "<main><section class='hero'><p class='eyebrow'>" + escaparHtml(conteudo.slogan) + "</p><h1>" + escaparHtml(conteudo.titulo || site.empresa) + "</h1><p>" + escaparHtml(conteudo.subtitulo) + "</p>" + (wa ? "<a class='button' href='" + wa + "'>Falar pelo WhatsApp</a>" : "") + "</section>",
+    "<section id='servicos'><h2>Serviços</h2><div class='grid'>" + servicos + "</div></section>",
+    cardapio ? "<section id='cardapio'><h2>Cardápio</h2><div class='grid'>" + cardapio + "</div></section>" : "",
+    "<section id='sobre'><h2>Sobre " + escaparHtml(site.empresa) + "</h2><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + (conteudo.observacao_operador ? "<p>" + escaparHtml(conteudo.observacao_operador) + "</p>" : "") + "</section>",
+    "<section><h2>Perguntas frequentes</h2>" + perguntas + "</section>",
+    "<section id='local'><h2>Localização</h2><p>" + escaparHtml(local) + "</p><iframe title='Mapa' loading='lazy' src='" + mapa + "'></iframe></section>",
+    "</main><footer>" + escaparHtml(site.empresa) + "</footer></body></html>",
+  ].join("");
+  const css = [
+    "*{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#142338;font:16px/1.6 Arial,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:20px;align-items:center}header p{font-weight:800}nav{display:flex;gap:18px}a{color:#145da8;text-decoration:none}.hero{padding:70px 24px;background:#e4edf7;border-radius:24px}.eyebrow{color:#145da8;text-transform:uppercase;letter-spacing:.12em;font-weight:700}h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.05}.button{display:inline-block;background:#145da8;color:white;padding:12px 22px;border-radius:30px;margin-top:16px}section{padding:42px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}article,details{background:white;border:1px solid #dce3ea;border-radius:16px;padding:20px}article img{width:100%;height:160px;object-fit:cover;border-radius:10px}iframe{width:100%;height:320px;border:0;border-radius:16px}footer{text-align:center;color:#65758a}@media(max-width:600px){header{display:block}nav{margin-top:12px;flex-wrap:wrap}.hero{padding:40px 20px}}",
+  ].join("");
+  const arquivos = {
+    "index.html": strToU8(html),
+    "styles.css": strToU8(css),
+    "site.json": strToU8(JSON.stringify(publico, null, 2)),
+    "README.txt": strToU8("SITE EDITÁVEL — " + site.empresa + "\n\nAbra index.html no navegador. Edite o conteúdo em site.json e o visual em styles.css. O site usa HTML e CSS simples, sem dependências pagas.\n\nO mapa é incorporado pelo Google Maps. O botão de contato abre o WhatsApp informado no cadastro.\n"),
+    "assets/README.txt": strToU8("O cadastro atual não contém arquivos de imagem locais para exportação. Imagens de itens do cardápio, quando informadas por URL, permanecem referenciadas externamente no index.html.\n"),
+  };
+  const pacote = zipSync(arquivos, { level: 6 });
+  const blob = new Blob([pacote], { type: "application/zip" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "site-" + (site.slug || "demonstracao") + ".zip";
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 const STATUS = {
   demonstracao: { label: "Demonstração", cls: "border-amber-500/30 bg-amber-500/10 text-amber-200" },
@@ -15,19 +86,15 @@ const STATUS = {
 };
 
 /**
- * Cartão do CRM: quando a empresa não tem site, o agente Claude AI cria um site de
- * demonstração com Google Maps e agendamento pelo WhatsApp para oferecer ao cliente.
+ * Cartão do CRM: cria uma demonstração local sem API paga a partir dos dados cadastrados no CRM.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
   const gerar = useServerFn(gerarSiteFn);
-  const prepararGratis = useServerFn(prepararSiteGratuitoFn);
   const atualizar = useServerFn(atualizarSiteFn);
   const [site, setSite] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [orientacoes, setOrientacoes] = useState("");
-  const [promptClaude, setPromptClaude] = useState("");
-  const [jsonClaude, setJsonClaude] = useState("");
   const [ajustes, setAjustes] = useState({ whatsapp: "", instagram: "", horario: "", slug: "" });
 
   useEffect(() => {
@@ -47,30 +114,18 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
     if (site) setAjustes({ whatsapp: site.whatsapp || "", instagram: site.instagram || "", horario: site.horario || "", slug: site.slug || "" });
   }, [site]);
 
-  const mPrepararGratis = useMutation({
-    mutationFn: () => prepararGratis({ data: { leadId: lead.id, orientacoes } }),
-    onSuccess: async (r) => {
-      setPromptClaude(r?.prompt || "");
-      try {
-        await navigator.clipboard.writeText(r.prompt);
-        toast.success("Instruções copiadas. Cole no Claude gratuito e peça o JSON.");
-      } catch {
-        toast.success("Instruções prontas. Copie o texto exibido abaixo.");
-      }
-    },
-    onError: (e) => toast.error(e?.message || "Não foi possível preparar as instruções."),
-  });
-
-  const mSalvarGratis = useMutation({
-    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes, conteudoManual: jsonClaude } }),
+  const mGerarAutomatico = useMutation({
+    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
     onSuccess: (r) => {
-      setSite(r?.site || null);
-      setJsonClaude("");
-      setPromptClaude("");
-      toast.success("Site salvo no CRM usando o Claude gratuito.");
+      if (!r?.ok || !r?.site) {
+        toast.error("O CRM não confirmou a criação do site.");
+        return;
+      }
+      setSite(r.site);
+      toast.success("Site de demonstração criado e salvo no CRM.");
       onGerado?.();
     },
-    onError: (e) => toast.error(e?.message || "Não foi possível validar e salvar o site."),
+    onError: (e) => toast.error(e?.message || "Não foi possível criar o site."),
   });
 
   const mAtualizar = useMutation({
@@ -109,57 +164,24 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Crie a demonstração com o Claude AI gratuito, sem chave de API: o sistema prepara as instruções da empresa e abre o Claude. Depois, traga a resposta para salvar o site no CRM.
+            Crie a demonstração diretamente no sistema. O gerador usa os dados já cadastrados no CRM, salva o site e prepara o link para você enviar ao cliente, sem API paga ou etapas de copiar e colar.
           </p>
           <textarea
             value={orientacoes}
             onChange={(e) => setOrientacoes(e.target.value)}
             rows={2}
             maxLength={600}
-            placeholder="Orientações opcionais para o agente (ex.: destacar corte infantil, tom mais jovem...)"
+            placeholder="Observação opcional que aparecerá no site (não inclua dados não confirmados)"
             className={inputCls}
           />
           <button
-            onClick={() => {
-              const janela = window.open("about:blank", "_blank");
-              if (!janela) { toast.error("O navegador bloqueou a nova aba. Permita pop-ups e tente novamente."); return; }
-              mPrepararGratis.mutateAsync().then((r) => {
-                if (!r?.prompt) throw new Error("As instruções não foram retornadas pelo sistema.");
-                janela.location.href = `https://claude.ai/new?q=${encodeURIComponent(r.prompt)}`;
-              }).catch((e) => { janela.close(); toast.error(e?.message || "Não foi possível abrir o Claude com as instruções."); });
-            }}
-            disabled={mPrepararGratis.isPending}
+            onClick={() => mGerarAutomatico.mutate()}
+            disabled={mGerarAutomatico.isPending}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
-            {mPrepararGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mPrepararGratis.isPending ? "Preparando instruções..." : "Criar site com Claude AI (gratuito)"}
+            {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {mGerarAutomatico.isPending ? "Criando demonstração..." : "Criar site automaticamente"}
           </button>
-          {promptClaude && (
-            <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
-              <p className="text-[11.5px] leading-relaxed text-white/65">As instruções foram copiadas. No Claude gratuito, cole o texto, envie e depois copie a resposta JSON completa para o campo abaixo.</p>
-              <textarea readOnly value={promptClaude} rows={4} className={inputCls} />
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(promptClaude);
-                    toast.success("Instruções copiadas. Cole no Claude e envie.");
-                  } catch {
-                    toast.error("Não foi possível copiar automaticamente. Selecione e copie o texto acima.");
-                  }
-                }}
-                className={btnCls}
-              >
-                <Copy className="h-3 w-3" /> Copiar instruções novamente
-              </button>
-              <label className="block text-[11px] font-semibold text-white/60">Cole aqui a resposta JSON do Claude</label>
-              <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={6} maxLength={30000} placeholder='{"slogan":"...","titulo":"...","servicos":[...]}' className={inputCls} />
-              <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
-                {mSalvarGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                {mSalvarGratis.isPending ? "Validando e salvando..." : "Salvar site no CRM"}
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <div className="mt-3 space-y-3">
@@ -183,6 +205,9 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
               className={btnCls}
             >
               <Copy className="h-3 w-3" /> Copiar link
+            </button>
+            <button onClick={() => exportarSiteZip(site)} className={btnCls}>
+              <Download className="h-3 w-3" /> Exportar ZIP editável
             </button>
             <button
               onClick={() =>
@@ -236,31 +261,21 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <PrecoDoSite site={site} salvando={mAtualizar.isPending} onSalvar={(patch) => mAtualizar.mutate(patch)} />
 
-          <details className="rounded-xl border border-white/[0.07] p-3">
-            <summary className="cursor-pointer text-[11.5px] font-semibold text-white/55">Atualizar com Claude gratuito</summary>
+          <div className="rounded-xl border border-white/[0.07] p-3">
+            <p className="text-[11.5px] font-semibold text-white/55">Atualizar demonstração</p>
             <textarea
               value={orientacoes}
               onChange={(e) => setOrientacoes(e.target.value)}
               rows={2}
               maxLength={600}
-              placeholder="O que mudar? (ex.: incluir delivery, cores mais sóbrias...)"
+              placeholder="Orientações opcionais para a atualização"
               className={`${inputCls} mt-2`}
             />
-            <button onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }} disabled={mPrepararGratis.isPending} className={`${btnCls} mt-2`}>
-              {mPrepararGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              Atualizar com Claude AI (gratuito)
+            <button onClick={() => mGerarAutomatico.mutate()} disabled={mGerarAutomatico.isPending} className={`${btnCls} mt-2`}>
+              {mGerarAutomatico.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Atualizar site automaticamente
             </button>
-            {promptClaude && (
-              <div className="mt-2 space-y-2">
-                <textarea readOnly value={promptClaude} rows={3} className={inputCls} />
-                <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={5} maxLength={30000} placeholder="Cole aqui o JSON retornado pelo Claude gratuito" className={inputCls} />
-                <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className={btnCls}>
-                  {mSalvarGratis.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Validar e salvar atualização
-                </button>
-              </div>
-            )}
-            <p className="mt-1.5 text-[10.5px] text-white/30">O endereço, o WhatsApp e o status continuam os mesmos. Nenhuma chave de API é necessária.</p>
-          </details>
+          </div>
         </div>
       )}
     </section>

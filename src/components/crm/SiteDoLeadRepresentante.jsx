@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Globe, Loader2, MessageCircle, Wand2 } from "lucide-react";
-import { gerarSiteFn, prepararSiteGratuitoFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
+import { gerarSiteFn, siteDoLeadFn } from "@/lib/sites-clientes-fns";
 import { LIMITE_SITES_DIA_REPRESENTANTE } from "@/lib/crm-limites";
 
 const STATUS = {
@@ -14,7 +14,7 @@ const STATUS = {
 
 /**
  * Cartão "Site para o cliente" no painel do representante. O representante cria até
- * 2 sites de demonstração por dia, só para os próprios clientes, e compartilha o link.
+ * 2 demonstrações locais por dia, apenas para os próprios clientes, e compartilha o link.
  * Preço, custos e status do site continuam com o administrador.
  */
 export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado }) {
@@ -24,9 +24,6 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
   const [limite, setLimite] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [orientacoes, setOrientacoes] = useState("");
-  const [promptClaude, setPromptClaude] = useState("");
-  const [jsonClaude, setJsonClaude] = useState("");
-  const prepararGratis = useServerFn(prepararSiteGratuitoFn);
 
   useEffect(() => {
     let ativo = true;
@@ -45,52 +42,20 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lead.id]);
 
-  const mPrepararGratis = useMutation({
-    mutationFn: () => prepararGratis({ data: { leadId: lead.id, orientacoes } }),
-    onSuccess: async (r) => {
-      setPromptClaude(r?.prompt || "");
-      try {
-        await navigator.clipboard.writeText(r.prompt);
-        toast.success("Instruções copiadas. O Claude será aberto com o texto pronto.");
-      } catch {
-        toast.success("Instruções prontas. Se necessário, copie o texto exibido abaixo.");
-      }
-    },
-    onError: (e) => toast.error(e?.message || "Não foi possível preparar as instruções."),
-  });
-
-  const mSalvarGratis = useMutation({
-    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes, conteudoManual: jsonClaude } }),
+  const mGerarAutomatico = useMutation({
+    mutationFn: () => gerar({ data: { leadId: lead.id, orientacoes } }),
     onSuccess: (r) => {
       if (!r?.ok || !r?.site) {
-        toast.error("O CRM não confirmou o salvamento do site.");
+        toast.error("O CRM não confirmou a criação do site.");
         return;
       }
       setSite(r.site);
       if (r?.limite) setLimite(r.limite);
-      setJsonClaude("");
-      setPromptClaude("");
-      toast.success("Site salvo no CRM com o conteúdo do Claude gratuito.");
+      toast.success("Site de demonstração criado e salvo no CRM.");
       onGerado?.();
     },
-    onError: (e) => toast.error(e?.message || "Não foi possível validar e salvar o site."),
+    onError: (e) => toast.error(e?.message || "Não foi possível criar o site."),
   });
-
-  const iniciarClaude = async () => {
-    const janela = window.open("about:blank", "_blank");
-    if (!janela) {
-      toast.error("O navegador bloqueou a nova aba. Permita pop-ups e tente novamente.");
-      return;
-    }
-    try {
-      const r = await mPrepararGratis.mutateAsync();
-      if (!r?.prompt) throw new Error("As instruções não foram retornadas pelo sistema.");
-      janela.location.href = `https://claude.ai/new?q=${encodeURIComponent(r.prompt)}`;
-    } catch (e) {
-      janela.close();
-      toast.error(e?.message || "Não foi possível abrir o Claude com as instruções.");
-    }
-  };
 
   const total = limite?.limite ?? LIMITE_SITES_DIA_REPRESENTANTE;
   const restantes = limite ? limite.restantes : total;
@@ -126,43 +91,24 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             ) : (
               <><strong className="text-white">Esta empresa não tem site.</strong> </>
             )}
-            O agente Claude cria um site de uma página com os serviços do ramo, mapa do Google Maps e agendamento
-            pelo WhatsApp. Você mostra a demonstração ao cliente e oferece o serviço.
+            O sistema monta automaticamente uma demonstração com os dados cadastrados, localização, informações do segmento e contato pelo WhatsApp. Nenhuma API paga é utilizada.
           </p>
           <textarea
             value={orientacoes}
             onChange={(e) => setOrientacoes(e.target.value)}
             rows={2}
             maxLength={600}
-            placeholder="Orientações opcionais para o agente (ex.: destacar corte infantil, tom mais jovem...)"
+            placeholder="Observação opcional que aparecerá no site (não inclua dados não confirmados)"
             className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
           />
           <button
-            onClick={iniciarClaude}
-            disabled={mPrepararGratis.isPending || mSalvarGratis.isPending || esgotado}
+            onClick={() => mGerarAutomatico.mutate()}
+            disabled={mGerarAutomatico.isPending || esgotado}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-50"
           >
-            {mPrepararGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            {mPrepararGratis.isPending ? "Preparando Claude..." : "Criar site com Claude AI (gratuito)"}
+            {mGerarAutomatico.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {mGerarAutomatico.isPending ? "Criando demonstração..." : "Criar site automaticamente"}
           </button>
-          {promptClaude && (
-            <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
-              <p className="text-[11.5px] leading-relaxed text-white/65">As instruções foram preparadas e abertas no Claude. Envie a mensagem lá, copie a resposta JSON completa e cole abaixo para salvar no CRM.</p>
-              <textarea readOnly value={promptClaude} rows={4} className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white" />
-              <button type="button" onClick={async () => {
-                try { await navigator.clipboard.writeText(promptClaude); toast.success("Instruções copiadas."); }
-                catch { toast.error("Não foi possível copiar automaticamente. Selecione o texto acima."); }
-              }} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-1.5 text-[11.5px] font-semibold text-white/70">
-                <Copy className="h-3 w-3" /> Copiar instruções
-              </button>
-              <label className="block text-[11px] font-semibold text-white/60">Resposta JSON do Claude</label>
-              <textarea value={jsonClaude} onChange={(e) => setJsonClaude(e.target.value)} rows={6} maxLength={30000} placeholder='{"slogan":"...","titulo":"...","servicos":[...]}' className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white" />
-              <button onClick={() => mSalvarGratis.mutate()} disabled={!jsonClaude.trim() || mSalvarGratis.isPending} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
-                {mSalvarGratis.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                {mSalvarGratis.isPending ? "Validando e salvando..." : "Salvar site no CRM"}
-              </button>
-            </div>
-          )}
           <p className={`text-[11px] ${esgotado ? "text-red-300" : "text-white/40"}`}>
             {esgotado
               ? `Você já criou ${total} sites hoje, que é o limite diário. Amanhã você pode criar mais.`
