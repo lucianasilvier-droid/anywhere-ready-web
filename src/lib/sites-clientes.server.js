@@ -76,10 +76,17 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
   const nome = textoSeguro(lead.empresa || "Nossa empresa", 120);
   const categoria = textoSeguro(lead.categoria || "", 100);
   const observacaoOperador = textoSeguro(orientacoes, 600);
+  const analiseCliente = textoSeguro(lead.ai_resumo || "", 500);
+  const oportunidadesCliente = textoSeguro(lead.ai_oportunidades || "", 420);
+  const observacoesCliente = textoSeguro(lead.observacoes || "", 420);
   const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
   const ramo = `${categoria} ${nome}`.toLowerCase();
   const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
-  const tema = /beleza|barbearia|sal[aã]o|est[eé]tica|pet|veterin/.test(ramo) ? "terracota" : restaurante ? "vinho" : "oceano";
+  const tema = /pet|veterin/.test(ramo) ? "floresta"
+    : /beleza|barbearia|sal[aã]o|est[eé]tica|moda|unha/.test(ramo) ? "terracota"
+    : /sa[uú]de|cl[ií]nica|dent|odonto|terapia|fisioter/.test(ramo) ? "esmeralda"
+    : /advoc|cont[aá]bil|consult|tecnolog|inform[aá]tica/.test(ramo) ? "grafite"
+    : restaurante ? "vinho" : "oceano";
   const servicos = restaurante
     ? [
         { nome: "Cardápio e opções", descricao: "Consulte as opções disponíveis e tire suas dúvidas diretamente com a equipe.", icone: "comida" },
@@ -103,12 +110,12 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
     slogan: restaurante ? "Uma experiência para aproveitar" : `Conheça ${nome}` ,
     titulo: nome,
     subtitulo: [categoria, local].filter(Boolean).join(" · ") || "Conheça a empresa e fale diretamente com a equipe.",
-    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. Esta demonstração reúne as informações disponíveis no cadastro e facilita o contato com a empresa.\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
+    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. ${analiseCliente || "Esta página foi organizada para apresentar o negócio com clareza e facilitar o contato com a equipe."}${oportunidadesCliente ? `\n\nA apresentação destaca os pontos de contato e oportunidades mais relevantes identificados na análise do estabelecimento.` : ""}${observacoesCliente ? `\n\nInformações adicionais consideradas na preparação: ${observacoesCliente}` : ""}\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
     servicos,
     diferenciais: [
-      { titulo: "Contato direto", texto: "Fale com a empresa para confirmar informações e tirar dúvidas." },
-      { titulo: "Localização", texto: local ? `Referência de atendimento: ${local}.` : "Consulte a localização e as formas de contato disponíveis." },
-      { titulo: "Informações claras", texto: "Consulte os dados cadastrados e confirme detalhes diretamente com a equipe." },
+      { titulo: "Atendimento próximo", texto: "Entre em contato diretamente com a equipe para receber orientação sobre a melhor opção para sua necessidade." },
+      { titulo: "Presença local", texto: local ? `Encontre a empresa em ${local} e consulte a rota para chegar com facilidade.` : "Consulte a localização e as formas de contato disponíveis." },
+      { titulo: oportunidadesCliente ? "Soluções para seu negócio" : "Informações claras", texto: oportunidadesCliente ? "A apresentação considera as oportunidades identificadas para este estabelecimento, sem prometer resultados não comprovados." : "Consulte os dados cadastrados e confirme detalhes diretamente com a equipe." },
     ],
     perguntas: [
       { pergunta: "Como posso entrar em contato?", resposta: "Use o botão de WhatsApp ou os dados de contato apresentados nesta página." },
@@ -190,6 +197,7 @@ export function sitePublico(site) {
     place_id: site.place_id || "",
     nota_google: site.nota_google ?? null,
     total_avaliacoes: site.total_avaliacoes ?? null,
+    fotos_google: (Array.isArray(site.fotos_google) ? site.fotos_google : []).slice(0, 5).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(String(foto?.name || ""))).map((foto) => ({ name: foto.name, autor: String(foto.autor || ""), autor_uri: String(foto.autor_uri || "") })),
     whatsapp: whatsappDe(site.whatsapp),
     telefone: site.telefone || "",
     instagram: site.instagram || "",
