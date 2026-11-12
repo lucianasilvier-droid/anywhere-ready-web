@@ -248,6 +248,18 @@ export async function applyPaymentStatus(base44, pagamentoOuCodigo, novoStatus, 
 
 export async function syncMercadoPagoPayment(base44, pagamento, mpPayment, origem) {
   if (!pagamento || !mpPayment) return { changed: false };
+  // The provider's payment must belong to this exact order. Without this
+  // check, a valid payment_id from another order with the same amount could
+  // be replayed against a public payment-return URL.
+  const referenciaEsperada = String(pagamento.pedido_numero || "").trim();
+  const referenciaRecebida = String(mpPayment.external_reference || "").trim();
+  if (!referenciaEsperada || !referenciaRecebida || referenciaRecebida !== referenciaEsperada) {
+    await (base44?.asServiceRole || base44).entities.Pagamento.update(pagamento.id, {
+      erro: "A referência do pagamento no Mercado Pago não corresponde a este pedido. Pagamento não liberado.",
+      status_detalhe: "referencia_divergente",
+    });
+    return { changed: false, status: pagamento.status };
+  }
   const status = mapMercadoPagoStatus(mpPayment.status, mpPayment.status_detail);
   const valorPago = Number(mpPayment.transaction_amount || 0);
 
