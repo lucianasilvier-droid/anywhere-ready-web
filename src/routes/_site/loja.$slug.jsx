@@ -57,6 +57,8 @@ function ProdutoPage() {
       if (!resultado) {
         resultado = CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null;
       }
+      // Corrige cadastros antigos usando preço, imagem e checkout oficiais.
+      resultado = resolverProdutoOficial(resultado, slug);
       // Não permitir abrir diretamente um produto explicitamente desativado.
       if (resultado?.ativo === false) resultado = null;
       if (ativo) setProduto(resultado);
@@ -107,7 +109,9 @@ function ProdutoPage() {
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
         <div>
           {produto.imagens?.[0] ? (
-            <img src={produto.imagens[0]} alt={produto.nome} className="w-full rounded-2xl object-cover" />
+            <div className="flex aspect-[4/5] max-h-[680px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111827] p-3 sm:p-5">
+              <img src={produto.imagens[0]} alt={produto.nome} className={`h-full w-full ${produto.imagem_fit === "contain" ? "object-contain" : "object-cover"}`} />
+            </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-10">
               <PlateVisual nome={produto.modelo ? produto.modelo.toUpperCase() : "Sua Empresa"} />
@@ -171,7 +175,7 @@ function ProdutoPage() {
               onClick={() => adicionar(true)}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-5 py-3 text-sm font-bold text-[#0a1128]"
             >
-              Comprar agora
+              Ver carrinho
             </button>
           </div>}
 
