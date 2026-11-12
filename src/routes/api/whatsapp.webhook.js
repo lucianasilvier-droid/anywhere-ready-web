@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 
 const STOP_WORDS = [
@@ -60,10 +61,25 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
       },
 
       POST: async ({ request, context }) => {
-        const payload = await request.json().catch(() => null);
-        if (!payload) return Response.json({ received: true });
-
+        // Validate Meta's HMAC before parsing or processing any inbound message.
+        // Without the App Secret, fail closed instead of accepting forged webhooks.
+        const { resolveCredentials } = await import("@/lib/integrations.server");
         const base44 = context.getBase44().asServiceRole;
+        const creds = await resolveCredentials(base44, "whatsapp");
+        const appSecret = String(creds.values.whatsapp_app_secret || "").trim();
+        if (!appSecret) {
+          return Response.json({ error: "Webhook não configurado: informe o App Secret da Meta no painel." }, { status: 503 });
+        }
+        const rawBody = await request.text();
+        const signature = request.headers.get("x-hub-signature-256") || "";
+        const expected = "sha256=" + createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+        const receivedBytes = Buffer.from(signature, "utf8");
+        const expectedBytes = Buffer.from(expected, "utf8");
+        if (receivedBytes.length !== expectedBytes.length || !timingSafeEqual(receivedBytes, expectedBytes)) {
+          return Response.json({ error: "Assinatura do webhook inválida." }, { status: 401 });
+        }
+        const payload = (() => { try { return JSON.parse(rawBody); } catch { return null; } })();
+        if (!payload) return Response.json({ error: "JSON inválido." }, { status: 400 });
         const messages =
           payload?.entry?.flatMap((entry) =>
             (entry?.changes || []).flatMap((change) => change?.value?.messages || []),
