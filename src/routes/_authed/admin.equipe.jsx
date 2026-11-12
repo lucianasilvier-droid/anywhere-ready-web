@@ -59,8 +59,12 @@ function EquipePage() {
     if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("Informe um e-mail válido.");
     setConvidando(true);
     try {
-      await base44.users.inviteUser(email, papel);
-      toast.success("Convite enviado por e-mail.");
+      const resultado = await base44.users.inviteUser(email, papel);
+      if (resultado?.delivered) {
+        toast.success("Convite enviado por e-mail.");
+      } else {
+        toast.warning("Usuário registrado, mas o convite não foi enviado. Configure SMTP_HOST, SMTP_PORT, SMTP_FROM e, se houver autenticação, SMTP_USER e SMTP_PASS nas variáveis do projeto.");
+      }
       setEmail("");
       await carregar();
     } catch (err) {
