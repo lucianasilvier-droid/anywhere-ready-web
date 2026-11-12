@@ -324,18 +324,7 @@ function SiteCliente({ site }) {
 }
 
 function Agendamento({ site, wa, isRestaurante = false, waReserva = "" }) {
-  if (isRestaurante) {
-    return (
-      <div className="flex flex-col justify-center rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-8 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.4)]">
-        <p className="text-[15px] leading-relaxed text-[var(--muted)]">Entre em contato pelo WhatsApp para fazer sua reserva e confirmar a disponibilidade.</p>
-        {waReserva ? (
-          <a href={waReserva} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-[15px] font-semibold text-[#062b14] hover:brightness-95">
-            <MessageCircle className="h-5 w-5" /> Reserve já pelo WhatsApp
-          </a>
-        ) : <p className="mt-5 text-[13px] text-[var(--muted)]">O WhatsApp ainda não foi informado pela empresa.</p>}
-      </div>
-    );
-  }
+
   const servicos = useMemo(() => (site.conteudo?.servicos || []).map((s) => s.nome), [site]);
   const [f, setF] = useState({ nome: "", servico: servicos[0] || "", data: "", periodo: PERIODOS[0], obs: "" });
   const [erro, setErro] = useState("");
@@ -364,6 +353,19 @@ function Agendamento({ site, wa, isRestaurante = false, waReserva = "" }) {
   }
 
   const campo = "w-full rounded-xl border border-black/10 bg-[var(--bg)] px-3.5 py-3 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--accent)]";
+
+  if (isRestaurante) {
+    return (
+      <div className="flex flex-col justify-center rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-8 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.4)]">
+        <p className="text-[15px] leading-relaxed text-[var(--muted)]">Entre em contato pelo WhatsApp para fazer sua reserva e confirmar a disponibilidade.</p>
+        {waReserva ? (
+          <a href={waReserva} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-[15px] font-semibold text-[#062b14] hover:brightness-95">
+            <MessageCircle className="h-5 w-5" /> Reserve já pelo WhatsApp
+          </a>
+        ) : <p className="mt-5 text-[13px] text-[var(--muted)]">O WhatsApp ainda não foi informado pela empresa.</p>}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={enviar} className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.4)]">
