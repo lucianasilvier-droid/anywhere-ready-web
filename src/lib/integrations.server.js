@@ -421,6 +421,7 @@ function osmParaLead(el) {
     cidade,
     estado,
     telefone: tel,
+    email: t.email || t["contact:email"] || "",
     site,
     categoria,
     nota_google: null,
@@ -470,7 +471,7 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
       .map(osmParaLead)
       // quem tem telefone ou site aparece primeiro (mais útil para prospecção)
       .sort((a, b) => Number(!!(b.telefone || b.site)) - Number(!!(a.telefone || a.site)))
-      .slice(0, limite)
+      .slice(0, Math.min(limite * 2, 40))
       .map((p) => ({ ...p, cidade: p.cidade || geo[0].name || local }));
 
     return { ok: true, places: lista, error: null };
@@ -502,19 +503,41 @@ export async function fetchGooglePlacePhotos(placeId, values = {}) {
   }
 }
 
-/** Tenta o Google; se estiver bloqueado/sem chave, usa a busca reserva. */
+/** Tenta Google e OSM, mas só devolve empresas com WhatsApp/telefone válido ou e-mail válido. */
 export async function searchPlaces(args, values = {}) {
   const google = await searchGooglePlaces(args, values);
-  if (google.ok) return google;
+  if (google.ok && Array.isArray(google.places)) {
+    const places = await filtrarEmpresasComContato(google.places);
+    if (places.length) {
+      return {
+        ...google,
+        places,
+        descartadas_sem_contato: Math.max(0, google.places.length - places.length),
+      };
+    }
+  }
+
   const osm = await searchOpenStreetMap(args);
   if (osm.ok) {
+    const places = await filtrarEmpresasComContato(osm.places);
     return {
       ...osm,
-      aviso:
-        "Busca feita pelo OpenStreetMap (a chave do Google não está funcionando). Pode haver menos empresas, sem nota e com menos telefones.",
+      places,
+      descartadas_sem_contato: Math.max(0, (osm.places || []).length - places.length),
+      aviso: places.length
+        ? "Busca feita pelo OpenStreetMap. Só são exibidas empresas com WhatsApp/telefone válido ou e-mail válido."
+        : "Nenhuma empresa encontrada com WhatsApp/telefone válido ou e-mail válido. Empresas sem contato foram descartadas automaticamente.",
     };
   }
-  return { ...google, error: `${google.error} | ${osm.error}` };
+
+  if (google.ok) {
+    return {
+      ...google,
+      places: [],
+      aviso: "Nenhuma empresa encontrada com WhatsApp/telefone válido ou e-mail válido. Empresas sem contato foram descartadas automaticamente.",
+    };
+  }
+  return { ...google, places: [], error: `${google.error} | ${osm.error}` };
 }
 
 /* --------------------------------- Groq ---------------------------------- */
