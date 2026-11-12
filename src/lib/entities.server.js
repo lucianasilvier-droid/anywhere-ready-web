@@ -163,7 +163,7 @@ const OWNER_CREATE = new Set(["ServicoAtualizacao"]);
 
 // An active sales representative works the CRM and the sales funnel, but only with
 // the leads they added themselves (`representante_id` on the Lead).
-const REP_SCOPED = new Set(["Lead", "LeadInteraction"]);
+const REP_SCOPED = new Set(["Lead", "LeadInteraction", "AtividadeLog"]);
 // Fields a representative can never set or change on a lead.
 // The archive fields (inactive-client control) are changed only by administrators.
 const REP_PROTECTED_LEAD_FIELDS = [
@@ -176,7 +176,7 @@ const REP_PROTECTED_LEAD_FIELDS = [
 function repCondition(entity, repId, params) {
   params.push(String(repId));
   const p = `$${params.length}`;
-  if (entity === "Lead") return `data->>'representante_id' = ${p}`;
+  if (entity === "Lead" || entity === "AtividadeLog") return `data->>'representante_id' = ${p}`;
   return `data->>'lead_id' IN (SELECT id FROM records WHERE entity = 'Lead' AND data->>'representante_id' = ${p})`;
 }
 
@@ -254,6 +254,16 @@ async function repWrite(entity, kind, current, patch, rep, user) {
   if (entity === "LeadInteraction" && kind === "update" && (await leadDoRepresentante(current?.lead_id, rep.id))) {
     const { lead_id, ...rest } = patch;
     return rest;
+  }
+  if (entity === "AtividadeLog" && kind === "create") {
+    return {
+      ...patch,
+      representante_id: rep.id,
+      representante_nome: rep.nome || "",
+      autor: rep.nome || user.full_name || user.email,
+      autor_email: norm(user.email),
+      lida: false,
+    };
   }
   return null;
 }
