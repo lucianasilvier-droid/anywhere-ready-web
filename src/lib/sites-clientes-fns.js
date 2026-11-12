@@ -4,9 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import {
   erro,
-  promptParaClaudeGratuito,
-  gerarConteudoSiteAutomatico,
-  validarConteudoSite,
+  gerarConteudoSiteComIA,
   sitePorLead,
   sitePublico,
   slugUnico,
@@ -137,7 +135,16 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const conteudo = validarConteudoSite(gerarConteudoSiteAutomatico(lead, data.orientacoes));
+      const credencialBase = base44.asServiceRole || base44;
+      const [credenciaisRoq, credenciaisClaude] = await Promise.all([
+        resolveCredentials(credencialBase, "groq"),
+        resolveCredentials(credencialBase, "claude"),
+      ]);
+      const geracao = await gerarConteudoSiteComIA(lead, data.orientacoes, {
+        ...credenciaisRoq.values,
+        ...credenciaisClaude.values,
+      });
+      const conteudo = geracao.conteudo;
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
@@ -158,7 +165,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         whatsapp: existente?.whatsapp || lead.telefone || "",
         conteudo,
         orientacoes: data.orientacoes || "",
-        modelo: "gerador-automatico-sem-api",
+        modelo: `cloud-ai:${geracao.modelo}`,
         gerado_em: agora,
         gerado_por: context.user?.email || "",
         valor_calculado: preco.valor_calculado,
