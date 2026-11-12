@@ -273,7 +273,7 @@ async function repWrite(entity, kind, current, patch, rep, user) {
       );
     }
     if (patch.place_id) {
-      const dup = await query(`SELECT data->>'representante_id' AS rep FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 LIMIT 1`, [
+      const dup = await query(`SELECT data->>'representante_id' AS rep FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 AND ${VALID_LEAD_CONTACT_SQL} LIMIT 1`, [
         String(patch.place_id),
       ]);
       if (dup[0]) {
@@ -447,7 +447,7 @@ function entityHandle(entity, access) {
 
           if (placeId) {
             const duplicado = await tx(
-              "SELECT id FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 LIMIT 1",
+              `SELECT id FROM records WHERE entity = 'Lead' AND data->>'place_id' = $1 AND ${VALID_LEAD_CONTACT_SQL} LIMIT 1`,
               [placeId],
             );
             if (duplicado[0]) {
