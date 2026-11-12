@@ -157,7 +157,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
     onError: (e) => toast.error(e?.message || "Não foi possível atualizar o site."),
   });
 
-  const semSite = !lead.site;
+  const semSite = !site;
   const url = site && typeof window !== "undefined" ? `${window.location.origin}/site/${site.slug}` : "";
 
 
