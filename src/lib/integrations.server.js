@@ -148,7 +148,7 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
         name: String(foto?.name || ""),
         autor: String(foto?.authorAttributions?.[0]?.displayName || ""),
         autor_uri: String(foto?.authorAttributions?.[0]?.uri || ""),
-      })).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(foto.name)),
+      })).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_=-]+$/.test(foto.name)),
     };
   });
 
