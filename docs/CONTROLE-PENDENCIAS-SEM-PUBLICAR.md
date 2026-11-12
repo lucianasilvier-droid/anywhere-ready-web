@@ -120,3 +120,9 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - O valor definido em `APP_URL` continua tendo prioridade.
 
 **Validação:** revisão estática dos arquivos de integração, webhook, cartão de integração, função administrativa e gerador de propostas. Nenhum webhook foi chamado; nenhum teste, build ou deploy foi executado.
+
+
+### Loja — configuração de checkout pelo painel
+- O formulário de cadastro/edição de produtos não expunha os campos `checkout_url` e `checkout_label`, embora a página pública de detalhe dependesse deles para apresentar o link correto de compra/atendimento.
+- Incluídos os dois campos no formulário administrativo, permitindo configurar o destino e o texto do botão por produto.
+- **Status:** alteração de código registrada; ainda depende de inserir e conferir os links reais de cada produto no painel depois da publicação. Não foi feito teste de interface.
