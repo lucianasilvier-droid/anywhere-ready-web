@@ -40,6 +40,7 @@ export default function CrmLeads({ base = "/admin" }) {
   // CRM e funil leem a mesma base. Busca paginada evita o corte antigo de 300
   // registros e a atualização silenciosa mantém as telas sincronizadas entre usuários.
   const [leads, setLeads] = useState([]);
+  const [representantesDisponiveis, setRepresentantesDisponiveis] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erroLeads, setErroLeads] = useState("");
   const reload = useCallback(async ({ silent = false } = {}) => {
@@ -66,6 +67,13 @@ export default function CrmLeads({ base = "/admin" }) {
       if (!silent) setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (representante) return;
+    base44.entities.Representante.filter({ status: "ativo" }, { limit: 300 })
+      .then((page) => setRepresentantesDisponiveis(Array.isArray(page) ? page : page?.items || []))
+      .catch((e) => toast.error(e?.message || "Não foi possível carregar os representantes."));
+  }, [representante]);
 
   useEffect(() => {
     let ativo = true;
@@ -514,7 +522,7 @@ export default function CrmLeads({ base = "/admin" }) {
                       </td>
                       {!representante && (
                         <td className="max-w-[180px] px-4 py-2.5">
-                          <RepresentanteDoLead lead={lead} />
+                          <RepresentanteDoLead lead={lead} representantes={representantesDisponiveis} onAtualizado={reload} />
                         </td>
                       )}
                       <td className="max-w-[180px] px-4 py-2.5 text-white/55">
