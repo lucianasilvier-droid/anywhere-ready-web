@@ -1,5 +1,5 @@
-// Sites de demonstração para empresas prospectadas no CRM. O conteúdo é gerado
-// pela IA configurada no sistema, validado no servidor e guardado em SiteCliente.
+// Sites de demonstração para empresas prospectadas no CRM. O conteúdo é preparado
+// no Claude gratuito pelo navegador, validado no servidor e guardado em SiteCliente.
 import { listar } from "@/lib/representantes.server";
 import { slugify } from "@/lib/landing-representante.server";
 
