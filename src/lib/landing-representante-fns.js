@@ -207,14 +207,19 @@ export const salvarMinhaPaginaFn = createServerFn({ method: "POST" })
         pagina_whatsapp: data.pagina_whatsapp,
         pagina_ativa: data.pagina_ativa,
       };
+      let fotoNova = "";
       if (data.foto) {
-        patch.pagina_foto = await salvarFoto(rep.id, data.foto);
-        await removerFoto(rep.pagina_foto);
+        fotoNova = await salvarFoto(rep.id, data.foto);
+        patch.pagina_foto = fotoNova;
       } else if (data.remover_foto) {
         patch.pagina_foto = "";
-        await removerFoto(rep.pagina_foto);
       }
       const atualizado = await base44.entities.Representante.update(rep.id, patch);
+      // Só apaga o arquivo antigo depois que o banco confirmou a nova referência.
+      // Se a atualização do registro falhar, a foto atual continua disponível.
+      if ((data.foto || data.remover_foto) && rep.pagina_foto) {
+        await removerFoto(rep.pagina_foto);
+      }
       await base44.entities.AtividadeLog.create({
         acao: "Página do representante atualizada",
         entidade: "Representante",
