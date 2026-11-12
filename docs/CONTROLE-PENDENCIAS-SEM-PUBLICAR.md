@@ -396,9 +396,9 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 
 - A imagem principal da página inicial está configurada como a placa NFC do Google (PLATE_IMAGE_URL), não como a arte de Perfil do Google.
 - A arte de serviço Google Maps (SERVICE_IMAGE_URL) está configurada nas páginas Perfil do Google e Gestão de Perfil, conforme a orientação anterior.
-- A página de produtos apresenta imagens separadas para a placa Google e o display Instagram. O texto foi corrigido para deixar explícito que são produtos individuais, vendidos separadamente, sem kit ou combo.
+- A vitrine apresenta os produtos individuais Google e Instagram e também o kit Google + Instagram, com imagem conjunta própria. Não confundir o kit com a placa Google vendida individualmente.
 - A página de criação de site ainda não tem uma imagem própria de serviço configurada. Não reutilizar a arte do Google Maps nessa página; falta inserir a arte específica aprovada para criação de site.
-- O catálogo de contingência contém somente a placa Google NFC, o display Instagram NFC e o serviço Perfil da Empresa no Google. Confirmar a lista completa de produtos/serviços cadastrados antes de declarar catálogo e imagens completos; não inventar itens nem criar combos.
+- O catálogo canônico contém Kit Google + Instagram, Placa Google NFC, Placa NFC Instagram e o serviço Sua Empresa no Google Maps.
 - As imagens não foram geradas ou substituídas nesta revisão; qualquer nova arte deve ser apresentada uma por vez para aprovação antes de entrar no site.
 ## Pull requests e branches auxiliares — cautela
 
@@ -448,3 +448,23 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 **Conferência de conteúdo:** dados institucionais, endereço, horários, serviços e preços foram comparados com o site oficial. O site original apresenta algumas linhas de preço/combos com formatação ambígua; os valores de combos devem ser confirmados com a empresa antes de qualquer publicação comercial.
 
 **Status real:** código e registro da rota confirmados no GitHub. Fotos de equipe verificadas por abertura dos arquivos oficiais. Ainda não foi executado build, teste de navegação, conferência visual em navegador ou publicação. Portanto, a proposta está implementada no código, mas não pode ser chamada de visualmente aprovada/pronta para apresentação até uma prévia ser aberta e revisada. Nenhum build ou deploy da Vercel foi iniciado.
+
+## Catálogo da loja — preços, fotos e checkouts — 12/11/2026
+
+**Implementado na branch de trabalho, sem publicação:**
+- Kit Google + Instagram: R$ 95,00; checkout InfinitePay `vhh6927-kit-google-e-instagram`; imagem conjunta `/images/divulgacao/arte-2026-10-31-b.jpeg`, que mostra as duas placas na mesma composição.
+- Placa Google NFC: R$ 55,00; checkout `hhy2911-placa-google-nfc`; foto própria da placa Google.
+- Placa NFC Instagram: R$ 55,00; checkout `xpg6030-placas-nfc-instagram`; foto própria da placa Instagram.
+- Sua Empresa no Google Maps: R$ 150,00; checkout `wmk4399-sua-empresa-no-google-maps`; inclui criação completa do perfil e placa Google NFC grátis, conforme a descrição do checkout.
+- Os três checkouts NFC e o checkout do Google Maps foram abertos e conferidos na loja InfinitePay. O preço principal do kit é R$ 95,00; o preço principal das duas placas individuais é R$ 55,00 cada; o serviço Google Maps é R$ 150,00.
+- Criada uma fonte canônica de dados para preço, imagem, nome, itens inclusos e checkout. Os dados canônicos prevalecem sobre cadastros antigos incompletos ou incorretos do banco para os quatro produtos conhecidos.
+- Cards e detalhes usam enquadramento de imagem controlado para não distorcer as fotos; a página do kit mostra a imagem que contém Google e Instagram juntos.
+- A ação do produto distingue adicionar ao carrinho de abrir o checkout externo.
+
+**Arquivos alterados:**
+- `src/lib/catalogo-inicial.js`
+- `src/routes/_site/loja.index.jsx`
+- `src/routes/_site/loja.$slug.jsx`
+- `src/components/store/ProductCard.jsx`
+
+**Status real:** alterações confirmadas no GitHub. Checkout e valores conferidos no site da InfinitePay; arquivos de imagem do projeto conferidos diretamente. Ainda não foi executado build nem teste visual do catálogo no navegador. Nenhum build, deploy ou publicação foi iniciado. A revisão visual final permanece pendente.
