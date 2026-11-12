@@ -27,7 +27,7 @@
 
 ### Prioridade alta
 - [ ] Corrigir a experiência de duplicidade também no cadastro manual, com regras seguras para não criar falsos positivos.
-- [ ] Rever concorrência: dois usuários podem tentar cadastrar a mesma empresa simultaneamente; manter a proteção de unicidade no servidor e tratar o conflito com mensagem clara.
+- [ ] Executar teste funcional de concorrência com duas sessões: mesmo place_id simultâneo e limite diário individual simultâneo; a proteção transacional já foi implementada no servidor, mas ainda não foi testada.
 - [ ] Auditar sincronização do CRM, funil e detalhe do lead em todas as telas e perfis.
 - [ ] Corrigir persistência de fotos/arquivos no ambiente serverless sem contratar armazenamento pago.
 
@@ -85,7 +85,7 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 ### CRM — risco remanescente
 - A verificação de duplicidade na busca automática usa acesso privilegiado e retorna apenas booleano, como planejado.
 - O cadastro manual não tem `place_id` obrigatório e, por isso, não se beneficia da mesma chave de deduplicação.
-- A proteção de duplicidade do representante consulta antes do INSERT, mas não é uma garantia atômica contra duas criações simultâneas. Não foi alterada a estrutura da tabela nem criado índice único porque isso exige auditoria de duplicados históricos e migração segura.
+- A proteção transacional de place_id e do limite diário individual foi implementada posteriormente com withTransaction e travas consultivas. Cadastro manual sem place_id continua sem uma chave confiável de identidade; não usar deduplicação aproximada por nome sem regra aprovada.
 - O teste funcional com duas contas continua pendente e não será executado na Vercel.
 
 **Validação desta auditoria:** leitura estática dos arquivos `src/lib/storage.server.js`, `src/lib/integrations.server.js`, `src/lib/admin-fns.js` e `src/lib/entities.server.js`. Nenhum teste, build ou deploy foi executado.
@@ -130,11 +130,12 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 
 ## Continuação da auditoria — CRM, SMTP e administração — 12/11/2026
 
-### CRM — prevenção atômica de duplicidade
-- A checagem anterior consultava place_id antes do INSERT, mas duas requisições simultâneas ainda podiam passar pela consulta e criar duplicados.
-- Incluída uma trava consultiva transacional do PostgreSQL (pg_advisory_xact_lock) junto da verificação final e do INSERT, serializando cadastros com o mesmo place_id.
-- A proteção cobre leads com place_id (Google Places / identificador OSM). Cadastro manual sem place_id continua sem uma chave de identidade confiável; não foi criada deduplicação aproximada por nome para evitar bloquear empresas diferentes.
-- Não foi criada migration nem índice único, evitando risco com dados históricos duplicados.
+### CRM — prevenção transacional de duplicidade e limite diário
+- A gravação de Lead agora usa withTransaction, mantendo trava, consulta e INSERT na mesma transação PostgreSQL.
+- A trava de place_id é adquirida em comando separado; a consulta de duplicidade ocorre depois da trava e recebe snapshot atualizado, evitando a corrida entre duas criações simultâneas do mesmo estabelecimento.
+- Para representantes, uma segunda trava por representante/dia serializa a contagem e a criação; o limite individual é rechecado dentro da mesma transação antes do INSERT.
+- Cadastro manual sem place_id continua sem uma chave confiável de identidade; não foi criada deduplicação aproximada por nome para evitar bloquear empresas diferentes.
+- A proteção está implementada no código, mas o teste funcional com duas sessões simultâneas continua pendente. Não foi criada migration nem índice único.
 
 ### SMTP e convites
 - smtpConfigured() agora só considera o SMTP disponível quando host, remetente, porta válida e par de autenticação consistente estão configurados. Relay sem autenticação continua permitido se houver remetente explícito.
@@ -352,7 +353,7 @@ Arquivos alterados:
 - A consulta exibida ao representante usa a mesma resolução do registro pelo e-mail de login e respeita o status ativo (mantendo compatibilidade com cadastros antigos sem status explícito).
 - A tela de configurações gerais não deve voltar a oferecer um limite global: a configuração é individual por representante.
 - A validação do limite no servidor continua sendo a proteção efetiva; o bloqueio visual e o recorte da ação em lote no navegador são apenas conveniência de interface.
-- Limitação conhecida: a contagem é consultada antes da gravação; em duas requisições simultâneas, ainda existe uma pequena janela de concorrência que pode permitir ultrapassar o limite. Não declarar proteção atômica até implementar e validar uma reserva transacional apropriada.
+- O limite é consultado antes da gravação para resposta rápida e rechecado dentro da transação PostgreSQL após uma trava por representante/dia. Isso fecha a janela de concorrência no código; o teste funcional simultâneo ainda está pendente.
 
 Arquivos alterados nesta revisão: src/components/admin/representantes/RepForm.jsx, src/lib/representantes-fns.js, src/lib/entities.server.js.
 
