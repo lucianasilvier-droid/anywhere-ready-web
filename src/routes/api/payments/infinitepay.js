@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ipPaymentCheck, loadProvider } from "@/lib/payments.server";
 import {
-  applyPaymentStatus,
   logNotification,
   syncInfinitepayPayment,
 } from "@/lib/payments-flow.server";
