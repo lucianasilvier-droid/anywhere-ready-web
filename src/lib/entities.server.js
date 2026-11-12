@@ -191,6 +191,7 @@ const REP_SCOPED = new Set(["Lead", "LeadInteraction", "AtividadeLog"]);
 // The archive fields (inactive-client control) are changed only by administrators.
 const REP_PROTECTED_LEAD_FIELDS = [
   "representante_id", "representante_nome", "representante_email",
+  "criado_por_representante_id", "criado_por_representante_nome",
   "arquivado", "arquivado_em", "arquivado_motivo", "arquivado_origem", "arquivado_por",
   "arquivado_prazo_dias", "arquivado_ultima_atividade_em", "arquivado_etapa",
   "restaurado_em", "restaurado_por", "ultimo_arquivamento",
@@ -225,9 +226,22 @@ const VALID_LEAD_CONTACT_SQL = "(" + [
 
 /** How many leads the representative added today (Brasília time) and how many are left. */
 export async function limiteLeadsHoje(repId) {
-  const rows = await query(
-    `SELECT count(*)::int AS n FROM records WHERE entity = 'Lead' AND data->>'representante_id' = $1 AND created_date >= ${START_OF_TODAY} AND ${VALID_LEAD_CONTACT_SQL}`,
+  const cadastroEmail = await query(
+    "SELECT lower(data->>'user_email') AS email FROM records WHERE entity = 'Representante' AND id = $1 LIMIT 1",
     [String(repId)],
+  );
+  const emailRep = String(cadastroEmail[0]?.email || "").toLowerCase();
+  const rows = await query(
+    `SELECT count(*)::int AS n
+       FROM records
+      WHERE entity = 'Lead'
+        AND (
+          data->>'criado_por_representante_id' = $1
+          OR (COALESCE(data->>'criado_por_representante_id', '') = '' AND lower(COALESCE(created_by, '')) = $2)
+        )
+        AND created_date >= ${START_OF_TODAY}
+        AND ${VALID_LEAD_CONTACT_SQL}`,
+    [String(repId), emailRep],
   );
   const usados = rows[0]?.n ?? 0;
   // O limite é individual e fica salvo no cadastro de cada representante.
@@ -291,6 +305,8 @@ async function repWrite(entity, kind, current, patch, rep, user) {
       representante_id: rep.id,
       representante_nome: rep.nome || "",
       representante_email: norm(user.email),
+      criado_por_representante_id: rep.id,
+      criado_por_representante_nome: rep.nome || "",
       responsavel: clean.responsavel || rep.nome || user.full_name || user.email,
       responsavel_email: norm(user.email),
     };
@@ -473,10 +489,13 @@ function entityHandle(entity, access) {
               `SELECT count(*)::int AS n
                  FROM records
                 WHERE entity = 'Lead'
-                  AND data->>'representante_id' = $1
+                  AND (
+                    data->>'criado_por_representante_id' = $1
+                    OR (COALESCE(data->>'criado_por_representante_id', '') = '' AND lower(COALESCE(created_by, '')) = lower($2))
+                  )
                   AND created_date >= ${START_OF_TODAY}
-                  AND ${VALID_LEAD_CONTACT_SQL}`,
-              [repId],
+                  AND ${VALID_LEAD_CONTACT_SQL}
+              [repId, user?.email || ""],
             );
             const limite = Number(limites[0]?.n ?? LIMITE_LEADS_DIA_REPRESENTANTE);
             if (Number(usados[0]?.n || 0) >= limite) {
