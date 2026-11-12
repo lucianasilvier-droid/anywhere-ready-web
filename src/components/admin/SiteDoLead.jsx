@@ -120,7 +120,14 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             className={inputCls}
           />
           <button
-            onClick={() => { window.open("https://claude.ai/new", "_blank", "noopener,noreferrer"); mPrepararGratis.mutate(); }}
+            onClick={() => {
+              const janela = window.open("about:blank", "_blank");
+              if (!janela) { toast.error("O navegador bloqueou a nova aba. Permita pop-ups e tente novamente."); return; }
+              mPrepararGratis.mutateAsync().then((r) => {
+                if (!r?.prompt) throw new Error("As instruções não foram retornadas pelo sistema.");
+                janela.location.href = `https://claude.ai/new?q=${encodeURIComponent(r.prompt)}`;
+              }).catch((e) => { janela.close(); toast.error(e?.message || "Não foi possível abrir o Claude com as instruções."); });
+            }}
             disabled={mPrepararGratis.isPending}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-4 py-2 text-[12px] font-bold text-[#0a1128] disabled:opacity-60"
           >
