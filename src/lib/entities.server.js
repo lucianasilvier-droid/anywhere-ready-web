@@ -27,11 +27,13 @@ function leadTemContatoValido(record) {
     telefone.length === 10 || telefone.length === 11 ||
     (telefone.startsWith("55") && (telefone.length === 12 || telefone.length === 13))
   );
-  const email = norm(record?.email || record?.email_contato || record?.email_publico);
-  const emailValido = email.length <= 254 &&
+  const emails = [record?.email, record?.email_contato, record?.email_publico].map(norm);
+  const emailValido = emails.some((email) =>
+    email.length <= 254 &&
     /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
     !/(^|\.)(example|invalid|localhost|test)$/i.test(email.split("@")[1] || "") &&
-    !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
+    !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email)
+  );
   return telefoneValido || emailValido;
 }
 
@@ -104,19 +106,22 @@ function buildWhere(entity, filter, params) {
   }
   if (entity === "Lead") {
     const telefone = (campo) => "regexp_replace(COALESCE(data->>'" + campo + "', ''), '[^0-9]', '', 'g')";
-    const email = "lower(COALESCE(NULLIF(data->>'email', ''), NULLIF(data->>'email_contato', ''), NULLIF(data->>'email_publico', ''), ''))";
     const tel = [telefone("telefone"), telefone("whatsapp")];
-    conds.push(`(
-      length(${tel[0]}) IN (10, 11)
-      OR (left(${tel[0]}, 2) = '55' AND length(${tel[0]}) IN (12, 13))
-      OR length(${tel[1]}) IN (10, 11)
-      OR (left(${tel[1]}, 2) = '55' AND length(${tel[1]}) IN (12, 13))
-      OR (
-        ${email} ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'
-        AND ${email} !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'
-        AND split_part(${email}, '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$'
-      )
-    )`);
+    const emailValidoSql = (campo) => {
+      const email = "lower(COALESCE(data->>'" + campo + "', ''))";
+      return "(" + email + " ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'" +
+        " AND " + email + " !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'" +
+        " AND split_part(" + email + ", '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$')";
+    };
+    conds.push("(" +
+      "length(" + tel[0] + ") IN (10, 11)" +
+      " OR (left(" + tel[0] + ", 2) = '55' AND length(" + tel[0] + ") IN (12, 13))" +
+      " OR length(" + tel[1] + ") IN (10, 11)" +
+      " OR (left(" + tel[1] + ", 2) = '55' AND length(" + tel[1] + ") IN (12, 13))" +
+      " OR " + emailValidoSql("email") +
+      " OR " + emailValidoSql("email_contato") +
+      " OR " + emailValidoSql("email_publico") +
+    ")");
   }
   return conds;
 }
