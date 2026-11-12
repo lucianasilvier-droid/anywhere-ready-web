@@ -246,8 +246,7 @@ export async function limiteLeadsHoje(repId) {
 /** How many demo sites the representative created today (Brasília time) and how many are left. */
 export async function limiteSitesHoje(repId) {
   const rows = await query(
-    `SELECT count(*)::int AS n FROM records WHERE entity = 'SiteCliente' AND data->>'criado_por_representante_id' = $1 AND created_date >= ${START_OF_TODAY}
-                  AND ${VALID_LEAD_CONTACT_SQL}`,
+    `SELECT count(*)::int AS n FROM records WHERE entity = 'SiteCliente' AND data->>'criado_por_representante_id' = $1 AND created_date >= ${START_OF_TODAY}`,
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
@@ -475,7 +474,8 @@ function entityHandle(entity, access) {
                  FROM records
                 WHERE entity = 'Lead'
                   AND data->>'representante_id' = $1
-                  AND created_date >= ${START_OF_TODAY}`,
+                  AND created_date >= ${START_OF_TODAY}
+                  AND ${VALID_LEAD_CONTACT_SQL}`,
               [repId],
             );
             const limite = Number(limites[0]?.n ?? LIMITE_LEADS_DIA_REPRESENTANTE);
