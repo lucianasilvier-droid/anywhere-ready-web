@@ -249,3 +249,12 @@ Arquivos alterados:
 - Removido o preço fixo "Comprar por R$ 55,00" do destaque inicial de placas NFC.
 - O catálogo de contingência não tem preço confirmado (valores zerados) e o preço real deve vir do cadastro atual do produto. O botão agora diz "Ver placas e preços" e leva à loja, evitando divulgar valor incorreto.
 - Não foram alterados preços cadastrados, links de checkout ou valores de pagamentos.
+
+
+## CRM — remoção do segmento Assistência Técnica — 12/11/2026
+
+- Removida a opção **Assistência Técnica** da lista de segmentos exibida na busca de empresas do CRM para representantes.
+- A alteração remove o segmento tanto do seletor quanto da relação visual de sequência, pois ambos são gerados pela mesma lista `segmentosRepresentante` em `src/components/crm/CrmLeads.jsx`.
+- Os demais segmentos e o funcionamento da busca não foram alterados.
+
+**Validação:** alteração estática confirmada no arquivo do GitHub. Nenhum teste, build ou deploy foi executado; a Vercel não foi acessada.
