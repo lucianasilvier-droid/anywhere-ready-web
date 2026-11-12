@@ -160,7 +160,12 @@ export default function CrmLeads({ base = "/admin" }) {
       await reload();
       atualizarLimite();
     } catch (e) {
-      toast.error(e?.message || "Não foi possível salvar o lead.");
+      if (e?.status === 409) {
+        toast.info("Esta empresa já está cadastrada no CRM. Atualize a busca para ver o status.");
+        await reload({ silent: true });
+      } else {
+        toast.error(e?.message || "Não foi possível salvar o lead.");
+      }
       atualizarLimite();
     } finally {
       setSalvando("");
@@ -176,6 +181,7 @@ export default function CrmLeads({ base = "/admin" }) {
     if (!permitidos.length) return toast.error("Você já atingiu o limite diário de clientes.");
     setSalvandoTodos(true);
     let adicionados = 0;
+    let duplicados = 0;
     let falhas = 0;
     try {
       for (const place of permitidos) {
@@ -190,13 +196,15 @@ export default function CrmLeads({ base = "/admin" }) {
           });
           adicionados += 1;
         } catch (error) {
-          falhas += 1;
+          if (error?.status === 409) duplicados += 1;
+          else falhas += 1;
           if (error?.status === 429 || /limite diário/i.test(error?.message || "")) break;
         }
       }
       await reload();
       atualizarLimite();
       if (adicionados) toast.success(`${adicionados} cliente(s) adicionado(s) ao CRM.`);
+      if (duplicados) toast.info(`${duplicados} empresa(s) já estavam cadastradas e foram ignoradas.`);
       if (falhas) toast.error(`${falhas} resultado(s) não puderam ser adicionados.`);
     } finally {
       setSalvandoTodos(false);
