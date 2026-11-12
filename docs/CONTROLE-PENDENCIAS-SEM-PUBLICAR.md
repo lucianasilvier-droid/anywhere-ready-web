@@ -377,3 +377,17 @@ Arquivos principais: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fn
 - Removidos também o handler e os estados exclusivos dessa funcionalidade; não ficou apenas escondido na interface.
 - Mantidos os controles de autorização existentes e o histórico de interações que não dependem desse formulário.
 - Revisão estática confirmou que o título, handler e estados removidos não aparecem mais em CrmLeadDetalhe.jsx. Sem build, testes ou publicação.
+## CRM — somente empresas com contato válido — revisão de 12/11/2026
+
+- Regra permanente: só exibir e aceitar leads que tenham pelo menos um contato em formato válido: WhatsApp/telefone ou e-mail. Sem ambos, a empresa é descartada antes de aparecer e não pode ser salva no CRM.
+- A busca do Google Places é enriquecida: quando não há telefone válido, o servidor tenta localizar um e-mail no site oficial e em links/páginas de contato do mesmo domínio.
+- A busca reserva do OpenStreetMap também considera tags de telefone, e-mail e site; os resultados passam pelo mesmo filtro.
+- A consulta de leads no banco filtra registros sem contato válido, de modo que leads antigos sem telefone/e-mail não apareçam nas listas e relatórios que usam a entidade Lead.
+- A camada de gravação bloqueia criação e atualização que deixem um lead sem telefone/WhatsApp ou e-mail válido; o formulário manual também valida antes de enviar.
+- A tela de busca exibe o e-mail encontrado e o telefone disponível; a tela de detalhe já oferece a ação Abrir e-mail quando há endereço cadastrado.
+- A validação do telefone verifica o formato e a quantidade de dígitos; ela não confirma se o número está efetivamente registrado no WhatsApp. A confirmação de conta WhatsApp exigiria uma verificação externa autorizada.
+- A leitura de sites usa HTTPS/HTTP público, sem credenciais, validação de host/IP, redirecionamentos restritos ao mesmo domínio, timeout e limite de conteúdo. Se o site bloquear a leitura ou não expuser e-mail, a empresa é descartada se também não houver telefone válido.
+
+Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e src/components/crm/CrmLeads.jsx.
+
+**Validação:** revisão estática das regras de busca, enriquecimento, leitura do banco, gravação e interface. Não foram executadas buscas reais, consultas a sites, testes, build ou deploy.
