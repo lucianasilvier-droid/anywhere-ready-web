@@ -50,6 +50,8 @@ export function authSettings() {
     providers: { email: true, google: googleConfigured() },
     signupDisabled: true,
     confirmationRequired: confirmationRequired(),
+    // Safe global capability flag: does not reveal whether an e-mail exists.
+    recoveryEmailConfigured: smtpConfigured(),
   };
 }
 
