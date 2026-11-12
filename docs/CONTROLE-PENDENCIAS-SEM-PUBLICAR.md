@@ -338,3 +338,9 @@ Arquivos alterados:
 - Corrigido em `src/components/store/PaymentPanel.jsx`: quando o servidor informa que o código não corresponde a um pagamento, o polling é interrompido. Falhas transitórias de rede continuam podendo ser consultadas novamente.
 - A mensagem amigável de pagamento não encontrado já existia e foi mantida.
 - **Status:** correção implementada na branch de trabalho; não houve teste, build, consulta a provedor ou deploy.
+
+
+### Conferência adicional do limite de implantação — 12/11/2026
+- Consulta somente de leitura ao histórico da equipe Vercel, com janela móvel de 24 horas, retornou 100 registros (limite máximo solicitado pela consulta): 68 associados a `anywhere-ready-web-s71m` e 32 a `google-nfc-connect`.
+- O registro mais recente retornado foi de 12/11/2026 15:15 UTC; o mais antigo, 11/11/2026 15:48 UTC. Como a consulta atingiu o teto de 100 resultados e já existe erro explícito `api-deployments-free-per-day`, o bloqueio deve ser tratado como ativo.
+- Branch de trabalho atualizada após a correção do polling: `26d3adeb1552014f6349bae74e7eadadfabcac27`. A `main` permaneceu em `bb2794505db5935c66ece3e568a8168c92c4e5dd`.
