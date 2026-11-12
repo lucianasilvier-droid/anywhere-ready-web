@@ -230,9 +230,9 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         empresa: lead.empresa,
         tipo: "ia",
         mensagem: existente
-          ? "Site de demonstração atualizado pelo gerador automático sem API paga."
-          : "Site de demonstração criado automaticamente a partir dos dados do CRM.",
-        autor: "Gerador automático",
+          ? "Site de demonstração atualizado com o Claude gratuito no navegador."
+          : "Site de demonstração criado com o Claude gratuito, usando os dados e a análise do CRM.",
+        autor: "Claude gratuito",
         detalhe: `Endereço: /site/${site.slug}${rep ? ` · criado pelo representante ${rep.nome || ""}` : ""}`,
       });
 
