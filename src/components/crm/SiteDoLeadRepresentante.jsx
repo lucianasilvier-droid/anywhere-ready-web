@@ -98,7 +98,7 @@ export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado
             onChange={(e) => setOrientacoes(e.target.value)}
             rows={2}
             maxLength={600}
-            placeholder="Orientações opcionais para o agente (ex.: destacar corte infantil, tom mais jovem...)"
+            placeholder="Observação opcional que aparecerá no site (não inclua dados não confirmados)"
             className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
           />
           <button
