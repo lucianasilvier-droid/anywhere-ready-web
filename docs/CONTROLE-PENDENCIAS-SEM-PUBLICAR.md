@@ -204,3 +204,9 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 **Limitação:** o registro administrativo de conclusão manual precisa ser tratado com cuidado, exigindo confirmação humana documentada. O estorno parcial também não está implementado; a API atual solicita estorno total.
 
 **Validação:** alteração estática confirmada no GitHub. Nenhum pagamento ou estorno real foi executado; nenhum build, teste ou deploy foi executado.
+
+
+### Checkout — bloqueio de cobranças indevidas
+- A criação de cobrança agora recusa pedidos com status cancelado/reembolsado e pedidos cujo total não seja numérico, finito e maior que zero.
+- Pedido já pago continua retornando o estado já pago sem criar nova cobrança.
+- Não foi alterado o fluxo de pedidos aguardando pagamento nem a modalidade de checkout de convidados.
