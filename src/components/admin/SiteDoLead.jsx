@@ -15,7 +15,7 @@ const STATUS = {
 };
 
 /**
- * Cartão do CRM: quando a empresa não tem site, o agente Claude AI cria um site de
+ * Cartão do CRM: cria uma demonstração local sem API paga a partir dos dados cadastrados no CRM.
  * demonstração com Google Maps e agendamento pelo WhatsApp para oferecer ao cliente.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
@@ -101,7 +101,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             onChange={(e) => setOrientacoes(e.target.value)}
             rows={2}
             maxLength={600}
-            placeholder="Orientações opcionais para o agente (ex.: destacar corte infantil, tom mais jovem...)"
+            placeholder="Observação opcional que aparecerá no site (não inclua dados não confirmados)"
             className={inputCls}
           />
           <button
