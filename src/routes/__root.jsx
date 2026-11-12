@@ -12,14 +12,22 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Google NFC Connect — Perfil no Google Maps, Gestão e Placas NFC" },
+      { title: "Google NFC Connect | Perfil da Empresa no Google, Placas NFC e Sites" },
       {
         name: "description",
         content:
-          "Criamos e administramos o Perfil da Empresa no Google e vendemos placas NFC para avaliações. Mais visibilidade e mais clientes para o seu negócio.",
+          "Melhore a presença digital do seu negócio com configuração e gestão do Perfil da Empresa no Google, placas NFC para avaliações e sites profissionais. Atendimento em todo o Brasil.",
       },
+      { name: "google-site-verification", content: "quTWAR4_UmBqhf19Xd2_J-9BOp3_i5WSuGiscIcaOAs" },
       { name: "theme-color", content: "#070d1c" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Google NFC Connect" },
+      { property: "og:title", content: "Google NFC Connect | Perfil no Google, Placas NFC e Sites" },
+      {
+        property: "og:description",
+        content:
+          "Soluções para fortalecer a presença digital de empresas: Perfil da Empresa no Google, placas NFC e sites profissionais.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
