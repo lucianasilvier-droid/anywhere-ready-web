@@ -14,7 +14,7 @@ const STATUS = {
 
 /**
  * Cartão "Site para o cliente" no painel do representante. O representante cria até
- * 2 sites de demonstração por dia, só para os próprios clientes, e compartilha o link.
+ * 2 demonstrações locais por dia, apenas para os próprios clientes, e compartilha o link.
  * Preço, custos e status do site continuam com o administrador.
  */
 export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado }) {
