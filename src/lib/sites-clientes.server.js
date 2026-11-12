@@ -294,6 +294,12 @@ export function sitePublico(site) {
     nota_google: site.nota_google ?? null,
     total_avaliacoes: site.total_avaliacoes ?? null,
     fotos_google: (Array.isArray(site.fotos_google) ? site.fotos_google : []).slice(0, 5).filter((foto) => /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_=-]+$/.test(String(foto?.name || ""))).map((foto) => ({ name: foto.name, autor: String(foto.autor || ""), autor_uri: String(foto.autor_uri || "") })),
+    fotos_site: (Array.isArray(site.fotos_site) ? site.fotos_site : []).slice(0, 12).filter((foto) => {
+      try {
+        const url = new URL(String(foto?.url || ""));
+        return url.protocol === "https:" && String(foto?.origem || "") === "site_oficial";
+      } catch { return false; }
+    }).map((foto) => ({ url: foto.url, origem: "site_oficial" })),
     whatsapp: whatsappDe(site.whatsapp),
     telefone: site.telefone || "",
     instagram: site.instagram || "",
