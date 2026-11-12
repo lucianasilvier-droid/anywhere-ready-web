@@ -381,3 +381,46 @@ export const meuLimiteCrmFn = createServerFn({ method: "GET" })
     const { limiteLeadsHoje } = await import("@/lib/entities.server");
     return { liberado: true, representante: { id: rep.id, nome: rep.nome }, ...(await limiteLeadsHoje(rep.id)) };
   });
+
+
+/** O administrador pode atribuir, transferir ou devolver um lead à equipe. */
+export const transferirLeadRepresentanteFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({
+    leadId: z.string().min(1),
+    representanteId: z.string().nullable(),
+  }))
+  .handler(async ({ data, context }) => {
+    requireAdmin(context);
+    const base44 = context.getBase44().asServiceRole;
+    const lead = await base44.entities.Lead.get(data.leadId).catch(() => null);
+    if (!lead) {
+      setResponseStatus(404);
+      throw Object.assign(new Error("Empresa não encontrada no CRM."), { status: 404 });
+    }
+
+    let rep = null;
+    if (data.representanteId) {
+      rep = await base44.entities.Representante.get(data.representanteId).catch(() => null);
+      if (!rep || rep.status !== "ativo") {
+        setResponseStatus(422);
+        throw Object.assign(new Error("Selecione um representante ativo."), { status: 422 });
+      }
+    }
+
+    await base44.entities.Lead.update(data.leadId, {
+      representante_id: rep?.id || null,
+      representante_nome: rep?.nome || "",
+      representante_email: rep?.email || "",
+    });
+
+    await base44.entities.AtividadeLog.create({
+      acao: rep ? "Empresa atribuída/transferida" : "Empresa devolvida à equipe",
+      entidade: "Lead",
+      registro_id: data.leadId,
+      detalhe: `${lead.empresa || "Empresa"} · ${lead.representante_nome || "Equipe"} → ${rep?.nome || "Equipe"}`,
+      autor_email: context.user.email,
+    });
+
+    return { ok: true, representante: rep ? { id: rep.id, nome: rep.nome } : null };
+  });
