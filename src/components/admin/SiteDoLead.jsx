@@ -164,7 +164,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Crie a demonstração com Cloud AI. A IA usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para produzir um conteúdo específico para esta empresa. A geração só acontece quando você clicar e pode consumir a cota da integração de IA configurada no painel.
+            Crie a demonstração com Cloud AI. A IA usa os dados do CRM, a análise comercial e as fotos reais do Google disponíveis para produzir um conteúdo específico para esta empresa. A geração só acontece quando você clicar e pode consumir a cota da IA e, para leads antigos sem fotos, da Google Places API.
           </p>
           <textarea
             value={orientacoes}
