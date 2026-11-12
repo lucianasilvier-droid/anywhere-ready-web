@@ -17,6 +17,7 @@ function ClienteDetalhePage() {
   const [cliente, setCliente] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [form, setForm] = useState(null);
+  const [erroCarregamento, setErroCarregamento] = useState("");
   const { items: pedidos } = useEntityList("Pedido", { cliente_id: clientId }, { limit: 50 });
   const { items: servicos } = useEntityList("ServicoCliente", { cliente_id: clientId }, { limit: 50 });
   const { items: placas } = useEntityList(
@@ -26,13 +27,29 @@ function ClienteDetalhePage() {
   );
 
   useEffect(() => {
+    let ativo = true;
+    setCarregando(true);
+    setErroCarregamento("");
+    setCliente(null);
+    setForm(null);
+
     base44.entities.Cliente.get(clientId)
       .then((c) => {
+        if (!ativo) return;
         setCliente(c);
         setForm(c);
       })
-      .catch(() => toast.error("Cliente não encontrado."))
-      .finally(() => setCarregando(false));
+      .catch(() => {
+        if (!ativo) return;
+        setErroCarregamento("Não foi possível localizar este cliente ou você não tem acesso a ele.");
+      })
+      .finally(() => {
+        if (ativo) setCarregando(false);
+      });
+
+    return () => {
+      ativo = false;
+    };
   }, [clientId]);
 
   async function salvar(e) {
@@ -51,8 +68,19 @@ function ClienteDetalhePage() {
     }
   }
 
-  if (carregando || !form) {
+  if (carregando) {
     return <div className="flex items-center gap-2 py-20 text-sm text-white/40"><Loader2 className="h-4 w-4 animate-spin" /> Carregando cliente...</div>;
+  }
+
+  if (erroCarregamento || !form) {
+    return (
+      <div className="space-y-4 py-12">
+        <p className="text-sm text-white/65">{erroCarregamento || "Não foi possível carregar os dados deste cliente."}</p>
+        <Link to="/admin/clientes" className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:underline">
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar para clientes
+        </Link>
+      </div>
+    );
   }
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
