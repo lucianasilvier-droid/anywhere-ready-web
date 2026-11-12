@@ -13,8 +13,8 @@ const STATUS = {
 };
 
 /**
- * Cartão "Site para o cliente" no painel do representante. A IA cria até
- * 2 demonstrações por dia, apenas para os próprios clientes, e o representante compartilha o link.
+ * Cartão "Site para o cliente" no painel do representante. O Claude gratuito prepara o conteúdo
+ * sem API ou chave; o representante salva a demonstração apenas para os próprios clientes.
  * Preço, custos e status do site continuam com o administrador.
  */
 export default function SiteDoLeadRepresentante({ lead, onUsarMensagem, onGerado }) {
