@@ -180,8 +180,18 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
 }
 /** Valida e normaliza o JSON retornado pelo Claude gratuito antes de salvar. */
 export function validarConteudoSite(d) {
-  if (!d || typeof d !== "object" || !Array.isArray(d.servicos) || d.servicos.length < 3 || !String(d.titulo || "").trim()) {
-    throw erro("O JSON retornado pelo Claude está incompleto. Confira o conteúdo e tente novamente.", 422);
+  const servicos = Array.isArray(d?.servicos) ? d.servicos.filter((item) => String(item?.nome || "").trim()) : [];
+  const diferenciais = Array.isArray(d?.diferenciais) ? d.diferenciais.filter((item) => String(item?.titulo || "").trim()) : [];
+  const perguntas = Array.isArray(d?.perguntas) ? d.perguntas.filter((item) => String(item?.pergunta || "").trim()) : [];
+  if (
+    !d || typeof d !== "object" ||
+    !String(d.titulo || "").trim() ||
+    !String(d.sobre || "").trim() ||
+    servicos.length < 3 ||
+    diferenciais.length < 3 ||
+    perguntas.length < 3
+  ) {
+    throw erro("O JSON do Claude está incompleto. Ele precisa conter título, apresentação, pelo menos 3 serviços, 3 diferenciais e 3 perguntas frequentes.", 422);
   }
   const txt = (v, max) => String(v || "").trim().slice(0, max);
   return {
@@ -189,15 +199,15 @@ export function validarConteudoSite(d) {
     titulo: txt(d.titulo, 120),
     subtitulo: txt(d.subtitulo, 260),
     sobre: txt(d.sobre, 1400),
-    servicos: d.servicos.slice(0, 6).map((item) => ({
+    servicos: servicos.slice(0, 6).map((item) => ({
       nome: txt(item.nome, 60),
       descricao: txt(item.descricao, 220),
       icone: ICONES.includes(item.icone) ? item.icone : "check",
     })),
-    diferenciais: (Array.isArray(d.diferenciais) ? d.diferenciais : []).slice(0, 4).map((item) => ({
+    diferenciais: diferenciais.slice(0, 4).map((item) => ({
       titulo: txt(item.titulo, 60), texto: txt(item.texto, 180),
     })),
-    perguntas: (Array.isArray(d.perguntas) ? d.perguntas : []).slice(0, 5).map((item) => ({
+    perguntas: perguntas.slice(0, 5).map((item) => ({
       pergunta: txt(item.pergunta, 140), resposta: txt(item.resposta, 320),
     })),
     chamada_agendamento: txt(d.chamada_agendamento, 180),
