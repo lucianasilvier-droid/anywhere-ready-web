@@ -37,3 +37,22 @@ export async function query(text, params = []) {
   const result = await getPool().query(text, params);
   return result.rows;
 }
+/** Runs several parameterized statements on one PostgreSQL transaction/client. */
+export async function withTransaction(work) {
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const tx = async (text, params = []) => {
+      const result = await client.query(text, params);
+      return result.rows;
+    };
+    const value = await work(tx);
+    await client.query("COMMIT");
+    return value;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
