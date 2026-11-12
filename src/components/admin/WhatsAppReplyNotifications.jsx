@@ -31,6 +31,7 @@ export default function WhatsAppReplyNotifications() {
   const [erro, setErro] = useState("");
   const initialLoad = useRef(true);
   const knownIds = useRef(new Set());
+  const containerRef = useRef(null);
 
   useEffect(() => {
     let ativo = true;
@@ -70,6 +71,22 @@ export default function WhatsAppReplyNotifications() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!aberto) return;
+    function fecharAoClicarFora(event) {
+      if (!containerRef.current?.contains(event.target)) setAberto(false);
+    }
+    function fecharComEscape(event) {
+      if (event.key === "Escape") setAberto(false);
+    }
+    document.addEventListener("pointerdown", fecharAoClicarFora);
+    document.addEventListener("keydown", fecharComEscape);
+    return () => {
+      document.removeEventListener("pointerdown", fecharAoClicarFora);
+      document.removeEventListener("keydown", fecharComEscape);
+    };
+  }, [aberto]);
+
   const naoLidas = items.filter((item) => item.notificacao_lida !== true).length;
 
   async function marcarLida(item) {
@@ -105,7 +122,7 @@ export default function WhatsAppReplyNotifications() {
   }
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setAberto((value) => !value)}
@@ -165,7 +182,10 @@ export default function WhatsAppReplyNotifications() {
                         <Link
                           to="/admin/lead/$leadId"
                           params={{ leadId: item.lead_id }}
-                          onClick={() => marcarLida(item)}
+                          onClick={() => {
+                            marcarLida(item);
+                            setAberto(false);
+                          }}
                           className="text-[10.5px] font-bold text-primary hover:underline"
                         >
                           Abrir lead
