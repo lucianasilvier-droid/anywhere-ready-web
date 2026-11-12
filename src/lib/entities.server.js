@@ -403,8 +403,10 @@ function entityHandle(entity, access) {
            ),
            rep_limit AS MATERIALIZED (
              SELECT CASE
-               WHEN data->>'limite_leads_dia' ~ '^[1-9][0-9]{0,4}$'
-                 THEN LEAST((data->>'limite_leads_dia')::int, 10000)
+               WHEN jsonb_typeof(data->'limite_leads_dia') = 'number'
+                 AND (data->>'limite_leads_dia')::numeric BETWEEN 1 AND 10000
+                 AND trunc((data->>'limite_leads_dia')::numeric) = (data->>'limite_leads_dia')::numeric
+                 THEN (data->>'limite_leads_dia')::int
                ELSE ${LIMITE_LEADS_DIA_REPRESENTANTE}
              END AS n
                FROM records
