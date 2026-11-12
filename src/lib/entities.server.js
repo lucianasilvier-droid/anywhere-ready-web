@@ -189,7 +189,16 @@ export async function limiteLeadsHoje(repId) {
     [String(repId)],
   );
   const usados = rows[0]?.n ?? 0;
-  const limite = LIMITE_LEADS_DIA_REPRESENTANTE;
+  // O administrador configura o limite em Configurações. Mantém 20 como padrão
+  // para instalações que ainda não possuem esse registro.
+  const config = await query(
+    `SELECT data->>'valor' AS valor FROM records WHERE entity = 'Configuracao' AND data->>'chave' = $1 ORDER BY updated_date DESC LIMIT 1`,
+    ["limite_leads_dia_representante"],
+  );
+  const valorConfigurado = Number(config[0]?.valor);
+  const limite = Number.isSafeInteger(valorConfigurado) && valorConfigurado > 0
+    ? Math.min(valorConfigurado, 10000)
+    : LIMITE_LEADS_DIA_REPRESENTANTE;
   return { usados, limite, restantes: Math.max(limite - usados, 0) };
 }
 
