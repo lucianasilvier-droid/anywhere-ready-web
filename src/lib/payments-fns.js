@@ -243,19 +243,26 @@ export const refundPaymentFn = createServerFn({ method: "POST" })
       return { ok: true, status: "reembolso_solicitado" };
     }
 
-    if (pagamento.provedor === "mercadopago" && /^\d+$/.test(String(pagamento.provedor_payment_id || ""))) {
-      const prov = await loadProvider(svc, "mercadopago");
-      if (!prov.pronto) throw Object.assign(new Error("Mercado Pago não está configurado."), { status: 400 });
-      const res = await mpRefund(prov.values, pagamento.provedor_payment_id);
-      if (!res.ok) {
-        await svc.entities.Pagamento.update(pagamento.id, { erro: `Reembolso recusado: ${res.error}` });
-        throw Object.assign(new Error(res.error), { status: 400 });
-      }
+    // Nunca marque como reembolsado sem confirmação do provedor.
+    // A API de estorno atualmente cobre apenas pagamentos MP com ID numérico.
+    if (pagamento.provedor !== "mercadopago" || !/^\\d+$/.test(String(pagamento.provedor_payment_id || ""))) {
+      throw Object.assign(
+        new Error("O estorno automático ainda não está disponível para esta modalidade. O pagamento permanece como reembolso solicitado; conclua o estorno diretamente no provedor e atualize o registro após confirmar."),
+        { status: 400 },
+      );
+    }
+
+    const prov = await loadProvider(svc, "mercadopago");
+    if (!prov.pronto) throw Object.assign(new Error("Mercado Pago não está configurado."), { status: 400 });
+    const res = await mpRefund(prov.values, pagamento.provedor_payment_id);
+    if (!res.ok) {
+      await svc.entities.Pagamento.update(pagamento.id, { erro: `Reembolso recusado: ${res.error}` });
+      throw Object.assign(new Error(res.error), { status: 400 });
     }
 
     await applyPaymentStatus(svc, pagamento, "reembolsado", {
       origem: "painel",
-      detalhe: "Reembolso concluído",
+      detalhe: "Reembolso confirmado pelo Mercado Pago",
     });
     return { ok: true, status: "reembolsado" };
   });
