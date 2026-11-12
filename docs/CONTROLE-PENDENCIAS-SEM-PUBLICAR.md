@@ -283,9 +283,10 @@ Arquivos alterados:
 
 ### Melhorias implementadas na branch de trabalho
 - A paleta automática foi refinada por ramo: floresta para pet/veterinária, terracota para beleza/moda, esmeralda para saúde, grafite para consultoria/tecnologia, vinho para alimentação e oceano como opção geral.
-- O conteúdo automático passou a considerar também o resumo e as oportunidades da análise comercial do CRM, além das observações do estabelecimento. O texto continua sem inventar preços, resultados ou dados não confirmados.
+- O gerador usa o resumo, as oportunidades e as observações da análise comercial apenas como sinais internos para ajustar o tom e a chamada para ação; o texto interno da análise não é copiado para o site público. O conteúdo público permanece baseado em dados do estabelecimento e não inventa preços, resultados ou dados não confirmados.
 - A busca Google Places agora solicita até cinco referências de fotos reais e seus créditos de autoria. Leads salvos pelo resultado da busca preservam esses metadados.
 - A página pública do site exibe a primeira foto na área principal e as demais em uma galeria, mantendo os créditos fornecidos pelo Google.
+- Os serviços e slogans automáticos também passaram a variar por segmento (alimentação, beleza, pet, saúde, automotivo e serviços profissionais), em vez de usar a mesma lista genérica para todos.
 - Criado um endpoint servidor para buscar a mídia do Google Places sem expor a chave da API no navegador. O endpoint valida o nome do recurso e usa a chave salva nas integrações ou a variável de ambiente.
 - A primeira mensagem de autorização agora inclui o link provisório do site quando disponível. A ordem é: link público do representante comercial e, logo abaixo, link da prévia do site. O texto orienta o cliente a abrir a demonstração e pedir SIM para receber mais informações das placas NFC.
 
