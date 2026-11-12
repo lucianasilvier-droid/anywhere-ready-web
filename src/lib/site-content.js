@@ -59,7 +59,7 @@ export const SERVICES = [
     features: [
       "Aproxime o celular e abra a avaliação",
       "Chip NFC programado com o seu link",
-      "Links do Google e do Instagram",
+      "Opções individuais: link do Google ou do Instagram",
       "Personalização com a sua marca",
     ],
   },
