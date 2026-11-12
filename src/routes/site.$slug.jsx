@@ -90,9 +90,39 @@ function SiteCliente({ site }) {
   const isRestaurante = c.tipo_negocio === "restaurante";
   const waReserva = wa(`Olá, ${site.empresa}! Gostaria de fazer uma reserva. Poderiam me informar a disponibilidade?`);
   const serif = { fontFamily: "'Fraunces', Georgia, serif" };
+  const dadosEstruturados = {
+    "@context": "https://schema.org",
+    "@type": isRestaurante ? "Restaurant" : "LocalBusiness",
+    name: site.empresa,
+    description: c.seo_descricao || c.subtitulo || site.empresa,
+    telephone: site.telefone || undefined,
+    address: site.endereco || local ? {
+      "@type": "PostalAddress",
+      streetAddress: site.endereco || undefined,
+      addressLocality: site.cidade || undefined,
+      addressRegion: site.estado || undefined,
+      addressCountry: "BR",
+    } : undefined,
+    aggregateRating: site.nota_google != null && Number(site.total_avaliacoes) > 0 ? {
+      "@type": "AggregateRating",
+      ratingValue: site.nota_google,
+      reviewCount: site.total_avaliacoes,
+      bestRating: 5,
+    } : undefined,
+    servesCuisine: isRestaurante && site.categoria ? site.categoria : undefined,
+    hasMenu: isRestaurante && c.cardapio?.length ? {
+      "@type": "Menu",
+      hasMenuItem: c.cardapio.map((item) => ({
+        "@type": "MenuItem",
+        name: item.nome,
+        description: item.descricao || undefined,
+      })),
+    } : undefined,
+  };
 
   return (
     <div style={{ ...vars, backgroundColor: "var(--bg)", color: "var(--ink)" }} className="min-h-screen font-sans antialiased">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados).replace(/</g, "\\u003c") }} />
       {site.status === "demonstracao" && (
         <div className="bg-[var(--dark)] px-4 py-2 text-center text-[12px] text-white/80">
           Demonstração criada pela <strong className="text-white">Google NFC Connect</strong> para {site.empresa}.{" "}
