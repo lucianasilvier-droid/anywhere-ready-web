@@ -160,3 +160,18 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 ### Integrações — escopo do painel
 - O painel administrativo de integrações agora exibe somente Google Maps / Places, API Roq e WhatsApp Business.
 - As funções internas que dependem de Claude/OpenAI continuam podendo usar credenciais de ambiente ou configurações já existentes, mas esses provedores não aparecem como cartões de configuração nesta tela.
+
+
+## Auditoria adicional — webhooks de pagamento — 12/11/2026
+
+### Mercado Pago — segredo de assinatura obrigatório
+- Identificado comportamento inseguro: quando o Webhook Secret não estava configurado, a função de validação aceitava a notificação como válida.
+- Alterado para rejeitar a assinatura quando o segredo não está configurado. A integração continua exigindo Access Token para operações, mas o webhook só deve ser cadastrado/considerado pronto após incluir também o Webhook Secret no painel.
+- O endpoint retorna 401 para assinatura ausente/inválida e registra o motivo sem aceitar a notificação.
+
+### InfinitePay — eventos de estorno/cancelamento
+- A InfinitePay não assina as notificações. O fluxo já consultava payment_check para confirmar pagamento, mas também aceitava os textos de evento refunded/canceled como prova suficiente para alterar o status.
+- Removida essa confiança: eventos sem confirmação verificável não mudam um pagamento para reembolsado/cancelado. A confirmação de pagamento continua dependendo do payment_check.
+- Estorno/cancelamento precisa ser reconciliado por consulta/ação administrativa segura; não pode ser declarado apenas pelo conteúdo do webhook.
+
+**Validação:** inspeção estática e confirmação dos commits no GitHub. Nenhuma API de pagamento foi chamada, nenhum pagamento foi criado/alterado, nenhum teste/build/deploy foi executado.
