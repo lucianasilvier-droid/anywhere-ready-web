@@ -447,7 +447,7 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 
 **Conferência de conteúdo:** dados institucionais, endereço, horários, serviços e preços foram comparados com o site oficial. O site original apresenta algumas linhas de preço/combos com formatação ambígua; os valores de combos devem ser confirmados com a empresa antes de qualquer publicação comercial.
 
-**Status real:** código e registro da rota confirmados no GitHub. Fotos de equipe verificadas por abertura dos arquivos oficiais. Ainda não foi executado build, teste de navegação, conferência visual em navegador ou publicação. Portanto, a proposta está implementada no código, mas não pode ser chamada de visualmente aprovada/pronta para apresentação até uma prévia ser aberta e revisada. Nenhum build ou deploy da Vercel foi iniciado.
+**Status real:** código e registro da rota confirmados no GitHub. Fotos de equipe verificadas por abertura dos arquivos oficiais. Ainda não foi executado build, teste de navegação, conferência visual em navegador ou publicação. Portanto, a proposta está implementada no código, mas não pode ser chamada de visualmente aprovada/pronta para apresentação até uma prévia ser aberta e revisada. Nenhum build manual ou publicação foi solicitado. A integração automática do GitHub com a Vercel gerou uma prévia no commit 3ec5d40, que falhou por uma quebra de linha literal na lista de serviços (arquivo da proposta Barbearia da Vinci, linha 42). A quebra foi corrigida no commit 3a8c0a5; ainda não houve nova execução para validar a correção.
 
 ## Catálogo da loja — preços, fotos e checkouts — 12/11/2026
 
@@ -468,3 +468,5 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 - `src/components/store/ProductCard.jsx`
 
 **Status real:** alterações confirmadas no GitHub. Checkout e valores conferidos no site da InfinitePay; arquivos de imagem do projeto conferidos diretamente. Ainda não foi executado build nem teste visual do catálogo no navegador. Nenhum build, deploy ou publicação foi iniciado. A revisão visual final permanece pendente.
+
+**Nota de validação Vercel — 12/11/2026:** a Vercel criou automaticamente uma prévia após um push no branch; não foi acionada manualmente. O build falhou por erro de sintaxe no arquivo da proposta da Barbearia da Vinci, não nos arquivos do catálogo. O erro era uma sequência literal `\\n` dentro do array de serviços. Corrigido no commit `3a8c0a5`. Não iniciar nova build sem autorização; a validação visual do catálogo e a confirmação do build corrigido continuam pendentes.
