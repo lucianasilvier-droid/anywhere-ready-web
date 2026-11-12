@@ -183,7 +183,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             ) : (
               <><strong className="text-white">Esta empresa já tem site.</strong> Você também pode preparar uma nova demonstração moderna para apresentar ao cliente. </>
             )}
-            Prepare o pedido no sistema, gere o conteúdo no Claude gratuito pelo navegador e cole a resposta aqui para validar e salvar. Não precisa de chave de API nem gera cobrança da Anthropic.
+            Prepare o pedido no sistema, gere o conteúdo no Claude gratuito pelo navegador e cole a resposta aqui para validar e salvar. O Claude não exige chave de API nem gera cobrança da Anthropic. Somente leads antigos sem fotos podem acionar a consulta de fotos no Google Places.
           </p>
           <textarea
             value={orientacoes}
