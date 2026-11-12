@@ -53,7 +53,7 @@ export const SERVICES = [
     slug: "/servicos/placa-nfc",
     number: "03",
     title: "Placa NFC de Avaliação",
-    short: "Placa com NFC que leva o cliente direto à sua avaliação no Google.",
+    short: "Placas NFC individuais para avaliação no Google ou acesso ao Instagram, vendidas separadamente.",
     color: "#FBBC05",
     icon: "nfc",
     features: [
