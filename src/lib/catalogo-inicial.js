@@ -10,7 +10,6 @@ export const CATALOGO_INICIAL = [
     descricao_curta: "Duas placas NFC em acrílico: uma para receber avaliações no Google e outra para levar clientes ao Instagram.",
     descricao: "O conjunto acompanha as duas placas físicas em acrílico: Placa Google NFC para facilitar avaliações do estabelecimento e Placa NFC Instagram para direcionar clientes ao perfil da empresa. Após a compra, coletamos os dados do estabelecimento para configurar as placas antes da entrega.",
     preco: 95,
-    preco_antigo: 110,
     modelo: "kit",
     imagens: ["/images/divulgacao/arte-2026-10-31-b.jpeg"],
     imagem_fit: "contain",
