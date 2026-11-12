@@ -121,6 +121,7 @@ export default function CrmLeads({ base = "/admin" }) {
     () => new Set(leads.map((l) => l.place_id).filter(Boolean)),
     [leads],
   );
+  const jaRegistrados = (place) => Boolean(place?.ja_cadastrado || existentes.has(place?.place_id));
 
   const mutation = useMutation({
     mutationFn: (textQuery) => buscar({ data: { textQuery, max: 20 } }),
@@ -167,7 +168,7 @@ export default function CrmLeads({ base = "/admin" }) {
   }
 
   async function salvarTodosResultados() {
-    const pendentes = resultados.filter((place) => place.place_id && !existentes.has(place.place_id));
+    const pendentes = resultados.filter((place) => place.place_id && !jaRegistrados(place));
     if (!pendentes.length) return toast.info("Todos os resultados já estão no CRM.");
     const permitidos = representante && limite
       ? pendentes.slice(0, Math.max(0, limite.restantes))
@@ -381,7 +382,7 @@ export default function CrmLeads({ base = "/admin" }) {
               <p className="text-[11px] text-white/40">{resultados.length} resultado(s) encontrados · até 20 por busca</p>
               <button
                 type="button"
-                disabled={salvandoTodos || esgotado || resultados.every((place) => existentes.has(place.place_id))}
+                disabled={salvandoTodos || esgotado || resultados.every(jaRegistrados)}
                 onClick={salvarTodosResultados}
                 className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[11.5px] font-bold text-[#0a1128] disabled:opacity-50"
               >
@@ -390,7 +391,7 @@ export default function CrmLeads({ base = "/admin" }) {
               </button>
             </div>
             {resultados.map((place) => {
-              const jaSalvo = existentes.has(place.place_id);
+              const jaSalvo = jaRegistrados(place);
               return (
                 <div
                   key={place.place_id}
