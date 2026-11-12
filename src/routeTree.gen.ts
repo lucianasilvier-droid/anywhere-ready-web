@@ -1570,6 +1570,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTimeRoute: ApiTimeRoute,
   RSlugRoute: RSlugRoute,
   SiteSlugRoute: SiteSlugRoute,
+  PropostaBarbeariaDaVinciRoute: PropostaBarbeariaDaVinciRoute,
   ApiAuthConfirmRoute: ApiAuthConfirmRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
