@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/google-place-photo")({
           return new Response(await upstream.arrayBuffer(), {
             headers: {
               "content-type": contentType,
-              "cache-control": "public, max-age=86400, stale-while-revalidate=604800",
+              "cache-control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
               "x-content-type-options": "nosniff",
             },
           });
