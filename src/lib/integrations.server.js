@@ -14,7 +14,7 @@ export const SECRET_NAMES = {
   groq: ["GROQ_API_KEY"],
   claude: ["ANTHROPIC_API_KEY"],
   openai: ["OPENAI_API_KEY"],
-  whatsapp: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"],
+  whatsapp: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_APP_SECRET"],
 };
 
 export function integrationConfigured(tipo) {
@@ -32,6 +32,7 @@ export const CREDENTIAL_KEYS = {
     WHATSAPP_ACCESS_TOKEN: "whatsapp_access_token",
     WHATSAPP_PHONE_NUMBER_ID: "whatsapp_phone_number_id",
     WHATSAPP_VERIFY_TOKEN: "whatsapp_verify_token",
+    WHATSAPP_APP_SECRET: "whatsapp_app_secret",
   },
 };
 
