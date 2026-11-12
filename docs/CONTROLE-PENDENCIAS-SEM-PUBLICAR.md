@@ -396,7 +396,7 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 
 - A imagem principal da página inicial está configurada como a placa NFC do Google (PLATE_IMAGE_URL), não como a arte de Perfil do Google.
 - A arte de serviço Google Maps (SERVICE_IMAGE_URL) está configurada nas páginas Perfil do Google e Gestão de Perfil, conforme a orientação anterior.
-- A vitrine apresenta os produtos individuais Google e Instagram e também o kit Google + Instagram, com imagem conjunta própria. Não confundir o kit com a placa Google vendida individualmente.
+- A vitrine apresenta os produtos individuais Google e Instagram e também o kit Google + Instagram, com imagem conjunta própria, composta com as duas fotos originais das placas. Não confundir o kit com a placa Google vendida individualmente.
 - A página de criação de site ainda não tem uma imagem própria de serviço configurada. Não reutilizar a arte do Google Maps nessa página; falta inserir a arte específica aprovada para criação de site.
 - O catálogo canônico contém Kit Google + Instagram, Placa Google NFC, Placa NFC Instagram e o serviço Sua Empresa no Google Maps.
 - As imagens não foram geradas ou substituídas nesta revisão; qualquer nova arte deve ser apresentada uma por vez para aprovação antes de entrar no site.
@@ -452,7 +452,7 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 ## Catálogo da loja — preços, fotos e checkouts — 12/11/2026
 
 **Implementado na branch de trabalho, sem publicação:**
-- Kit Google + Instagram: R$ 95,00; checkout InfinitePay `vhh6927-kit-google-e-instagram`; imagem conjunta `/images/divulgacao/arte-2026-10-31-b.jpeg`, que mostra as duas placas na mesma composição.
+- Kit Google + Instagram: R$ 95,00; checkout InfinitePay `vhh6927-kit-google-e-instagram`; imagem conjunta `/images/site/kit-google-instagram.svg`, que mostra as duas placas na mesma composição.
 - Placa Google NFC: R$ 55,00; checkout `hhy2911-placa-google-nfc`; foto própria da placa Google.
 - Placa NFC Instagram: R$ 55,00; checkout `xpg6030-placas-nfc-instagram`; foto própria da placa Instagram.
 - Sua Empresa no Google Maps: R$ 150,00; checkout `wmk4399-sua-empresa-no-google-maps`; inclui criação completa do perfil e placa Google NFC grátis, conforme a descrição do checkout.
@@ -463,6 +463,7 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 
 **Arquivos alterados:**
 - `src/lib/catalogo-inicial.js`
+- `public/images/site/kit-google-instagram.svg`
 - `src/routes/_site/loja.index.jsx`
 - `src/routes/_site/loja.$slug.jsx`
 - `src/components/store/ProductCard.jsx`
