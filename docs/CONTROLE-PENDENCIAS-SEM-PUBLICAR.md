@@ -226,3 +226,19 @@ Arquivos alterados:
 - `src/components/crm/CrmLeadDetalhe.jsx`
 
 **Validação:** inspeção estática dos arquivos e confirmação dos commits no GitHub. Não foi gerada mensagem real com IA, não foi enviado WhatsApp e não houve build, teste ou deploy.
+
+
+## Autenticação — recuperação de senha — 12/11/2026
+
+- Encontrado que a página `/forgot-password` chamava o método legado `base44.auth.resetPasswordRequest`, em vez da função de recuperação própria do sistema (`recoverPasswordFn`).
+- A tela também ignorava qualquer falha e sempre mostrava a mensagem genérica de sucesso, mesmo sem SMTP configurado.
+- Corrigido para usar `authSettingsFn` e `recoverPasswordFn`, os mesmos serviços de autenticação próprios.
+- `authSettings()` agora informa apenas um sinalizador global `recoveryEmailConfigured`, derivado da configuração SMTP. Isso não revela se determinado endereço de e-mail está cadastrado.
+- A tela bloqueia o envio quando SMTP está ausente/incompleto ou quando não consegue confirmar a configuração, e orienta o usuário a falar com o administrador. Com SMTP configurado, mantém a resposta genérica de privacidade ("se existir uma conta...") para evitar enumeração de contas.
+
+Arquivos alterados:
+- `src/lib/auth.server.js`
+- `src/components/auth/ForgotPasswordPage.jsx`
+
+**Limitação:** o SMTP continua sem credenciais reais no ambiente; a recuperação por e-mail só ficará operacional após configurar SMTP_HOST, SMTP_PORT, SMTP_FROM e, quando exigido pelo provedor, SMTP_USER/SMTP_PASS. Nenhuma credencial foi inventada ou alterada.
+**Validação:** inspeção estática e confirmação dos commits no GitHub; nenhum e-mail foi enviado e nenhum teste/build/deploy foi executado.
