@@ -885,6 +885,7 @@ export interface RootRouteChildren {
   ApiTimeRoute: typeof ApiTimeRoute
   RSlugRoute: typeof RSlugRoute
   SiteSlugRoute: typeof SiteSlugRoute
+  PropostaBarbeariaDaVinciRoute: typeof PropostaBarbeariaDaVinciRoute
   ApiAuthConfirmRoute: typeof ApiAuthConfirmRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
@@ -1022,6 +1023,13 @@ declare module '@tanstack/react-router' {
       path: '/site/$slug'
       fullPath: '/site/$slug'
       preLoaderRoute: typeof SiteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposta-barbearia-da-vinci': {
+      id: '/proposta-barbearia-da-vinci'
+      path: '/proposta-barbearia-da-vinci'
+      fullPath: '/proposta-barbearia-da-vinci'
+      preLoaderRoute: typeof PropostaBarbeariaDaVinciRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/admin/': {
