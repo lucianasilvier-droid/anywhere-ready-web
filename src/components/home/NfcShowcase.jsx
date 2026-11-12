@@ -51,7 +51,7 @@ export default function NfcShowcase() {
                 to="/loja"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-3.5 text-sm font-bold text-[#0a1128] transition-transform hover:-translate-y-0.5"
               >
-                Comprar por R$ 55,00
+                Ver placas e preços
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <span className="text-[12px] text-white/40">
