@@ -8,7 +8,5 @@ Disallow: /login
 Disallow: /representante
 Disallow: /crm
 Disallow: /api/
-Disallow: /carrinho
-Disallow: /pagamento
 
 Sitemap: https://google-nfc-connect.vercel.app/sitemap.xml
