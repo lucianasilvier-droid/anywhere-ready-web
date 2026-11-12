@@ -5,7 +5,21 @@ import { base44 } from "@/api/base44Client";
 import ProductCard from "@/components/store/ProductCard";
 
 export const Route = createFileRoute("/_site/loja/")({
-  head: () => ({ meta: [{ title: "Catálogo NFC — Google NFC Connect" }] }),
+  head: () => ({
+    meta: [
+      { title: "Loja de Placas NFC Personalizadas e Soluções Digitais | Google NFC Connect" },
+      {
+        name: "description",
+        content:
+          "Conheça placas NFC personalizadas para avaliações no Google e acesso ao Instagram, além de soluções digitais para empresas. Veja os modelos e condições de compra.",
+      },
+      { property: "og:title", content: "Loja de Placas NFC Personalizadas | Google NFC Connect" },
+      {
+        property: "og:description",
+        content: "Placas NFC personalizadas para empresas e soluções para fortalecer sua presença digital.",
+      },
+    ],
+  }),
   component: LojaPage,
 });
 
