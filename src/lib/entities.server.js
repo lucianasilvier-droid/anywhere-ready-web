@@ -371,6 +371,30 @@ function entityHandle(entity, access) {
     async create(input) {
       const data = await requireWrite("create", null, stripSystemFields(input));
       const user = await access.user();
+      if (entity === "Lead" && data.place_id) {
+        // The preliminary duplicate check in repWrite gives a friendly error,
+        // but two simultaneous requests can pass it together. Serialize the
+        // final check + insert for this Google/OSM place id in one SQL statement.
+        const rows = await query(
+          `WITH lead_lock AS MATERIALIZED (
+             SELECT pg_advisory_xact_lock(hashtextextended('google-nfc-lead-place:' || $1, 0))
+           ),
+           duplicate AS MATERIALIZED (
+             SELECT r.id
+               FROM records r CROSS JOIN lead_lock
+              WHERE r.entity = 'Lead' AND r.data->>'place_id' = $1
+              LIMIT 1
+           )
+           INSERT INTO records (id, entity, data, created_by, created_by_id)
+           SELECT $2, $3, $4::jsonb, $5, $6
+             FROM lead_lock
+            WHERE NOT EXISTS (SELECT 1 FROM duplicate)
+           RETURNING *`,
+          [String(data.place_id), newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
+        );
+        if (!rows[0]) throw httpError("Esta empresa já está no CRM. Atualize a lista antes de cadastrar novamente.", 409);
+        return toRecord(rows[0]);
+      }
       const rows = await query(
         `INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, $2, $3::jsonb, $4, $5) RETURNING *`,
         [newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
