@@ -87,18 +87,9 @@ export const Route = createFileRoute("/api/payments/infinitepay")({
           return Response.json({ ok: true, alterado: !!resultado.changed });
         }
 
-        if (evento === "refunded") {
-          await applyPaymentStatus(base44, pagamento, "reembolsado", { origem: "webhook" });
-          await logNotification(base44, { ...log, assinatura_valida: true, processado: true, status_aplicado: "reembolsado" });
-          return Response.json({ ok: true });
-        }
-
-        if (evento === "canceled") {
-          await applyPaymentStatus(base44, pagamento, "cancelado", { origem: "webhook" });
-          await logNotification(base44, { ...log, assinatura_valida: true, processado: true, status_aplicado: "cancelado" });
-          return Response.json({ ok: true });
-        }
-
+        // A notificação da InfinitePay não é assinada. payment_check confirma
+        // pagamento, mas não comprova estorno/cancelamento. Nunca altere status
+        // final apenas com base no texto do evento recebido.
         await logNotification(base44, {
           ...log,
           assinatura_valida: true,
