@@ -410,3 +410,10 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 - Identificado que observacao_operador (orientações internas usadas para guiar o Claude) era enviado na resposta pública e também aparecia na exportação ZIP.
 - Corrigido: sitePublico agora remove observacao_operador antes de devolver o conteúdo; a página pública não renderiza esse campo; o ZIP exportado também o remove do HTML e do site.json.
 - A observação continua armazenada no registro interno para contexto administrativo, mas não deve aparecer ao visitante.
+## Atribuição de leads e limite diário — revisão de 12/11/2026
+
+- Foi preservada a função administrativa já existente na main para atribuir, transferir ou devolver um lead à equipe, com validação de representante ativo e registro em AtividadeLog.
+- O controle de atribuição é editável na lista administrativa do CRM; nas telas de funil e detalhe, o componente continua somente informativo quando a lista de representantes não é fornecida.
+- O limite diário agora identifica o criador original do lead (criado_por_representante_id; para registros antigos, usa created_by/e-mail de acesso). Transferir um lead posteriormente não consome nem altera o limite diário do novo responsável.
+- Os campos de criador original são protegidos contra alteração pelo próprio representante.
+- O segmento Assistência Técnica foi preservado na lista de segmentos sugeridos para busca.
