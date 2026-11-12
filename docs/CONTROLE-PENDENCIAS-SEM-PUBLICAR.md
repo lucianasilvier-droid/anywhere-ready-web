@@ -370,3 +370,10 @@ Status: implementação de código na branch de trabalho e revisão estática do
 Arquivos alterados: src/lib/sites-clientes.server.js, src/lib/sites-clientes-fns.js, src/components/admin/SiteDoLead.jsx e src/components/crm/SiteDoLeadRepresentante.jsx.
 
 **Validação:** revisão estática dos fluxos, imports, credenciais, prompt, validação do conteúdo e persistência. Nenhuma chamada à IA, Google Places, build, teste automatizado, teste funcional ou deploy foi executado. O funcionamento real depende de credenciais válidas de API Roq/Groq ou Claude no ambiente/painel.
+## Integridade de branches e catálogo — 12/11/2026
+
+- Branch ativa de preparação: work/pendencias-sem-publicar-2026-11-12. Ela contém a trilha mais completa de trabalho e não é a branch de produção.
+- Não mesclar integralmente main nem ajustes-pendentes-sem-publicar sem revisão: essas branches têm alterações de catálogo/loja que incluem o item combinado “Placa Google + Instagram” e link de checkout de kit.
+- A regra comercial confirmada é vender as placas individualmente; não reintroduzir kits, combos ou conjuntos no catálogo, na vitrine, no checkout ou nas artes.
+- O catálogo de contingência da branch ativa contém duas placas individuais (Google NFC e Instagram NFC) e o serviço de Perfil da Empresa no Google. Ele não deve ser considerado catálogo completo até a conferência da lista oficial de todos os serviços e produtos cadastrados no sistema.
+- A branch de preparação recebeu manualmente as correções do limite individual de leads e a conexão da geração de sites à IA existente; as alterações não foram publicadas.
