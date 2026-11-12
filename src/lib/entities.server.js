@@ -213,7 +213,7 @@ const emailContactSql = (field) => {
   const email = "lower(COALESCE(data->>'" + field + "', ''))";
   return "(" + email + " ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'" +
     " AND " + email + " !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'" +
-    " AND split_part(" + email + ", '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)$')";
+    " AND split_part(" + email + ", '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)(\\.|$)')";
 };
 const VALID_LEAD_CONTACT_SQL = "(" + [
   phoneContactSql("telefone"),
