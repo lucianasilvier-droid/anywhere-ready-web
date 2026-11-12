@@ -107,8 +107,26 @@ export const searchPlacesFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireCrmAccess(context);
-    const creds = await resolveCredentials(context.getBase44().asServiceRole, "google_places");
-    return searchPlaces({ textQuery: data.textQuery, maxResultCount: data.max || 10 }, creds.values);
+    const base44 = context.getBase44();
+    const svc = base44.asServiceRole || base44;
+    const creds = await resolveCredentials(svc, "google_places");
+    const result = await searchPlaces({ textQuery: data.textQuery, maxResultCount: data.max || 10 }, creds.values);
+    if (!result?.ok || !Array.isArray(result.places) || result.places.length === 0) return result;
+
+    // Check duplicates with service-role access so representatives receive only a
+    // boolean flag, never another representative's identity or customer details.
+    const places = await Promise.all(result.places.map(async (place) => {
+      if (!place?.place_id) return { ...place, ja_cadastrado: false };
+      try {
+        const found = await svc.entities.Lead.filter({ place_id: place.place_id }, { limit: 1 });
+        const records = Array.isArray(found) ? found : found?.items || [];
+        return { ...place, ja_cadastrado: records.length > 0 };
+      } catch {
+        // Do not block Google Places results if duplicate lookup is temporarily unavailable.
+        return { ...place, ja_cadastrado: false };
+      }
+    }));
+    return { ...result, places };
   });
 
 /* ----------------------------------- IA (Groq) -------------------------------- */
