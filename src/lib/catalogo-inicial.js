@@ -52,17 +52,17 @@ export const CATALOGO_INICIAL = [
   {
     id: "perfil-google-maps",
     slug: "perfil-google-maps",
-    nome: "Google Maps + Placa Google NFC grátis",
-    descricao_curta: "Criação ou configuração do Perfil da Empresa no Google com uma Placa Google NFC de cortesia.",
-    descricao: "Serviço de criação e configuração do Perfil da Empresa no Google. Inclui uma Placa Google NFC de cortesia, configurada com o link de avaliação do estabelecimento.",
+    nome: "Sua Empresa no Google Maps",
+    descricao_curta: "Administração mensal do Perfil da Empresa no Google, com criação completa do perfil e uma placa Google NFC grátis.",
+    descricao: "Plano de administração mensal do Perfil da Empresa no Google. Inclui a criação completa do perfil e uma plaquinha de avaliação do Google por aproximação NFC inteiramente grátis.",
     preco: 150,
     modelo: "servico",
     imagens: ["/images/divulgacao/google-maps-perfil-empresa.jpeg"],
     imagem_fit: "contain",
     itens_inclusos: ["Criação ou configuração do Perfil da Empresa no Google", "1 Placa Google NFC grátis"],
     ativo: true,
-    checkout_url: "https://wa.me/5511913290911?text=Quero%20contratar%20Google%20Maps%20com%20placa%20Google%20NFC%20gratis%20por%20R%24%20150",
-    checkout_label: "Solicitar por R$ 150,00",
+    checkout_url: "https://loja.infinitepay.io/bikercourierexpress/wmk4399-sua-empresa-no-google-maps",
+    checkout_label: "Contratar por R$ 150,00",
   },
 ];
 
