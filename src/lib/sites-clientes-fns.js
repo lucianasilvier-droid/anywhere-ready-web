@@ -149,6 +149,14 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
       } catch {
         throw erro("Não consegui ler o JSON. Cole a resposta completa do Claude, sem alterar o conteúdo.", 422);
       }
+      if (
+        !objetoManual || typeof objetoManual !== "object" || Array.isArray(objetoManual) ||
+        !Array.isArray(objetoManual.servicos) ||
+        !Array.isArray(objetoManual.diferenciais) ||
+        !Array.isArray(objetoManual.perguntas)
+      ) {
+        throw erro("A resposta do Claude precisa ser um objeto JSON com serviços, diferenciais e perguntas frequentes.", 422);
+      }
       const baseConteudo = gerarConteudoSiteAutomatico(lead, data.orientacoes);
       const conteudo = validarConteudoSite({
         ...baseConteudo,
