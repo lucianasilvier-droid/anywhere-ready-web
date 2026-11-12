@@ -31,7 +31,7 @@ function leadTemContatoValido(record) {
   const emailValido = emails.some((email) =>
     email.length <= 254 &&
     /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
-    !/(^|\.)(example|invalid|localhost|test)$/i.test(email.split("@")[1] || "") &&
+    !/(^|\.)(example|invalid|localhost|test)(\.|$)/i.test(email.split("@")[1] || "") &&
     !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email)
   );
   return telefoneValido || emailValido;
