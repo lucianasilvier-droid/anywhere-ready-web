@@ -22,6 +22,10 @@ export const cart = {
   count: () => read().reduce((sum, i) => sum + (i.quantidade || 0), 0),
   subtotal: () => read().reduce((sum, i) => sum + (Number(i.preco) || 0) * (i.quantidade || 0), 0),
   add(produto, quantidade = 1) {
+    const preco = Number(produto?.preco);
+    if (!Number.isFinite(preco) || preco <= 0) {
+      throw new Error("Este produto ainda não tem preço confirmado e não pode ser adicionado ao carrinho.");
+    }
     const items = read();
     const existente = items.find((i) => i.produto_id === produto.id);
     if (existente) {
@@ -30,7 +34,7 @@ export const cart = {
       items.push({
         produto_id: produto.id,
         nome: produto.nome,
-        preco: Number(produto.preco) || 0,
+        preco,
         imagem: produto.imagens?.[0] || "",
         quantidade,
       });

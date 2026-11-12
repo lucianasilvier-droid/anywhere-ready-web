@@ -1,5 +1,4 @@
 import { Nfc, Star } from "lucide-react";
-import { brl } from "@/lib/format";
 
 /** Prévia visual da placa (usada quando o produto não tem foto cadastrada). */
 export default function PlateVisual({ nome = "Sua Empresa", compacto = false }) {
@@ -33,7 +32,7 @@ export default function PlateVisual({ nome = "Sua Empresa", compacto = false }) 
         <span className="text-[8px] font-bold uppercase tracking-widest text-white">
           Aproxime o celular
         </span>
-        <span className="text-[8px] font-bold text-white/80">{brl(55)}</span>
+        
       </div>
     </div>
   );

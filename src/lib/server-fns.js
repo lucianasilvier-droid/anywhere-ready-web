@@ -122,7 +122,11 @@ export const createOrder = createServerFn({ method: "POST" })
     for (const item of data.itens) {
       const produto = produtos.find((p) => p.id === item.produto_id);
       if (!produto || produto.ativo === false) continue;
-      const preco = Number(produto.preco) || 0;
+      const preco = Number(produto.preco);
+      if (!Number.isFinite(preco) || preco <= 0) {
+        setResponseStatus(409);
+        throw Object.assign(new Error(`O produto "${produto.nome}" está sem preço confirmado e não pode ser vendido agora.`), { status: 409 });
+      }
       subtotal += preco * item.quantidade;
       unidades += item.quantidade;
       itens.push({

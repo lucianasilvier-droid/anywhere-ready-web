@@ -43,12 +43,12 @@ function LojaPage() {
   return <div>
     <section className="relative overflow-hidden border-b border-white/[0.06]"><div className="aurora absolute inset-0" /><div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
       <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">Loja</p>
-      <h1 className="mt-3 max-w-2xl font-heading text-[2.1rem] font-extrabold leading-tight text-white sm:text-[2.8rem]">Placas NFC de avaliação <span className="text-gradient-gold">personalizadas</span></h1>
-      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">Escolha seu modelo e compre com segurança. As placas são personalizadas após a compra e entregues prontas para usar.</p>
+      <h1 className="mt-3 max-w-2xl font-heading text-[2.1rem] font-extrabold leading-tight text-white sm:text-[2.8rem]">Placas NFC de avaliação <span className="text-gradient-gold">para empresas</span></h1>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">Escolha sua placa física e compre com segurança. Após a compra, coletamos os dados do estabelecimento para configurar a placa e entregar pronta para usar.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-3">{[
         { icon: Nfc, t: "NFC por aproximação", d: "Compatível com celulares Android e iPhone." },
         { icon: Zap, t: "Acesso rápido", d: "O cliente aproxima o celular e abre seu link." },
-        { icon: ShieldCheck, t: "Personalização", d: "Configuramos os dados do estabelecimento após a compra." },
+        { icon: ShieldCheck, t: "Configuração", d: "Configuramos o link do estabelecimento após a compra." },
       ].map((b) => <div key={b.t} className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><b.icon className="mt-0.5 h-4.5 w-4.5 text-primary" /><div><p className="text-[13px] font-semibold text-white">{b.t}</p><p className="text-[11.5px] leading-relaxed text-white/45">{b.d}</p></div></div>)}</div>
     </div></section>
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">

@@ -7,6 +7,7 @@ import PlateVisual from "@/components/store/PlateVisual";
 import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
 import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
+import { precoConfirmado } from "@/lib/catalogo-preco";
 
 export const Route = createFileRoute("/_site/loja/$slug")({
   head: () => ({ meta: [{ title: "Placas NFC personalizadas para empresas | Google NFC Connect" }, { name: "description", content: "Conheça placas NFC personalizadas para facilitar o acesso dos clientes à avaliação no Google e aos canais digitais da sua empresa." }] }),
@@ -88,7 +89,8 @@ function ProdutoPage() {
     );
   }
 
-  const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
+  const temPreco = precoConfirmado(produto.preco);
+  const checkoutUrl = temPreco ? (produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id]) : null;
   const checkoutWhatsApp = String(checkoutUrl || "").startsWith("https://wa.me/");
 
   function adicionar(irParaCarrinho) {
@@ -131,7 +133,7 @@ function ProdutoPage() {
           <p className="mt-3 text-[14.5px] leading-relaxed text-white/60">{produto.descricao_curta}</p>
 
           <div className="mt-5 flex items-end gap-3">
-            <p className="font-heading text-3xl font-extrabold text-primary">{brl(produto.preco)}</p>
+            <p className="font-heading text-3xl font-extrabold text-primary">{temPreco ? brl(produto.preco) : "Preço em confirmação"}</p>
             {produto.preco_antigo > produto.preco && (
               <p className="pb-1 text-sm text-white/35 line-through">{brl(produto.preco_antigo)}</p>
             )}
@@ -142,7 +144,7 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          {!checkoutWhatsApp && <div className="mt-6 flex items-center gap-3">
+          {temPreco && !checkoutWhatsApp && <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
               <button
                 onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
@@ -174,7 +176,9 @@ function ProdutoPage() {
             </button>
           </div>}
 
-          {checkoutUrl ? (
+          {!temPreco ? (
+            <p className="mt-5 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-[12px] leading-relaxed text-amber-200/80">Estamos confirmando o preço e o link de pagamento deste produto. A compra será liberada assim que os dados forem conferidos.</p>
+          ) : checkoutUrl ? (
             <a
               href={checkoutUrl}
               target="_blank"
