@@ -177,6 +177,23 @@ function SiteCliente({ site }) {
           </div>
 
           <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
+            {site.fotos_google?.[0]?.name && (
+              <div className="mb-5 overflow-hidden rounded-2xl">
+                <img
+                  src={`/api/google-place-photo?name=${encodeURIComponent(site.fotos_google[0].name)}`}
+                  alt={`Foto real de ${site.empresa}`}
+                  loading="eager"
+                  className="h-56 w-full object-cover sm:h-64"
+                />
+                {site.fotos_google[0].autor && (
+                  <p className="bg-[var(--soft)] px-3 py-1.5 text-[10px] text-[var(--muted)]">
+                    Foto: {site.fotos_google[0].autor_uri ? (
+                      <a href={site.fotos_google[0].autor_uri} target="_blank" rel="noreferrer" className="underline">{site.fotos_google[0].autor}</a>
+                    ) : site.fotos_google[0].autor}
+                  </p>
+                )}
+              </div>
+            )}
             {site.nota_google != null && (
               <div className="border-b border-black/[0.06] pb-5">
                 <div className="flex items-center gap-1">
@@ -205,6 +222,35 @@ function SiteCliente({ site }) {
           </div>
         </div>
       </section>
+
+      {site.fotos_google?.length > 1 && (
+        <section className="mx-auto max-w-6xl px-5 pb-6 pt-2">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Conheça o espaço</p>
+              <h2 style={serif} className="mt-1 text-2xl font-bold">Fotos do estabelecimento</h2>
+            </div>
+            <span className="text-xs text-[var(--muted)]">Imagens do perfil no Google</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {site.fotos_google.slice(1, 5).map((foto, index) => (
+              <figure key={foto.name} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)] shadow-sm">
+                <img
+                  src={`/api/google-place-photo?name=${encodeURIComponent(foto.name)}`}
+                  alt={`Foto ${index + 2} de ${site.empresa}`}
+                  loading="lazy"
+                  className="h-36 w-full object-cover transition-transform duration-500 hover:scale-105 sm:h-48"
+                />
+                {foto.autor && (
+                  <figcaption className="px-2.5 py-2 text-[10px] text-[var(--muted)]">
+                    Foto: {foto.autor_uri ? <a href={foto.autor_uri} target="_blank" rel="noreferrer" className="underline">{foto.autor}</a> : foto.autor}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {c.servicos?.length > 0 && (
         <section id="servicos" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
