@@ -83,7 +83,7 @@ export function validarEmailContato(value) {
   const email = String(value || "").trim().toLowerCase();
   if (email.length > 254 || !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email)) return false;
   const domain = email.split("@")[1] || "";
-  if (/(^|\.)(example|invalid|localhost|test)$/i.test(domain)) return false;
+  if (/(^|\.)(example|invalid|localhost|test)(\.|$)/i.test(domain)) return false;
   if (/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email)) return false;
   return true;
 }
