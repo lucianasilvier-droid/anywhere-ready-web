@@ -133,7 +133,7 @@ function AdminLayout() {
                 to="/"
                 className="flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[11px] text-white/45 hover:bg-white/5 hover:text-white"
               >
-                <Home className="h-3 w-3" /> Ver o site
+                <Home className="h-3 w-3" /> Ver site
               </Link>
               <Link
                 to="/admin/configuracoes"
@@ -170,6 +170,12 @@ function AdminLayout() {
               </nav>
             </details>
             <WhatsAppReplyNotifications />
+            <Link
+              to="/"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white"
+            >
+              <Home className="h-3 w-3" /> Ver site
+            </Link>
             <button
               onClick={sair}
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/12 px-3 py-1.5 text-[11px] font-bold text-white/60 hover:border-red-400/40 hover:text-red-300"
