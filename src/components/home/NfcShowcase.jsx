@@ -20,8 +20,7 @@ export default function NfcShowcase() {
               <span className="text-gradient-gold">A avaliação abre na hora.</span>
             </h2>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/60">
-              Uma placa bonita, personalizada com a sua marca, que facilita o acesso do cliente
-              ao seu perfil no Google e ao seu Instagram. Sem aplicativo, sem digitação.
+              Temos placas NFC individuais: uma opção para facilitar a avaliação no Google e outra para direcionar ao Instagram. Cada placa é vendida separadamente e personalizada com a sua marca.
             </p>
 
             <ul className="mt-7 space-y-4">
