@@ -12,7 +12,7 @@ export const CATALOGO_INICIAL = [
     preco: 95,
     modelo: "kit",
     imagens: ["/images/divulgacao/arte-2026-10-31-b.jpeg"],
-    imagem_fit: "contain",
+    imagem_fit: "cover",
     itens_inclusos: ["1 Placa Google NFC", "1 Placa NFC Instagram", "Configuração dos links após a compra"],
     ativo: true,
     destaque: true,
@@ -68,7 +68,7 @@ export function produtoCanonico(produtoOuSlug) {
   return null;
 }
 
-// Sempre exibe os três produtos físicos oficiais, mesmo se o banco estiver incompleto.
+// Sempre exibe os produtos oficiais do catálogo, mesmo se o banco estiver incompleto.
 // Para os produtos conhecidos, preço, foto e checkout oficiais prevalecem sobre cadastros antigos.
 export function mesclarCatalogoOficial(produtosBanco = []) {
   const usados = new Set();
