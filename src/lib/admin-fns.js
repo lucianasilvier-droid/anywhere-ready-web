@@ -208,6 +208,17 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     }[data.tipo];
 
     const remetente = await senderIdentity(context);
+    // A proposta deve partir do diagnóstico já salvo, não de uma oferta genérica.
+    const contextoAnalise = [
+      { titulo: "Resumo", valor: lead.ai_resumo },
+      { titulo: "Oportunidades identificadas", valor: lead.ai_oportunidades },
+      { titulo: "Abordagem recomendada", valor: lead.ai_abordagem },
+      { titulo: "Proposta sugerida", valor: lead.ai_proposta },
+    ]
+      .filter((item) => String(item.valor || "").trim())
+      .map((item) => item.titulo + ": " + String(item.valor).trim())
+      .join("\n");
+
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
     const catalogoFallback = [
@@ -261,7 +272,17 @@ Contexto de materiais disponíveis:
 Dados do estabelecimento que vai receber a mensagem:
 ${leadBrief(lead)}
 
-${lead.ai_abordagem ? `Sugestão de abordagem já registrada: ${lead.ai_abordagem}` : ""}
+ANÁLISE DA EMPRESA — use como referência principal para personalizar a proposta:
+${contextoAnalise || "Análise ainda não registrada."}
+
+REGRAS PARA PROPOSTAS:
+- Quando o tipo for proposta, priorize o serviço que resolve a necessidade mais importante indicada no resumo, nas oportunidades e na proposta salva.
+- Nas propostas comerciais, apresente as plaquinhas NFC como complemento, sem substituir o serviço principal indicado pela análise.
+- Se a análise apontar ausência de site, priorize criação de site; só mencione uma prévia se a URL estiver disponível.
+- Se apontar necessidade no Perfil da Empresa no Google, ofereça a criação/configuração ou gestão conforme o diagnóstico.
+- Não invente necessidades, problemas, preços, resultados ou recursos.
+- Se não houver análise salva, não finja que houve diagnóstico; use apenas os dados reais do estabelecimento.
+- Na primeira mensagem de autorização, mantenha as regras específicas: sem preço, catálogo, vídeo ou links promocionais.
 
 Devolva {"mensagem": string}.`,
       '{"mensagem": string}',
