@@ -89,3 +89,18 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 - O teste funcional com duas contas continua pendente e não será executado na Vercel.
 
 **Validação desta auditoria:** leitura estática dos arquivos `src/lib/storage.server.js`, `src/lib/integrations.server.js`, `src/lib/admin-fns.js` e `src/lib/entities.server.js`. Nenhum teste, build ou deploy foi executado.
+
+
+## Correção da loja — catálogo de contingência (12/11/2026)
+
+**Causa identificada por leitura do código:** a página da loja exibia um catálogo estático de contingência quando a consulta ao banco retornava vazio ou falhava, mas a página de detalhe consultava somente o banco. Assim, o card podia aparecer na vitrine e, ao abrir, mostrar “Produto não encontrado”.
+
+**Implementado na branch de trabalho:**
+- Criado `src/lib/catalogo-inicial.js` para compartilhar o catálogo de contingência entre vitrine e detalhe.
+- A página de detalhe agora procura no catálogo de contingência depois de tentar localizar o registro no banco.
+- Produtos explicitamente desativados continuam sem acesso público pelo link direto.
+- Removido do catálogo de contingência o item combinado “Placa Google + Instagram” e seu checkout com identificação de kit. As placas Google e Instagram permanecem como itens individuais.
+
+**Arquivos alterados:** `src/lib/catalogo-inicial.js`, `src/routes/_site/loja.index.jsx`, `src/routes/_site/loja.$slug.jsx`.
+
+**Status:** correção de código registrada; não foi executado build, teste, acesso à Vercel ou validação em produção. Os quatro produtos do banco ainda precisam ser conferidos com os registros reais, pois esta correção resolve o caminho do catálogo de contingência, não corrige automaticamente slugs ou registros ausentes na base.
