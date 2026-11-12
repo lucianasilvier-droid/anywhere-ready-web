@@ -21,6 +21,24 @@ const MAX_LIMIT = 1000;
 
 const norm = (v) => String(v ?? "").trim().toLowerCase();
 
+function leadTemContatoValido(record) {
+  const telefone = String(record?.telefone || record?.whatsapp || "").replace(/[^0-9]/g, "");
+  const telefoneValido = telefone.length === 10 || telefone.length === 11 ||
+    (telefone.startsWith("55") && (telefone.length === 12 || telefone.length === 13));
+  const email = norm(record?.email);
+  const emailValido = email.length <= 254 &&
+    /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email) &&
+    !/(^|\.)(example|invalid|localhost|test)$/i.test(email.split("@")[1] || "") &&
+    !/^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@/i.test(email);
+  return telefoneValido || emailValido;
+}
+
+function exigirContatoLead(record) {
+  if (!leadTemContatoValido(record)) {
+    throw httpError("Empresa sem contato válido. Informe um WhatsApp/telefone válido ou um e-mail válido; sem um desses contatos, o lead não pode entrar no CRM.", 422);
+  }
+}
+
 export function httpError(message, status) {
   return Object.assign(new Error(message), { status });
 }
@@ -81,6 +99,19 @@ function buildWhere(entity, filter, params) {
       params.push(JSON.stringify({ [key]: value }));
       conds.push(`data @> $${params.length}::jsonb`);
     }
+  }
+  if (entity === "Lead") {
+    const telefone = "regexp_replace(COALESCE(NULLIF(data->>'telefone', ''), NULLIF(data->>'whatsapp', ''), ''), '[^0-9]', '', 'g')";
+    const email = "lower(COALESCE(data->>'email', ''))";
+    conds.push(`(
+      length(${telefone}) IN (10, 11)
+      OR (left(${telefone}, 2) = '55' AND length(${telefone}) IN (12, 13))
+      OR (
+        ${email} ~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}
+        AND ${email} !~ '^(no[-_.]?reply|noreply|do[-_.]?not[-_.]?reply)@'
+        AND split_part(${email}, '@', 2) !~ '(^|\\.)(example|invalid|localhost|test)
+      )
+    )`);
   }
   return conds;
 }
@@ -378,7 +409,10 @@ function entityHandle(entity, access) {
     },
 
     async create(input) {
-      const data = await requireWrite("create", null, stripSystemFields(input));
+      const entrada = stripSystemFields(input);
+      if (entity === "Lead") exigirContatoLead(entrada);
+      const data = await requireWrite("create", null, entrada);
+      if (entity === "Lead") exigirContatoLead(data);
       const user = await access.user();
       if (entity === "Lead" && data.place_id) {
         // The preliminary duplicate check in repWrite gives a friendly error,
@@ -421,6 +455,7 @@ function entityHandle(entity, access) {
       const current = await getRaw(id);
       if (!current) throw httpError("Registro não encontrado.", 404);
       const changes = await requireWrite("update", current, stripSystemFields(patch));
+      if (entity === "Lead") exigirContatoLead({ ...current, ...changes });
       const rows = await query(
         `UPDATE records SET data = data || $3::jsonb, updated_date = now() WHERE entity = $1 AND id = $2 RETURNING *`,
         [entity, String(id), JSON.stringify(changes)],
