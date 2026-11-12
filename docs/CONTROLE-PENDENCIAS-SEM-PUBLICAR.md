@@ -104,3 +104,19 @@ A última correção anteriormente publicada na produção foi o commit `bb27945
 **Arquivos alterados:** `src/lib/catalogo-inicial.js`, `src/routes/_site/loja.index.jsx`, `src/routes/_site/loja.$slug.jsx`.
 
 **Status:** correção de código registrada; não foi executado build, teste, acesso à Vercel ou validação em produção. Os quatro produtos do banco ainda precisam ser conferidos com os registros reais, pois esta correção resolve o caminho do catálogo de contingência, não corrige automaticamente slugs ou registros ausentes na base.
+
+
+## Segurança do webhook WhatsApp e URL comercial — 12/11/2026
+
+### WhatsApp — assinatura de notificações
+- Incluído `WHATSAPP_APP_SECRET` no mapeamento de credenciais do servidor e no cartão de integração do administrador.
+- O endpoint POST agora lê o corpo bruto e valida `X-Hub-Signature-256` com HMAC-SHA256 e comparação em tempo constante antes de processar mensagens.
+- Sem App Secret configurado, o webhook retorna 503; com assinatura inválida, retorna 401. Isso evita aceitar notificações forjadas.
+- O status da integração passa a exigir Access Token, Phone Number ID e App Secret. O Verify Token continua separado para o handshake GET.
+- O administrador precisa inserir o App Secret verdadeiro da aplicação Meta no painel antes de ativar o recebimento de notificações. Nenhum segredo foi criado ou presumido.
+
+### Propostas comerciais
+- Corrigido o domínio de fallback usado ao montar links de produtos nas propostas: agora usa `https://google-nfc-connect.vercel.app`, em vez de um endereço legado incorreto.
+- O valor definido em `APP_URL` continua tendo prioridade.
+
+**Validação:** revisão estática dos arquivos de integração, webhook, cartão de integração, função administrativa e gerador de propostas. Nenhum webhook foi chamado; nenhum teste, build ou deploy foi executado.
