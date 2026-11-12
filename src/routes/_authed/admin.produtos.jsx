@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authed/admin/produtos")({
 const VAZIO = {
   nome: "", slug: "", descricao_curta: "", descricao: "", preco: 55, preco_antigo: 0,
   modelo: "acrilico", imagens: "", itens_inclusos: "", estoque: 0, prazo_producao: "",
-  ativo: true, destaque: false,
+  ativo: true, destaque: false, checkout_url: "", checkout_label: "",
 };
 
 function ProdutosPage() {
@@ -199,6 +199,8 @@ function ProdutosPage() {
           <AdminField label="Estoque" type="number" value={form.estoque} onChange={set("estoque")} />
           <AdminField label="Prazo de produção" value={form.prazo_producao} onChange={set("prazo_producao")} placeholder="Ex.: até 5 dias úteis" />
           <AdminField label="Imagens (uma URL por linha)" textarea={3} value={form.imagens} onChange={set("imagens")} hint="Opcional: envie as imagens na área de arquivos e cole as URLs." />
+          <AdminField label="Link de checkout ou atendimento" type="url" value={form.checkout_url} onChange={set("checkout_url")} hint="URL HTTPS da página de pagamento ou WhatsApp." />
+          <AdminField label="Texto do botão de compra" value={form.checkout_label} onChange={set("checkout_label")} placeholder="Ex.: Comprar pela InfinitePay" />
           <AdminField label="Itens inclusos (um por linha)" textarea={4} value={form.itens_inclusos} onChange={set("itens_inclusos")} />
           <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-[12px] text-white/65">
