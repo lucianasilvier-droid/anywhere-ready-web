@@ -291,7 +291,7 @@ Arquivos alterados:
 - A primeira mensagem de autorização agora inclui o link provisório do site quando disponível. A ordem é: link público do representante comercial e, logo abaixo, link da prévia do site. O texto orienta o cliente a abrir a demonstração e pedir SIM para receber mais informações das placas NFC.
 
 ### Cuidados e validação pendente
-- A inclusão do campo `places.photos` e a recuperação das imagens usam a Google Places API e podem consumir cota e/ou gerar cobrança conforme o projeto e o faturamento do Google Cloud. Nenhuma chamada de foto foi executada nesta rodada.
+- A inclusão do campo `places.photos` e a recuperação sob demanda de fotos de leads antigos usam a Google Places API e podem consumir cota e/ou gerar cobrança conforme o projeto e o faturamento do Google Cloud. Nenhuma chamada de foto foi executada nesta rodada.
 - Fotos só aparecem para leads cuja busca de origem Google Places retornou imagens; resultados do OpenStreetMap ou leads manuais sem referências de fotos permanecem sem galeria.
 - Atribuições de autoria são exibidas quando fornecidas pelo Google.
 - A alteração foi revisada estaticamente pelos arquivos de integração, geração do site, página pública, proxy de fotos e mensagem do CRM.
