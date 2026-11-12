@@ -16,7 +16,6 @@ const STATUS = {
 
 /**
  * Cartão do CRM: cria uma demonstração local sem API paga a partir dos dados cadastrados no CRM.
- * demonstração com Google Maps e agendamento pelo WhatsApp para oferecer ao cliente.
  */
 export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   const buscar = useServerFn(siteDoLeadFn);
