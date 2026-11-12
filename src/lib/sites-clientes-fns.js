@@ -122,7 +122,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
           );
         }
       }
-      const conteudo = validarConteudoSite(gerarConteudoSiteAutomatico(lead));
+      const conteudo = validarConteudoSite(gerarConteudoSiteAutomatico(lead, data.orientacoes));
       const preco = await avaliarPrecoSite(lead, conteudo, data.extras);
       const existente = await sitePorLead(base44, lead.id);
       const agora = new Date().toISOString();
