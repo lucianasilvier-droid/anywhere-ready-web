@@ -223,8 +223,28 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     const tipo = tipoRespostaManual === "sim" && bloqueado ? "sim_bloqueado" : tipoRespostaManual;
     const agora = new Date().toISOString();
     setSalvandoRespostaManual(true);
-    let notificacaoSalva = false;
+    let consentimentoAtualizado = false;
     try {
+      // Primeiro persiste a decisão de consentimento. A notificação específica
+      // só é criada depois que essa atualização for confirmada pelo servidor.
+      if (tipoRespostaManual === "nao") {
+        await consentimento({ data: {
+          leadId,
+          status: "recusado",
+          resposta: texto,
+          origem: "Resposta recebida e registrada manualmente pelo representante",
+        } });
+        consentimentoAtualizado = true;
+      } else if (tipoRespostaManual === "sim" && !bloqueado) {
+        await consentimento({ data: {
+          leadId,
+          status: "autorizado",
+          resposta: texto,
+          origem: "Resposta recebida e registrada manualmente pelo representante",
+        } });
+        consentimentoAtualizado = true;
+      }
+
       await base44.entities.LeadInteraction.create({
         lead_id: leadId,
         empresa: lead.empresa,
@@ -239,23 +259,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
         notificacao_lida: false,
         recebido_em: agora,
       });
-      notificacaoSalva = true;
-
-      if (tipoRespostaManual === "nao") {
-        await consentimento({ data: {
-          leadId,
-          status: "recusado",
-          resposta: texto,
-          origem: "Resposta recebida e registrada manualmente pelo representante",
-        } });
-      } else if (tipoRespostaManual === "sim" && !bloqueado) {
-        await consentimento({ data: {
-          leadId,
-          status: "autorizado",
-          resposta: texto,
-          origem: "Resposta recebida e registrada manualmente pelo representante",
-        } });
-      }
 
       toast.success("Resposta registrada. A notificação foi enviada ao painel administrativo.");
       setRespostaManual("");
@@ -263,10 +266,11 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       await carregar();
       reloadInteracoes();
     } catch (e) {
-      toast.error(notificacaoSalva
-        ? "A resposta foi registrada e notificada, mas houve falha ao atualizar a autorização: " + (e?.message || "verifique o cadastro.")
+      toast.error(consentimentoAtualizado
+        ? "A autorização/recusa foi salva, mas não foi possível criar a notificação: " + (e?.message || "verifique o histórico.")
         : e?.message || "Não foi possível registrar a resposta.");
-      if (notificacaoSalva) reloadInteracoes();
+      if (consentimentoAtualizado) carregar();
+      reloadInteracoes();
     } finally {
       setSalvandoRespostaManual(false);
     }
