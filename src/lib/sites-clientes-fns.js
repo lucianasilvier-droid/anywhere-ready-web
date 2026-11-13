@@ -14,7 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
-import { resolveCredentials, buscarFotosGooglePlace } from "@/lib/integrations.server";
+import { resolveCredentials, buscarFotosGooglePlace, buscarFotosGooglePlaceDetalhado } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -329,13 +329,22 @@ export const sitePublicoFn = createServerFn({ method: "POST" })
     const publico = sitePublico(site);
     // photoUri do Places é temporário: buscar uma URL nova em cada abertura pública.
     publico.fotos = [];
+    publico.fotos_status = "nao_consultado";
+    publico.fotos_mensagem = "As fotos ainda não foram consultadas.";
     if (site.place_id) {
       try {
         const credenciaisGoogle = await resolveCredentials(base44, "google_places");
-        publico.fotos = await buscarFotosGooglePlace(site.place_id, credenciaisGoogle.values);
+        const resultadoFotos = await buscarFotosGooglePlaceDetalhado(site.place_id, credenciaisGoogle.values);
+        publico.fotos = resultadoFotos.fotos;
+        publico.fotos_status = resultadoFotos.status;
+        publico.fotos_mensagem = resultadoFotos.mensagem;
       } catch {
-        publico.fotos = [];
+        publico.fotos_status = "erro_consulta";
+        publico.fotos_mensagem = "Não foi possível consultar as fotos do Google Places.";
       }
+    } else {
+      publico.fotos_status = "sem_place_id";
+      publico.fotos_mensagem = "Este cadastro não possui Place ID para localizar fotos reais.";
     }
     return { encontrado: true, site: publico };
   });
