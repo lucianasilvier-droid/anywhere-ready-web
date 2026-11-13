@@ -14,25 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
-      - name: Install application and Cloudflare build tools
-        run: |
-          npm install --no-audit --no-fund
-          npm install --no-save --no-audit --no-fund @cloudflare/vite-plugin wrangler
+          bun-version: latest
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Add Cloudflare build tools
+        run: bun add --dev @cloudflare/vite-plugin wrangler
       - name: Build for Cloudflare Workers
-        run: npm run build
-      - name: Generate deploy bundle
-        run: npx wrangler deploy --dry-run --outdir=worker-build
-      - name: Upload build output for deployment
+        run: bun run build
+      - name: Validate deploy bundle
+        run: bunx wrangler deploy --dry-run --outdir=worker-build
+      - name: Upload deploy bundle
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-workers-build
           path: |
             worker-build/
-            dist/client/
-            .wrangler/
+            .output/public/
           if-no-files-found: error
           retention-days: 2
