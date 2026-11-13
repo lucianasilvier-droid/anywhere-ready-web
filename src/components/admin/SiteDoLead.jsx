@@ -218,7 +218,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
-              WhatsApp para contato e reservas
+              {ehAlimentacao ? "WhatsApp para reservas" : "WhatsApp de contato"}
               <input value={ajustes.whatsapp} onChange={(e) => setAjustes({ ...ajustes, whatsapp: e.target.value })} placeholder="(11) 99999-9999" className={`${inputCls} mt-1`} />
             </label>
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
@@ -235,7 +235,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             </label>
           </div>
           <p className="text-[10.5px] leading-relaxed text-white/30">
-            Se a empresa não usa WhatsApp no telefone do Google, informe o número correto para contato ou reservas.
+            Informe somente um número confirmado como WhatsApp da empresa. O telefone público do Google não é considerado WhatsApp automaticamente.
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
