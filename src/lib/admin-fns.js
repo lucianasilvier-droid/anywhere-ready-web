@@ -267,11 +267,31 @@ Devolva {"mensagem": string}.`,
       await iaValues(base44),
     );
 
-    if (!result.ok) {
+    // A primeira mensagem de autorização precisa continuar disponível mesmo
+    // quando a IA externa estiver indisponível. Este texto é montado com dados
+    // já cadastrados no lead e não depende de Groq, Claude ou outra API.
+    let mensagemFinal;
+    if (result.ok) {
+      mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
+    } else if (data.tipo === "autorizacao") {
+      const detalhes = [
+        lead.categoria ? `do segmento de ${lead.categoria}` : "",
+        lead.bairro ? `no bairro ${lead.bairro}` : "",
+        lead.cidade ? `em ${lead.cidade}` : "",
+        typeof lead.nota_google === "number"
+          ? `com nota ${lead.nota_google.toLocaleString("pt-BR")} no Google e ${Number(lead.total_avaliacoes || 0).toLocaleString("pt-BR")} avaliações`
+          : "",
+      ].filter(Boolean).join(", ");
+      mensagemFinal = [
+        `Olá! Tudo bem? Aqui é da ${remetente.empresa}.`,
+        `Encontrei o perfil da ${lead.empresa || "empresa"} no Google${detalhes ? ` (${detalhes})` : ""} e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações por meio de uma placa NFC.`,
+        "Posso enviar uma breve apresentação, sem compromisso? Se preferirem não receber esse tipo de mensagem, é só me avisar.",
+        remetente.remetente ? ` ${remetente.remetente}` : "",
+      ].join("\\n\\n").trim();
+    } else {
       setResponseStatus(400);
       throw Object.assign(new Error(result.error), { status: 400 });
     }
-    let mensagemFinal = preencherPlaceholders(result.data?.mensagem, remetente, lead);
     if (data.tipo === "proposta") {
       const materiais = [
         "🌐 Conheça o Google NFC CONNECT:",
