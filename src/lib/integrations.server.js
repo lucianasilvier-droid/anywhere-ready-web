@@ -94,6 +94,7 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
         "places.userRatingCount",
         "places.primaryTypeDisplayName",
         "places.addressComponents",
+        "places.photos",
       ].join(","),
     },
     body: JSON.stringify({
@@ -124,13 +125,37 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
     };
   }
 
-  const places = (payload.places || []).map((p) => {
+  const places = await Promise.all((payload.places || []).map(async (p) => {
     const comp = p.addressComponents || [];
     const pick = (type) =>
       comp.find((c) => (c.types || []).includes(type))?.longText ||
       comp.find((c) => (c.types || []).includes(type))?.shortText ||
       "";
+    const fotos = await Promise.all((p.photos || []).slice(0, 8).map(async (photo) => {
+      try {
+        const mediaUrl = new URL(`https://places.googleapis.com/v1/${photo.name}/media`);
+        mediaUrl.searchParams.set("maxWidthPx", "1400");
+        mediaUrl.searchParams.set("skipHttpRedirect", "true");
+        const media = await fetch(mediaUrl, { headers: { "X-Goog-Api-Key": key } });
+        if (!media.ok) return null;
+        const mediaData = await media.json().catch(() => ({}));
+        if (!mediaData.photoUri || !/^https:\/\//i.test(mediaData.photoUri)) return null;
+        return {
+          url: mediaData.photoUri,
+          largura: photo.widthPx || null,
+          altura: photo.heightPx || null,
+          creditos: (photo.authorAttributions || []).map((a) => ({
+            nome: a.displayName || "",
+            uri: a.uri || "",
+            foto_uri: a.photoUri || "",
+          })),
+        };
+      } catch {
+        return null;
+      }
+    }));
     return {
+      fotos: fotos.filter(Boolean),
       place_id: p.id || "",
       empresa: p.displayName?.text || "Empresa sem nome",
       endereco: p.formattedAddress || p.shortFormattedAddress || "",
@@ -143,7 +168,7 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
       nota_google: typeof p.rating === "number" ? p.rating : null,
       total_avaliacoes: typeof p.userRatingCount === "number" ? p.userRatingCount : null,
     };
-  });
+  }));
 
   return { ok: true, places, error: null };
 }
