@@ -1,3 +1,4 @@
+import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -108,19 +109,29 @@ export const createOrder = createServerFn({ method: "POST" })
 
     const ids = [...new Set(data.itens.map((i) => i.produto_id))];
     const encontrados = await base44.entities.Produto.filter({ id: { $in: ids } });
-    const produtos = Array.isArray(encontrados) ? encontrados : encontrados?.items || [];
-
-    if (!produtos.length) {
-      setResponseStatus(400);
-      throw Object.assign(new Error("Nenhum produto válido encontrado no carrinho."), { status: 400 });
-    }
+    const produtosBanco = Array.isArray(encontrados) ? encontrados : encontrados?.items || [];
+    const catalogoPorId = new Map(CATALOGO_INICIAL.map((p) => [String(p.id), p]));
+    const catalogoPorSlug = new Map(CATALOGO_INICIAL.map((p) => [String(p.slug), p]));
+    const resolverProduto = (id) => {
+      const cadastrado = produtosBanco.find((p) => String(p.id) === String(id));
+      const fallback = catalogoPorId.get(String(id)) || catalogoPorSlug.get(String(id));
+      if (!cadastrado) return fallback || null;
+      const correspondente = catalogoPorSlug.get(String(cadastrado.slug || ""));
+      if (!correspondente) return cadastrado;
+      const precoBanco = Number(cadastrado.preco);
+      return {
+        ...correspondente,
+        ...cadastrado,
+        preco: Number.isFinite(precoBanco) && precoBanco > 0 ? precoBanco : correspondente.preco,
+      };
+    };
 
     const itens = [];
     let subtotal = 0;
     let unidades = 0;
 
     for (const item of data.itens) {
-      const produto = produtos.find((p) => p.id === item.produto_id);
+      const produto = resolverProduto(item.produto_id);
       if (!produto || produto.ativo === false) {
         setResponseStatus(400);
         throw Object.assign(new Error("Um dos produtos do carrinho não está mais disponível. Atualize a loja e tente novamente."), { status: 400 });
