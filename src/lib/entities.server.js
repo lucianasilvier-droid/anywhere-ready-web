@@ -3,7 +3,8 @@
 // pages and server functions keep working, but every record lives in the `records`
 // table (see db/schema.ts): one row per record, the fields as JSONB in `data`.
 import { getSessionUser, inviteAuthUser, setPasswordForEmail } from "@/lib/auth.server";
-import { query as dbQuery } from "@/lib/db.server";
+import { query as dbQuery, withTransaction } from "@/lib/db.server";
+import { createLeadUnderRepresentativeLimit } from "@/lib/crm-limite-transacao.server";
 import { env } from "@/lib/env.server";
 import { ENTITY_NAMES } from "@/lib/entity-names";
 import { FUSO_CRM, LIMITE_LEADS_DIA_REPRESENTANTE, LIMITE_SITES_DIA_REPRESENTANTE } from "@/lib/crm-limites";
@@ -380,6 +381,27 @@ function entityHandle(entity, access) {
     async create(input) {
       const data = await requireWrite("create", null, stripSystemFields(input));
       const user = await access.user();
+      const privileged = await access.isPrivileged();
+
+      // Every non-admin representative lead insert is serialized by representative
+      // inside a transaction. bulkCreate() uses create(), so it receives the same guard.
+      const rep = entity === "Lead" && !privileged ? await access.representante?.() : null;
+      if (rep) {
+        return withTransaction((tx) =>
+          createLeadUnderRepresentativeLimit(tx, {
+            repId: rep.id,
+            defaultLimit: LIMITE_LEADS_DIA_REPRESENTANTE,
+            insert: async (transactionQuery) => {
+              const rows = await transactionQuery(
+                `INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, $2, $3::jsonb, $4, $5) RETURNING *`,
+                [newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
+              );
+              return toRecord(rows[0]);
+            },
+          }),
+        );
+      }
+
       const rows = await query(
         `INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, $2, $3::jsonb, $4, $5) RETURNING *`,
         [newId(), entity, JSON.stringify(data), user?.email ?? null, user?.id ?? null],
