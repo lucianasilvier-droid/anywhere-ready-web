@@ -201,43 +201,75 @@ export async function criarVenda(base44, payload, autor) {
 
 /** Confirma o pagamento do cliente e libera a comissão. */
 export async function confirmarPagamentoCliente(base44, vendaId, autor) {
-  const venda = await base44.entities.VendaRepresentante.get(vendaId).catch(() => null);
-  if (!venda) throw erro("Venda não encontrada.", 404);
-  if (venda.status === "cancelada") throw erro("Venda cancelada não pode ser confirmada.");
-  if (venda.status_comissao === "paga") return { ok: true, jaConfirmada: true, venda };
+  return withTransaction(async (tx) => {
+    const rows = await tx(
+      "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND id = $1 FOR UPDATE",
+      [String(vendaId)],
+    );
+    const row = rows[0];
+    if (!row) throw erro("Venda não encontrada.", 404);
+    const venda = { ...row.data, id: row.id };
+    if (venda.status === "cancelada") throw erro("Venda cancelada não pode ser confirmada.");
+    if (venda.status_comissao === "paga") return { ok: true, jaConfirmada: true, venda };
 
-  const agora = new Date().toISOString();
-  const atualizada = await base44.entities.VendaRepresentante.update(venda.id, {
-    status: "confirmada",
-    status_comissao: venda.status_comissao === "aguardando_pagamento" ? "disponivel" : venda.status_comissao,
-    liberada_em: venda.liberada_em || agora,
+    const agora = new Date().toISOString();
+    const patch = {
+      status: "confirmada",
+      status_comissao: venda.status_comissao === "aguardando_pagamento" ? "disponivel" : venda.status_comissao,
+      liberada_em: venda.liberada_em || agora,
+    };
+    const updatedRows = await tx(
+      "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1 RETURNING id, data",
+      [venda.id, JSON.stringify(patch)],
+    );
+    const logId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'AtividadeLog', $2::jsonb, $3, NULL)",
+      [logId, JSON.stringify({
+        acao: "Pagamento do cliente confirmado",
+        entidade: "VendaRepresentante",
+        registro_id: venda.id,
+        detalhe: `${venda.numero} · ${venda.cliente_nome || "cliente"} · comissão liberada`,
+        autor_email: norm(autor),
+      }), autor || null],
+    );
+    return { ok: true, jaConfirmada: false, venda: { ...updatedRows[0].data, id: updatedRows[0].id } };
   });
-
-  await registrar(
-    base44,
-    "Pagamento do cliente confirmado",
-    `${venda.numero} · ${venda.cliente_nome || "cliente"} · comissão liberada`,
-    autor,
-    venda.id,
-  );
-  return { ok: true, jaConfirmada: false, venda: atualizada };
 }
 
 export async function cancelarVenda(base44, vendaId, autor) {
-  const venda = await base44.entities.VendaRepresentante.get(vendaId).catch(() => null);
-  if (!venda) throw erro("Venda não encontrada.", 404);
-  if (venda.status_comissao === "paga") throw erro("Comissão já paga não pode ser cancelada.");
-  if (venda.status_comissao === "solicitada") {
-    throw erro("Esta comissão está em uma solicitação de pagamento. Decida a solicitação antes.");
-  }
-  if (venda.status_comissao === "cancelada") return { ok: true, venda };
+  return withTransaction(async (tx) => {
+    const rows = await tx(
+      "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND id = $1 FOR UPDATE",
+      [String(vendaId)],
+    );
+    const row = rows[0];
+    if (!row) throw erro("Venda não encontrada.", 404);
+    const venda = { ...row.data, id: row.id };
+    if (venda.status_comissao === "paga") throw erro("Comissão já paga não pode ser cancelada.");
+    if (venda.status_comissao === "solicitada") {
+      throw erro("Esta comissão está em uma solicitação de pagamento. Decida a solicitação antes.");
+    }
+    if (venda.status_comissao === "cancelada") return { ok: true, venda };
 
-  const atualizada = await base44.entities.VendaRepresentante.update(venda.id, {
-    status: "cancelada",
-    status_comissao: "cancelada",
+    const patch = { status: "cancelada", status_comissao: "cancelada" };
+    const updatedRows = await tx(
+      "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1 RETURNING id, data",
+      [venda.id, JSON.stringify(patch)],
+    );
+    const logId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'AtividadeLog', $2::jsonb, $3, NULL)",
+      [logId, JSON.stringify({
+        acao: "Venda de representante cancelada",
+        entidade: "VendaRepresentante",
+        registro_id: venda.id,
+        detalhe: `${venda.numero} · comissão cancelada`,
+        autor_email: norm(autor),
+      }), autor || null],
+    );
+    return { ok: true, venda: { ...updatedRows[0].data, id: updatedRows[0].id } };
   });
-  await registrar(base44, "Venda de representante cancelada", `${venda.numero} · comissão cancelada`, autor, venda.id);
-  return { ok: true, venda: atualizada };
 }
 
 /** Saldo e histórico consolidado de um representante. */
