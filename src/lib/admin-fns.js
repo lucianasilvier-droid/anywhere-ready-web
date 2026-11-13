@@ -10,7 +10,7 @@ import {
   readSecret,
   resolveCredentials,
   searchPlaces,
-  sendWhatsappText,
+  sendWhatsappTemplate,
   testIntegration,
 } from "@/lib/integrations.server";
 
@@ -407,7 +407,7 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
   .validator(
     z.object({
       leadId: z.string().min(1),
-      mensagem: z.string().trim().min(5).max(1500),
+      mensagem: z.string().trim().min(5).max(1024),
       tipo: z.enum(["autorizacao", "proposta", "followup"]),
     }),
   )
@@ -433,7 +433,7 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
     }
 
     const credsWhats = await resolveCredentials(base44.asServiceRole, "whatsapp");
-    const envio = await sendWhatsappText({ to: lead.telefone, body: data.mensagem }, credsWhats.values);
+    const envio = await sendWhatsappTemplate({ to: lead.telefone, body: data.mensagem, tipo: data.tipo }, credsWhats.values);
     if (!envio.ok) {
       setResponseStatus(400);
       throw Object.assign(new Error(envio.error), { status: 400 });
@@ -458,7 +458,7 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
       tipo: "whatsapp_enviado",
       mensagem: data.mensagem,
       autor: context.user.email,
-      detalhe: `Enviado via WhatsApp Business API (${data.tipo}).`,
+      detalhe: `Enviado via template aprovado da Meta "${envio.templateName}" (${data.tipo}).`,
     });
 
     return { ok: true, messageId: envio.messageId };
