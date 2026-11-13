@@ -54,6 +54,8 @@ function siteParaRepresentante(site) {
     empresa: site.empresa,
     conteudo: { titulo: site.conteudo?.titulo || "", subtitulo: site.conteudo?.subtitulo || "" },
     gerado_em: site.gerado_em || site.created_date || "",
+    fotos_status: site.fotos_status || "nao_verificado",
+    fotos_count: site.fotos_count || 0,
   };
 }
 
@@ -195,8 +197,23 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         detalhe: `Endereço: /site/${site.slug}${rep ? ` · criado pelo representante ${rep.nome || ""}` : ""}`,
       });
 
-      if (rep) return { ok: true, site: siteParaRepresentante(site), limite: await limiteSitesHoje(rep.id) };
-      return { ok: true, site };
+      let resultadoFotos = { fotos: [], status: "sem_place_id", mensagem: "Cadastro sem Place ID." };
+      if (site.place_id) {
+        try {
+          const credenciaisGoogle = await resolveCredentials(base44, "google_places");
+          resultadoFotos = await buscarFotosGooglePlaceDetalhado(site.place_id, credenciaisGoogle.values);
+        } catch {
+          resultadoFotos = { fotos: [], status: "erro_consulta", mensagem: "Não foi possível validar as fotos do Google Places." };
+        }
+      }
+      const siteResposta = {
+        ...site,
+        fotos_status: resultadoFotos.status,
+        fotos_count: resultadoFotos.fotos.length,
+        fotos_mensagem: resultadoFotos.mensagem,
+      };
+      if (rep) return { ok: true, site: siteParaRepresentante(siteResposta), limite: await limiteSitesHoje(rep.id) };
+      return { ok: true, site: siteResposta };
     } catch (e) {
       falhar(e);
     }
