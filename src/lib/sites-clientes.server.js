@@ -78,7 +78,7 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
   const observacaoOperador = textoSeguro(orientacoes, 600);
   const local = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
   const ramo = `${categoria} ${nome}`.toLowerCase();
-  const restaurante = /restaurante|bar\b|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria/.test(ramo);
+  const restaurante = /restaurante|bar\\b|boteco|choperia|cervejaria|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria|rotisseria|cantina|bistrô|bistro|casa de sucos/.test(ramo);
   const tema = /beleza|barbearia|sal[aã]o|est[eé]tica|pet|veterin/.test(ramo) ? "terracota" : restaurante ? "vinho" : "oceano";
   const servicos = restaurante
     ? [
