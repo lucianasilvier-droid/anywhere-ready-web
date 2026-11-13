@@ -194,7 +194,7 @@ Devolva:
       etapa: lead.etapa === "novo_lead" ? "empresa_analisada" : lead.etapa,
     });
 
-    await base44.entities.LeadInteraction.create({
+    await (base44.asServiceRole || base44).entities.LeadInteraction.create({
       lead_id: lead.id,
       empresa: lead.empresa,
       tipo: "ia",
@@ -389,7 +389,7 @@ ${historico || "sem interações registradas"}`,
       throw Object.assign(new Error(result.error), { status: 400 });
     }
 
-    await base44.entities.LeadInteraction.create({
+    await (base44.asServiceRole || base44).entities.LeadInteraction.create({
       lead_id: lead.id,
       empresa: lead.empresa,
       tipo: "ia",
