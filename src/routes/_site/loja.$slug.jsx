@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Minus, Plus, ShoppingCart, Check, ArrowLeft, Truck, ShieldCheck, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Loader2, Check, ArrowLeft, Truck, ShieldCheck, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
-import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
 import { CATALOGO_INICIAL, completarProdutoComCatalogo } from "@/lib/catalogo-inicial";
 
@@ -21,10 +19,8 @@ const CHECKOUTS_CONHECIDOS = {
 
 function ProdutoPage() {
   const { slug } = Route.useParams();
-  const navigate = useNavigate();
   const [produto, setProduto] = useState(null);
   const [carregando, setCarregando] = useState(true);
-  const [quantidade, setQuantidade] = useState(1);
 
   useEffect(() => {
     let ativo = true;
@@ -88,14 +84,8 @@ function ProdutoPage() {
   }
 
   const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
-  const checkoutWhatsApp = String(checkoutUrl || "").startsWith("https://wa.me/");
+  const checkoutInfinitePay = String(checkoutUrl || "").startsWith("https://loja.infinitepay.io/");
   const temPreco = Number(produto.preco) > 0;
-
-  function adicionar(irParaCarrinho) {
-    cart.add(produto, quantidade);
-    toast.success("Produto adicionado ao carrinho.");
-    if (irParaCarrinho) navigate({ to: "/carrinho" });
-  }
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
@@ -142,7 +132,8 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          {!checkoutUrl && !checkoutWhatsApp && temPreco && <div className="mt-6 flex items-center gap-3">
+          {/* Carrinho e checkout interno permanecem preservados no código, mas indisponíveis na loja pública. */}
+          {false && !checkoutInfinitePay && temPreco && <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
               <button
                 onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
@@ -174,14 +165,14 @@ function ProdutoPage() {
             </button>
           </div>}
 
-          {checkoutUrl ? (
+          {checkoutInfinitePay ? (
             <a
               href={checkoutUrl}
               target="_blank"
               rel="noreferrer"
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128]"
             >
-              <ExternalLink className="h-4 w-4" /> {produto.checkout_label || (checkoutWhatsApp ? "Solicitar pelo WhatsApp" : "Ir para o checkout")}
+              <ExternalLink className="h-4 w-4" /> "Comprar pela InfinitePay"
             </a>
           ) : (
             <p className="mt-5 text-[12px] text-white/40">
