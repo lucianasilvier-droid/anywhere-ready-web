@@ -83,7 +83,7 @@ function ProdutoPage() {
     );
   }
 
-  const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
+  const checkoutUrl = CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id] || produto.checkout_url;
   const checkoutInfinitePay = String(checkoutUrl || "").startsWith("https://loja.infinitepay.io/");
   const temPreco = Number(produto.preco) > 0;
 
@@ -132,39 +132,6 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          {/* Carrinho e checkout interno permanecem preservados no código, mas indisponíveis na loja pública. */}
-          {false && !checkoutInfinitePay && temPreco && <div className="mt-6 flex items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
-              <button
-                onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
-                className="grid h-8 w-8 place-items-center rounded-full text-white/70 hover:bg-white/10"
-                aria-label="Diminuir quantidade"
-              >
-                <Minus className="h-3.5 w-3.5" />
-              </button>
-              <span className="w-8 text-center text-sm font-semibold text-white">{quantidade}</span>
-              <button
-                onClick={() => setQuantidade((q) => Math.min(50, q + 1))}
-                className="grid h-8 w-8 place-items-center rounded-full text-white/70 hover:bg-white/10"
-                aria-label="Aumentar quantidade"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <button
-              onClick={() => adicionar(false)}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-bold text-primary"
-            >
-              <ShoppingCart className="h-4 w-4" /> Adicionar
-            </button>
-            <button
-              onClick={() => adicionar(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-5 py-3 text-sm font-bold text-[#0a1128]"
-            >
-              Comprar agora
-            </button>
-          </div>}
-
           {checkoutInfinitePay ? (
             <a
               href={checkoutUrl}
@@ -172,7 +139,7 @@ function ProdutoPage() {
               rel="noreferrer"
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128]"
             >
-              <ExternalLink className="h-4 w-4" /> "Comprar pela InfinitePay"
+              <ExternalLink className="h-4 w-4" /> Comprar pela InfinitePay
             </a>
           ) : (
             <p className="mt-5 text-[12px] text-white/40">
