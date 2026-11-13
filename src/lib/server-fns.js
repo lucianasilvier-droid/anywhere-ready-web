@@ -116,7 +116,9 @@ export const createOrder = createServerFn({ method: "POST" })
       const cadastrado = produtosBanco.find((p) => String(p.id) === String(id));
       const fallback = catalogoPorId.get(String(id)) || catalogoPorSlug.get(String(id));
       if (!cadastrado) return fallback || null;
-      const correspondente = catalogoPorSlug.get(String(cadastrado.slug || ""));
+      const correspondente =
+        catalogoPorSlug.get(String(cadastrado.slug || "")) ||
+        catalogoPorId.get(String(cadastrado.id || ""));
       if (!correspondente) return cadastrado;
       const precoBanco = Number(cadastrado.preco);
       return {
