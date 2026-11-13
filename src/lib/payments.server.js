@@ -333,15 +333,19 @@ export function mapMercadoPagoStatus(status, detail) {
 
 /** Assinatura oficial: manifest id:<data.id>;request-id:<x-request-id>;ts:<ts>; com HMAC-SHA256. */
 export async function verifyMercadoPagoSignature({ header, requestId, dataId, secret }) {
-  if (!secret) return { valido: true, motivo: "sem_secret_configurado" };
+  // Falha fechada: sem segredo não existe forma segura de autenticar o webhook.
+  if (!secret) return { valido: false, motivo: "secret_nao_configurado" };
   if (!header) return { valido: false, motivo: "assinatura_ausente" };
+  if (!requestId || !dataId) return { valido: false, motivo: "identificadores_ausentes" };
   const parts = {};
   for (const pedaco of String(header).split(",")) {
     const [k, v] = pedaco.split("=");
     if (k && v) parts[k.trim()] = v.trim();
   }
-  if (!parts.ts || !parts.v1) return { valido: false, motivo: "assinatura_invalida" };
-  const manifest = `id:${String(dataId || "").toLowerCase()};request-id:${requestId || ""};ts:${parts.ts};`;
+  if (!parts.ts || !/^[a-f0-9]{64}$/i.test(parts.v1 || "")) {
+    return { valido: false, motivo: "assinatura_invalida" };
+  }
+  const manifest = `id:${String(dataId).toLowerCase()};request-id:${requestId};ts:${parts.ts};`;
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -352,7 +356,12 @@ export async function verifyMercadoPagoSignature({ header, requestId, dataId, se
   );
   const assinatura = await crypto.subtle.sign("HMAC", key, enc.encode(manifest));
   const hex = [...new Uint8Array(assinatura)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return { valido: hex === parts.v1, motivo: hex === parts.v1 ? "ok" : "assinatura_nao_confere" };
+  let diferenca = 0;
+  for (let i = 0; i < hex.length; i += 1) {
+    diferenca |= hex.charCodeAt(i) ^ parts.v1.toLowerCase().charCodeAt(i);
+  }
+  const valido = diferenca === 0;
+  return { valido, motivo: valido ? "ok" : "assinatura_nao_confere" };
 }
 
 /* ------------------------------- InfinitePay ------------------------------ */
