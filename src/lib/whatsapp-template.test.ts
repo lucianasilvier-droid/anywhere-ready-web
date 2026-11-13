@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildWhatsappTemplateRequest } from "@/lib/integrations.server";
+import { buildWhatsappTemplateRequest, validateWhatsappRecipientConsent } from "@/lib/integrations.server";
 
 describe("envio WhatsApp com template aprovado", () => {
   const values = {
@@ -51,5 +51,22 @@ describe("envio WhatsApp com template aprovado", () => {
       values,
     );
     expect(result).toMatchObject({ ok: false });
+  });
+});
+
+
+describe("consentimento obrigatório antes de qualquer envio pela Cloud API", () => {
+  it("permite somente contatos com consentimento prévio registrado", () => {
+    expect(validateWhatsappRecipientConsent({ consentimento: "autorizado", bloqueado: false })).toEqual({ ok: true });
+  });
+
+  it.each([
+    [null, false],
+    ["solicitado", false],
+    ["recusado", true],
+    ["revogado", true],
+    ["autorizado", true],
+  ])("bloqueia status %s com bloqueado=%s", (consentimento, bloqueado) => {
+    expect(validateWhatsappRecipientConsent({ consentimento, bloqueado }).ok).toBe(false);
   });
 });
