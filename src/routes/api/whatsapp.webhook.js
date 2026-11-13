@@ -30,6 +30,17 @@ export function classifyReply(text) {
   return "indefinida";
 }
 
+/** Confere a assinatura SHA-256 do corpo bruto enviada pela Meta. */
+export function validarAssinaturaMeta(rawBody, assinatura, appSecret) {
+  const recebido = String(assinatura || "").startsWith("sha256=")
+    ? String(assinatura).slice(7)
+    : "";
+  if (!appSecret || !/^[a-f0-9]{64}$/i.test(recebido)) return false;
+  const esperado = createHmac("sha256", appSecret).update(rawBody).digest();
+  const recebidoBuffer = Buffer.from(recebido, "hex");
+  return recebidoBuffer.length === esperado.length && timingSafeEqual(recebidoBuffer, esperado);
+}
+
 export const Route = createFileRoute("/api/whatsapp/webhook")({
   server: {
     handlers: {
@@ -74,14 +85,8 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
 
         // Valida a assinatura HMAC enviada pela Meta antes de processar qualquer evento.
         const assinatura = request.headers.get("x-hub-signature-256") || "";
-        const recebido = assinatura.startsWith("sha256=") ? assinatura.slice(7) : "";
-        if (!/^[a-f0-9]{64}$/i.test(recebido)) {
+        if (!validarAssinaturaMeta(rawBody, assinatura, appSecret)) {
           return Response.json({ error: "Assinatura do webhook ausente ou inválida." }, { status: 401 });
-        }
-        const esperado = createHmac("sha256", appSecret).update(rawBody).digest();
-        const recebidoBuffer = Buffer.from(recebido, "hex");
-        if (recebidoBuffer.length !== esperado.length || !timingSafeEqual(recebidoBuffer, esperado)) {
-          return Response.json({ error: "Assinatura do webhook não confere." }, { status: 401 });
         }
 
         const payload = JSON.parse(rawBody.toString("utf8"));
