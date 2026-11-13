@@ -17,7 +17,8 @@ const CAMPO_LABEL = {
   WHATSAPP_PHONE_NUMBER_ID: "Phone number ID",
   WHATSAPP_VERIFY_TOKEN: "Verify token do webhook (você define)",
   WHATSAPP_APP_SECRET: "App Secret (Meta for Developers)",
-  WHATSAPP_TEMPLATE_PREFIX: "Prefixo dos templates aprovados (opcional)",
+  WHATSAPP_TEMPLATE_PREFIX: "Prefixo dos templates aprovados (obrigatório para envio)",
+  WHATSAPP_TEMPLATE_LANGUAGE: "Idioma dos templates (padrão pt_BR)",
 };
 
 const ORIGEM_LABEL = {
