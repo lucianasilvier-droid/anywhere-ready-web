@@ -8,6 +8,10 @@
 //                                            without running it (database restored
 //                                            from a dump that already has those tables)
 //
+// Set SKIP_DATA_IMPORT=true on an isolated test database to create the schema
+// without importing the historical customer/lead backup. The migration is
+// recorded as applied, so the remaining schema migrations continue normally.
+//
 // A database that already has the `records` table but no `_migrations` history
 // (e.g. a pg_dump of the previous host) is baselined automatically up to the
 // data-import migration, so existing data is never inserted twice.
@@ -27,6 +31,7 @@ if (existsSync(path.join(ROOT, ".env")) && typeof process.loadEnvFile === "funct
 const args = process.argv.slice(2);
 const baselineArg = args.find((a) => a.startsWith("--baseline="))?.split("=")[1];
 const statusOnly = args.includes("--status");
+const skipDataImport = /^(1|true|yes|on)$/i.test(process.env.SKIP_DATA_IMPORT || "");
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -75,8 +80,16 @@ try {
     for (const m of migrations) console.log(`${applied.has(m) ? "  aplicada " : "  pendente "} ${m}`);
   } else {
     let count = 0;
+    let skipped = 0;
     for (const m of migrations) {
       if (applied.has(m)) continue;
+      if (skipDataImport && /import_base44_backup_data/.test(m)) {
+        await client.query(`INSERT INTO _migrations (name) VALUES ($1) ON CONFLICT DO NOTHING`, [m]);
+        applied.add(m);
+        skipped++;
+        console.log(`  ignorando ${m} (SKIP_DATA_IMPORT ativo; nenhum dado histórico foi importado).`);
+        continue;
+      }
       const sql = readFileSync(path.join(DIR, m, "migration.sql"), "utf8");
       const statements = sql
         .split("--> statement-breakpoint")
@@ -96,7 +109,9 @@ try {
         throw error;
       }
     }
-    console.log(count ? `${count} migração(ões) aplicada(s).` : "Banco de dados já está atualizado.");
+    if (count) console.log(`${count} migração(ões) aplicada(s).`);
+    else if (skipped) console.log(`${skipped} migração(ões) de dados ignorada(s); estrutura do banco preservada.`);
+    else console.log("Banco de dados já está atualizado.");
   }
 } catch (error) {
   console.error(error.message || error);
