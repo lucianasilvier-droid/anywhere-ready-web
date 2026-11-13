@@ -285,8 +285,10 @@ async function repWrite(entity, kind, current, patch, rep, user) {
     };
   }
   if (entity === "LeadInteraction" && kind === "update" && (await leadDoRepresentante(current?.lead_id, rep.id))) {
-    const { lead_id, ...rest } = patch;
-    return rest;
+    // O histórico é uma trilha de auditoria: representantes só podem marcar
+    // notificações como lidas, sem editar mensagem, autor, tipo ou data.
+    const allowed = ["notificacao_lida", "lida", "lida_em"];
+    return Object.fromEntries(Object.entries(patch).filter(([key]) => allowed.includes(key)));
   }
   if (entity === "AtividadeLog" && kind === "create") {
     return {
