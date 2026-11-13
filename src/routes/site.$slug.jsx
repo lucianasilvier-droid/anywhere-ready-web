@@ -231,7 +231,8 @@ function SiteCliente({ site }) {
         <section id="cardapio" className="mx-auto max-w-6xl px-5 py-16">
           <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Cardápio</p>
           <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Conheça nossas opções</h2>
-          {c.cardapio?.length > 0 ? (\n          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {c.cardapio?.length > 0 ? (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {c.cardapio.map((item, index) => (
               <article key={`${item.nome}-${index}`} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)]">
                 {item.imagem_url && <img src={item.imagem_url} alt={item.nome} loading="lazy" className="h-44 w-full object-cover" />}
