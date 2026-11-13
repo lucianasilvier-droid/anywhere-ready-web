@@ -1,0 +1,55 @@
+# GOOGLE NFC CONNECT — Quadro mestre de preparação para publicação
+
+**Atualizado em:** 13/11/2026  
+**Branch de preparação:** `fix/analise-comercial-contextual`  
+**Produção:** `main` — não alterada nesta rodada.  
+**Regra:** não criar deployment de produção nem preview na Vercel sem autorização expressa. Preservar créditos.
+
+## 1. Feito e comprovado
+
+- [x] Conferido que o `main` ainda continha o token antigo do Google Search Console em `src/routes/__root.jsx`.
+- [x] Gravada na branch de preparação a substituição pelo token novo fornecido pelo usuário: `lOe-akk9BgudktTFlKS-Z2oEZX4L7SPv5AdhlqszxJo`.
+- [x] Conferido no GitHub que o token novo está no arquivo da branch e o token antigo não está mais nele.
+- [x] Atualizada a lógica de análise comercial em `src/lib/admin-fns.js`: instrução explícita para nunca recomendar criação de site quando `lead.site` estiver preenchido; fallback local e resumo/proposta também respeitam essa regra.
+- [x] Comparação GitHub confirmou que a branch tem 2 commits à frente de `main`, sem commits atrás, com alterações somente em `src/routes/__root.jsx` e `src/lib/admin-fns.js`.
+- [x] Conferido o histórico da Vercel: no momento da consulta, não havia deployment dos dois novos commits; produção continuava no commit anterior de `main`.
+
+## 2. Implementado / preparado, mas ainda não verificado funcionalmente
+
+- [ ] Executar lint, testes unitários e build de produção em ambiente que não consuma créditos da Vercel.
+- [ ] Testar a análise com lead que tenha `site` preenchido: não pode sugerir criação de site em resumo, oportunidades ou proposta.
+- [ ] Testar a análise com lead sem site: só então pode considerar criação de site.
+- [ ] Testar o fallback local quando a API ROQ/Groq estiver indisponível.
+- [ ] Confirmar no HTML servido pelo site publicado que a nova meta tag do Google aparece dentro de `<head>` depois da publicação.
+- [ ] No Search Console, usar propriedade **Prefixo do URL** para `https://google-nfc-connect.vercel.app/`, selecionar **Tag HTML** e clicar em verificar. A confirmação do Google ainda não foi recebida.
+
+## 3. Pendente para revisão, integração ou publicação
+
+### Branches antigas — não integrar automaticamente
+- `ajustes-pendentes-sem-publicar`: 17 commits à frente e 19 atrás de `main`. Contém trabalho de sites para restaurantes, cardápios, reserva/WhatsApp, representantes e testes. A branch está divergente e requer reconciliação e validação antes de qualquer integração.
+- `work/pendencias-sem-publicar-2026-11-12`: 198 commits à frente e 17 atrás de `main`, com mudanças extensas em CRM, integrações, pagamentos, loja, autenticação, sites e webhook. Não mesclar em bloco; auditar por área e selecionar commits necessários.
+- Branches de backup permanecem somente como referência; não publicar a partir delas.
+
+### Pendências funcionais registradas
+- [ ] Fotos reais do Google Maps com atribuições exigidas e alternativa honesta quando não houver fotos.
+- [ ] Melhorar o conteúdo dos sites gerados com dados reais e oportunidades comerciais confirmadas.
+- [ ] Revisar design responsivo dos sites gerados e experiência mobile/desktop.
+- [ ] Auditar sincronização do CRM, funil e ficha do lead em perfis de administrador e representante.
+- [ ] Testar deduplicação e limite diário com sessões simultâneas.
+- [ ] Revisar persistência de fotos/arquivos em ambiente serverless sem ativar serviço pago.
+- [ ] Validar WhatsApp Cloud API (token, Phone Number ID, App Secret, Verify Token, assinatura do webhook, templates e autorização) sem inventar credenciais.
+- [ ] Auditar SMTP/convites e estado real de configuração.
+- [ ] Conferir produtos, slugs, links de checkout e os erros de produto não encontrado.
+- [ ] Revisar SEO, metadados, dados estruturados e links públicos.
+- [ ] Revisar todos os formulários e rotas do painel administrativo e do representante.
+
+### Critérios antes da publicação
+- [ ] Revisão de código concluída e conflitos das branches antigas resolvidos.
+- [ ] Lint, testes e build aprovados.
+- [ ] Testes funcionais dos fluxos prioritários aprovados.
+- [ ] Prévia revisada somente se houver crédito e autorização para criá-la.
+- [ ] Usuário aprova expressamente a publicação.
+- [ ] Após publicar, deployment Vercel em estado READY e teste real do site.
+- [ ] Google Search Console confirma a propriedade.
+
+**Importante:** commit no GitHub comprova que o código foi gravado; não comprova funcionamento, publicação ou verificação do Google.
