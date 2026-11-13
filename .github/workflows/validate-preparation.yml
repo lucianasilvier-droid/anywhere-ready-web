@@ -13,6 +13,20 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: google_nfc_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d google_nfc_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +38,14 @@ jobs:
         uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - name: Validate isolated PostgreSQL migrations and admin setup
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/google_nfc_test
+          SKIP_DATA_IMPORT: "true"
+        run: |
+          bun run db:migrate
+          bun run db:status
+          bun run admin:create -- ci-admin@example.invalid "CI-Test-Password-2026" "CI Admin"
       - name: Lint
         run: "bun run lint -- --no-inline-config --ignore-pattern src/routeTree.gen.ts --rule 'prettier/prettier: off'"
       - name: Unit tests
