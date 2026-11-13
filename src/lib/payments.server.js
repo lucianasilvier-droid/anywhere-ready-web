@@ -134,7 +134,13 @@ export async function saveProviderCredentials(base44, tipo, valores = {}, meta =
     alterados += 1;
   }
 
-  if (!alterados) return { ok: true, alterados: 0 };
+  if (!alterados) {
+    if (atual.registro?.ativo === true) {
+      await svc.entities.Integracao.update(atual.registro.id, { ativo: false });
+      return { ok: true, alterados: 0, ativo: false };
+    }
+    return { ok: true, alterados: 0, ativo: false };
+  }
 
   const patch = {
     tipo,
