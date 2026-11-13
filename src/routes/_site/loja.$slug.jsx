@@ -142,7 +142,7 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          {!checkoutWhatsApp && temPreco && <div className="mt-6 flex items-center gap-3">
+          {!checkoutUrl && !checkoutWhatsApp && temPreco && <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
               <button
                 onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
