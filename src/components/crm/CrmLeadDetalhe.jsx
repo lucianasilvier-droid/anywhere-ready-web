@@ -27,6 +27,8 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const [lead, setLead] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState("");
+  const [emailEdicao, setEmailEdicao] = useState("");
+  const [salvandoEmail, setSalvandoEmail] = useState(false);
   const [respostaManual, setRespostaManual] = useState("");
   const [tipoRespostaManual, setTipoRespostaManual] = useState("indefinida");
   const [salvandoRespostaManual, setSalvandoRespostaManual] = useState(false);
@@ -44,7 +46,9 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   async function carregar() {
     setCarregando(true);
     try {
-      setLead(await base44.entities.Lead.get(leadId));
+      const registro = await base44.entities.Lead.get(leadId);
+      setLead(registro);
+      setEmailEdicao(String(registro.email || registro.email_contato || registro.email_publico || "").trim());
     } catch (e) {
       setErro(e?.message || "Lead não encontrado.");
     } finally {
@@ -156,6 +160,26 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       toast.warning("Etapa salva. Não foi possível registrar o histórico: " + (historyError?.message || "tente novamente."));
     }
     reloadInteracoes();
+  }
+
+  async function salvarEmailLead(e) {
+    e.preventDefault();
+    const email = emailEdicao.trim().toLowerCase();
+    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      toast.error("Informe um endereço de e-mail válido.");
+      return;
+    }
+    setSalvandoEmail(true);
+    try {
+      await base44.entities.Lead.update(leadId, { email });
+      setLead((atual) => atual ? { ...atual, email, email_contato: "", email_publico: "" } : atual);
+      setEmailEdicao(email);
+      toast.success(email ? "E-mail do estabelecimento atualizado." : "E-mail removido do cadastro.");
+    } catch (e) {
+      toast.error(e?.message || "Não foi possível salvar o e-mail.");
+    } finally {
+      setSalvandoEmail(false);
+    }
   }
 
   function registrarAberturaEmail() {
@@ -329,6 +353,23 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
           <StatusPill map={STATUS_CONSENT} value={lead.consentimento} />
         </div>
       </header>
+
+      <form onSubmit={salvarEmailLead} className="flex flex-wrap items-end gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] p-3">
+        <label className="min-w-[220px] flex-1">
+          <span className="mb-1 block text-[10.5px] font-bold uppercase tracking-wider text-white/45">E-mail comercial do estabelecimento</span>
+          <input
+            type="email"
+            value={emailEdicao}
+            onChange={(e) => setEmailEdicao(e.target.value)}
+            placeholder="contato@empresa.com.br"
+            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12.5px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
+          />
+        </label>
+        <button type="submit" disabled={salvandoEmail} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[11.5px] font-bold text-[#0a1128] disabled:opacity-50">
+          {salvandoEmail ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+          {salvandoEmail ? "Salvando..." : "Salvar e-mail"}
+        </button>
+      </form>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-4">
