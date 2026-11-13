@@ -271,9 +271,9 @@ async function sendLink(email, kind, raw, details = {}) {
   const m = messages[kind];
   const { text, html } = linkEmail({
     ...m,
-    ...(kind === "invite" ? {
-      representativeName: details.representative?.name || "",
-      representativeProfileUrl: details.representative?.profileUrl || "",
+    ...(details.representative ? {
+      representativeName: details.representative.name || "",
+      representativeProfileUrl: details.representative.profileUrl || "",
     } : {}),
   });
   return sendMail({ to: email, subject: m.subject, text, html });
