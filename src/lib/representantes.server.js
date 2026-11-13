@@ -505,8 +505,8 @@ export async function decidirSolicitacao(base44, payload, adminEmail) {
       acao = "Solicitação de pagamento rejeitada";
       detalhe = `${solicitacao.numero} · ${solicitacao.valor}`;
     } else if (payload.acao === "pagar") {
-      if (solicitacao.status === "rejeitada") {
-        throw erro("Solicitação rejeitada não pode ser paga.", 409);
+      if (solicitacao.status !== "aprovada") {
+        throw erro("Somente uma solicitação aprovada pode ser marcada como paga.", 409);
       }
       patch = {
         status: "paga",
