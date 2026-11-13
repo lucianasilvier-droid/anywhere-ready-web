@@ -624,6 +624,10 @@ export const testIntegrationFn = createServerFn({ method: "POST" })
   .validator(z.object({ tipo: z.enum(["google_places", "groq", "claude", "openai", "whatsapp"]) }))
   .handler(async ({ data, context }) => {
     requireAdmin(context);
+    if (data.tipo === "whatsapp") {
+      setResponseStatus(503);
+      throw Object.assign(new Error("Teste da integração WhatsApp está pausado nesta etapa. Nenhuma chamada à Meta foi realizada."), { status: 503 });
+    }
     const base44 = context.getBase44();
     const creds = await resolveCredentials(base44, data.tipo);
     const resultado = await testIntegration(data.tipo, creds.values);
