@@ -11,6 +11,10 @@
 - [x] Gravada na branch de preparação a substituição pelo token novo fornecido pelo usuário: `lOe-akk9BgudktTFlKS-Z2oEZX4L7SPv5AdhlqszxJo`.
 - [x] Conferido no GitHub que o token novo está no arquivo da branch e o token antigo não está mais nele.
 - [x] Atualizada a lógica de análise comercial em `src/lib/admin-fns.js`: instrução explícita para nunca recomendar criação de site quando `lead.site` estiver preenchido; fallback local e resumo/proposta também respeitam essa regra.
+- [x] Incorporadas seletivamente correções seguras da branch antiga: telefone público não vira WhatsApp automaticamente; classificação ampliada de negócios de alimentação; rótulo do campo de WhatsApp diferencia reservas de contato.
+- [x] Adicionados testes para classificação de restaurantes, ausência de cardápio fictício, preservação dos dados cadastrados e WhatsApp confirmado.
+- [x] Reexecutados testes e build após as correções seletivas; GitHub Actions aprovado: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43433823881.
+- [x] Revisadas as branches antigas: catálogo de contingência descartado por conter preços zerados e checkout de kit; branch extensa de trabalho não integrada por misturar credenciais Claude no contexto de IA do CRM e alterações amplas em integrações, pagamentos e autenticação.
 - [x] Comparação GitHub confirmou que a branch está à frente de `main`, sem commits atrás, com alterações somente em `src/routes/__root.jsx` e `src/lib/admin-fns.js`.
 - [x] Conferido o histórico da Vercel: no momento da consulta, não havia deployment dos dois novos commits; produção continuava no commit anterior de `main`.
 
@@ -18,7 +22,7 @@
 
 - [x] Executar testes unitários e build de produção no GitHub Actions, sem consumir créditos da Vercel (execução aprovada: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43432483468).
 - [ ] Executar lint separadamente.
-- [ ] Testar a análise com lead que tenha `site` preenchido: não pode sugerir criação de site em resumo, oportunidades ou proposta.
+- [ ] Testar manualmente a análise com lead que tenha `site` preenchido: não pode sugerir criação de site em resumo, oportunidades ou proposta.
 - [ ] Testar a análise com lead sem site: só então pode considerar criação de site.
 - [ ] Testar o fallback local quando a API ROQ/Groq estiver indisponível.
 - [ ] Confirmar no HTML servido pelo site publicado que a nova meta tag do Google aparece dentro de `<head>` depois da publicação.
