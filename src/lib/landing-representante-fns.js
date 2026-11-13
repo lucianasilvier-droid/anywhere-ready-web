@@ -98,6 +98,8 @@ export const contatoRepresentanteFn = createServerFn({ method: "POST" })
       representante_nome: rep.nome,
       pagina: `/r/${rep.pagina_slug || rep.codigo || ""}`,
       notificacao_lida: false,
+      notificacao_lida_representante: false,
+      notificacao_lida_admin: false,
     });
 
     return { ok: true };
