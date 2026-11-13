@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Loader2, ShoppingBag, Nfc, ShieldCheck, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ProductCard from "@/components/store/ProductCard";
-import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
+import { CATALOGO_INICIAL, completarCatalogoComProdutos } from "@/lib/catalogo-inicial";
 
 export const Route = createFileRoute("/_site/loja/")({
   head: () => ({
@@ -34,7 +34,7 @@ function LojaPage() {
         if (!ativo) return;
         const lista = Array.isArray(page) ? page : page?.items || [];
         const individuais = lista.filter((produto) => !/kit|combo|conjunto/i.test(String(produto.nome || "")));
-        setProdutos(individuais.length ? individuais : CATALOGO_INICIAL);
+        setProdutos(completarCatalogoComProdutos(individuais));
       })
       .catch(() => ativo && setProdutos(CATALOGO_INICIAL))
       .finally(() => ativo && setCarregando(false));
