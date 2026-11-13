@@ -190,27 +190,32 @@ export async function applyPaymentStatus(base44, pagamentoOuCodigo, novoStatus, 
   if (!pagamento) return { changed: false };
 
   const atual = pagamento.status || "pendente";
-  if (atual === novoStatus) return { changed: false, status: atual };
+  const jaMesmoStatus = atual === novoStatus;
   if (atual === "reembolsado") return { changed: false, status: atual };
-  if (STATUS_FINAIS.includes(atual) && !["reembolsado", "reembolso_solicitado"].includes(novoStatus)) {
+  if (!jaMesmoStatus && STATUS_FINAIS.includes(atual) && !["reembolsado", "reembolso_solicitado"].includes(novoStatus)) {
     return { changed: false, status: atual };
   }
 
-  const patch = {
-    status: novoStatus,
-    atualizado_por: opcoes.origem || "sistema",
-  };
-  if (opcoes.detalhe) patch.status_detalhe = opcoes.detalhe;
-  if (opcoes.erro !== undefined) patch.erro = opcoes.erro;
-  if (opcoes.extra) Object.assign(patch, opcoes.extra);
-  if (novoStatus === "aprovado") {
-    patch.confirmado_em = new Date().toISOString();
-    patch.erro = "";
+  if (!jaMesmoStatus) {
+    const patch = {
+      status: novoStatus,
+      atualizado_por: opcoes.origem || "sistema",
+    };
+    if (opcoes.detalhe) patch.status_detalhe = opcoes.detalhe;
+    if (opcoes.erro !== undefined) patch.erro = opcoes.erro;
+    if (opcoes.extra) Object.assign(patch, opcoes.extra);
+    if (novoStatus === "aprovado") {
+      patch.confirmado_em = new Date().toISOString();
+      patch.erro = "";
+    }
+    await svc.entities.Pagamento.update(pagamento.id, patch);
   }
-  await svc.entities.Pagamento.update(pagamento.id, patch);
 
-  try {
-    const pedido = await svc.entities.Pedido.get(pagamento.pedido_id);
+  // Reconcilia o pedido mesmo quando a notificação de pagamento é repetida.
+  // Se a atualização do pedido falhar, o erro sobe para que a chamada possa ser
+  // repetida; o status do pagamento não impede uma nova tentativa de conciliação.
+  const pedido = await svc.entities.Pedido.get(pagamento.pedido_id).catch(() => null);
+  if (pedido) {
     if (novoStatus === "aprovado" && pedido.status_pagamento !== "pago") {
       await svc.entities.Pedido.update(pedido.id, {
         status_pagamento: "pago",
@@ -219,31 +224,29 @@ export async function applyPaymentStatus(base44, pagamentoOuCodigo, novoStatus, 
       });
       await confirmarVendaDoPedido(svc, pedido);
     }
-    if (novoStatus === "reembolsado" || novoStatus === "reembolso_solicitado") {
+    if (novoStatus === "reembolsado" && pedido.status_pagamento !== "reembolsado") {
       await svc.entities.Pedido.update(pedido.id, { status_pagamento: "reembolsado" });
     }
     if (["recusado", "expirado", "cancelado"].includes(novoStatus) && pedido.status_pagamento === "aguardando") {
       await svc.entities.Pedido.update(pedido.id, { status_pagamento: "cancelado" });
     }
-  } catch {
-    /* pedido removido: nada a atualizar */
   }
 
-  try {
-    await svc.entities.AtividadeLog.create({
-      acao: `Pagamento ${novoStatus}`,
-      entidade: "Pagamento",
-      registro_id: pagamento.id,
-      detalhe: `${pagamento.pedido_numero || pagamento.pedido_id} · ${pagamento.provedor} · ${opcoes.origem || "sistema"}${
-        opcoes.detalhe ? ` · ${opcoes.detalhe}` : ""
-      }`,
-      autor_email: "sistema",
-    });
-  } catch {
-    /* log opcional */
+  if (!jaMesmoStatus) {
+    try {
+      await svc.entities.AtividadeLog.create({
+        acao: `Pagamento ${novoStatus}`,
+        entidade: "Pagamento",
+        registro_id: pagamento.id,
+        detalhe: `${pagamento.pedido_numero || pagamento.pedido_id} · ${pagamento.provedor} · ${opcoes.origem || "sistema"}${opcoes.detalhe ? ` · ${opcoes.detalhe}` : ""}`,
+        autor_email: "sistema",
+      });
+    } catch {
+      /* log opcional */
+    }
   }
 
-  return { changed: true, status: novoStatus };
+  return { changed: !jaMesmoStatus, status: novoStatus };
 }
 
 export async function syncMercadoPagoPayment(base44, pagamento, mpPayment, origem) {
