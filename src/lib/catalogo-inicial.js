@@ -19,7 +19,7 @@ export function completarProdutoComCatalogo(produto) {
     ...fallback,
     ...produto,
     preco: Number.isFinite(precoBanco) && precoBanco > 0 ? precoBanco : fallback.preco,
-    checkout_url: produto.checkout_url || produto.link_pagamento || fallback.checkout_url,
+    checkout_url: fallback.checkout_url || produto.checkout_url || produto.link_pagamento,
     checkout_label: produto.checkout_label || fallback.checkout_label,
     imagens: Array.isArray(produto.imagens) && produto.imagens.length ? produto.imagens : fallback.imagens,
   };
