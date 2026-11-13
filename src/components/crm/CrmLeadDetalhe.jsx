@@ -468,19 +468,17 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
             )}
             {!bloqueado && !autorizado && (
               <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2 text-[11.5px] leading-relaxed text-amber-200">
-                A política do WhatsApp exige consentimento prévio antes de iniciar contato. Obtenha a autorização por um canal apropriado, identifique a empresa e registre a evidência aqui. Até lá, o CRM não libera envio pela API nem abertura do WhatsApp.
+                A política do WhatsApp exige consentimento prévio antes de iniciar contato. Obtenha a autorização por um canal apropriado, identifique a empresa e registre a evidência aqui. Nesta etapa, a API da Meta permanece desativada. O contato manual só é liberado após autorização prévia registrada.
               </p>
             )}
 
             <div className="mt-2.5 flex flex-wrap gap-2">
-              <button
-                onClick={() => mEnviar.mutate(lead.consentimento === "autorizado" ? "proposta" : "autorizacao")}
-                disabled={mEnviar.isPending || bloqueado || !autorizado || mensagem.trim().length < 5}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-[11.5px] font-bold text-[#062b14] disabled:opacity-40"
+              <span
+                className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-[11.5px] font-semibold text-white/35"
+                title="A integração com a Meta está fora de uso nesta etapa."
               >
-                {mEnviar.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                {autorizado ? "Enviar pela API" : "API bloqueada até autorização"}
-              </button>
+                <Send className="h-3 w-3" /> Envio pela API desativado
+              </span>
               <button
                 onClick={() => {
                   navigator.clipboard?.writeText(mensagem);
