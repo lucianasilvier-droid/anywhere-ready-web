@@ -9,16 +9,9 @@ export const Route = createFileRoute("/_site/loja/")({
   head: () => ({
     meta: [
       { title: "Loja de Placas NFC Personalizadas e Soluções Digitais | Google NFC Connect" },
-      {
-        name: "description",
-        content:
-          "Conheça placas NFC personalizadas para avaliações no Google e acesso ao Instagram, além de soluções digitais para empresas. Veja os modelos e condições de compra.",
-      },
+      { name: "description", content: "Conheça placas NFC vendidas individualmente para avaliações no Google e acesso ao Instagram, além de soluções digitais para empresas." },
       { property: "og:title", content: "Loja de Placas NFC Personalizadas | Google NFC Connect" },
-      {
-        property: "og:description",
-        content: "Placas NFC personalizadas para empresas e soluções para fortalecer sua presença digital.",
-      },
+      { property: "og:description", content: "Placas NFC individuais personalizadas para empresas e soluções para fortalecer sua presença digital." },
     ],
   }),
   component: LojaPage,
@@ -33,7 +26,9 @@ function LojaPage() {
       .then((page) => {
         if (!ativo) return;
         const lista = Array.isArray(page) ? page : page?.items || [];
-        setProdutos(completarCatalogoComProdutos(lista));
+        // O catálogo vende placas unitárias: ocultar kits, combos e conjuntos antigos.
+        const individuais = lista.filter((produto) => !/kit|combo|conjunto/i.test(String(produto.nome || "")));
+        setProdutos(completarCatalogoComProdutos(individuais));
       })
       .catch(() => ativo && setProdutos(CATALOGO_INICIAL))
       .finally(() => ativo && setCarregando(false));
@@ -44,7 +39,7 @@ function LojaPage() {
     <section className="relative overflow-hidden border-b border-white/[0.06]"><div className="aurora absolute inset-0" /><div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
       <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">Loja</p>
       <h1 className="mt-3 max-w-2xl font-heading text-[2.1rem] font-extrabold leading-tight text-white sm:text-[2.8rem]">Placas NFC de avaliação <span className="text-gradient-gold">personalizadas</span></h1>
-      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">Escolha seu modelo e compre com segurança. As placas são personalizadas após a compra e entregues prontas para usar.</p>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">Escolha sua placa individual e compre com segurança. A personalização é feita após a compra, e a placa é entregue pronta para usar.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-3">{[
         { icon: Nfc, t: "NFC por aproximação", d: "Compatível com celulares Android e iPhone." },
         { icon: Zap, t: "Acesso rápido", d: "O cliente aproxima o celular e abre seu link." },
