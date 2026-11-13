@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,13 +24,19 @@ jobs:
       - name: Build for Cloudflare Workers
         run: bun run build
       - name: Validate deploy bundle
-        run: bunx wrangler deploy --dry-run --outdir=worker-build
-      - name: Upload deploy bundle
+        run: bunx wrangler deploy --dry-run
+      - name: Deploy test Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: fed792a7a64b9916811dfaf01fb48f8b
+          command: deploy
+      - name: Upload build output for inspection
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-workers-build
           path: |
-            worker-build/
-            .output/public/
+            .output/
+            .wrangler/
           if-no-files-found: error
           retention-days: 2
