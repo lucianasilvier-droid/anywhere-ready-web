@@ -188,6 +188,41 @@ export async function resolveGooglePlacePhotos(photoNames = [], values = {}) {
 }
 
 
+/**
+ * Busca referências de foto atualizadas a partir do Place ID e resolve uma foto
+ * imediatamente. O Google informa que photoUri é temporário e photo names expiram;
+ * por isso não persistimos esses endereços no cadastro do site.
+ */
+export async function buscarFotosGooglePlace(placeId, values = {}) {
+  const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
+  if (!key || !placeId) return [];
+  try {
+    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`;
+    const response = await fetch(url, {
+      headers: {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "photos",
+      },
+    });
+    if (!response.ok) return [];
+    const payload = await response.json().catch(() => ({}));
+    const photoNames = (payload.photos || []).slice(0, 1).map((photo) => ({
+      nome: photo.name,
+      largura: photo.widthPx || null,
+      altura: photo.heightPx || null,
+      creditos: (photo.authorAttributions || []).map((a) => ({
+        nome: a.displayName || "",
+        uri: a.uri || "",
+        foto_uri: a.photoUri || "",
+      })),
+    })).filter((photo) => photo.nome);
+    return resolveGooglePlacePhotos(photoNames, { google_maps_api_key: key });
+  } catch {
+    return [];
+  }
+}
+
+
 /* --------------- Busca reserva: OpenStreetMap (sem chave de API) --------------- */
 
 const OSM_UA = "GoogleNFCConnect-CRM/1.0 (prospeccao de empresas)";
