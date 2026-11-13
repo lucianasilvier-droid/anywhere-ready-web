@@ -494,13 +494,13 @@ export async function resolveCurrentUser() {
 }
 
 /** Sends an invitation e-mail and records the role the person gets. */
-async function inviteUser(email, role = "user") {
+async function inviteUser(email, role = "user", options = {}) {
   const address = norm(email);
   if (!address) throw httpError("Informe um e-mail.", 400);
   const [existing] = await service.User.filter({ email: address }, { limit: 1 });
   if (existing) await service.User.update(existing.id, { role: role === "admin" ? "admin" : existing.role || "user" });
   else await service.User.create({ email: address, role: role === "admin" ? "admin" : "user", convidado_em: new Date().toISOString() });
-  return inviteAuthUser(address, { roles: role === "admin" ? ["admin"] : [] });
+  return inviteAuthUser(address, { roles: role === "admin" ? ["admin"] : [], representative: options.representative || null });
 }
 
 /**
@@ -540,9 +540,9 @@ export function createServerClient() {
       },
     },
     users: {
-      inviteUser: async (email, role) => {
+      inviteUser: async (email, role, options) => {
         await requireAdmin();
-        return inviteUser(email, role);
+        return inviteUser(email, role, options);
       },
     },
     asServiceRole: {
