@@ -187,7 +187,16 @@ function SiteCliente({ site }) {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
+          <div className="space-y-5">
+            {site.fotos?.[0]?.url && (
+              <figure className="overflow-hidden rounded-[28px] border border-black/[0.06] bg-[var(--surface)] shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
+                <img src={site.fotos[0].url} alt={`Foto real de ${site.empresa} no Google Maps`} className="h-[260px] w-full object-cover md:h-[320px]" loading="eager" />
+                {site.fotos[0].creditos?.map((credito, index) => credito.nome && (
+                  <figcaption key={index} className="px-3 py-1.5 text-[10px] text-[var(--muted)]">Foto: {credito.uri ? <a href={credito.uri} target="_blank" rel="noreferrer" className="underline">{credito.nome}</a> : credito.nome}</figcaption>
+                ))}
+              </figure>
+            )}
+            <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
             {site.nota_google != null && (
               <div className="border-b border-black/[0.06] pb-5">
                 <div className="flex items-center gap-1">
@@ -213,9 +222,23 @@ function SiteCliente({ site }) {
                 <li className="flex gap-3"><Instagram className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noreferrer" className="hover:underline">@{site.instagram}</a></li>
               )}
             </ul>
+            </div>
           </div>
         </div>
       </section>
+
+      {site.fotos?.length > 1 && (
+        <section className="mx-auto max-w-6xl px-5 pb-12">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {site.fotos.slice(1, 5).map((foto, index) => (
+              <figure key={foto.url} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)]">
+                <img src={foto.url} alt={`Foto ${index + 2} de ${site.empresa} no Google Maps`} loading="lazy" className="h-36 w-full object-cover md:h-48" />
+                {foto.creditos?.map((credito, i) => credito.nome && <figcaption key={i} className="px-2 py-1 text-[10px] text-[var(--muted)]">{credito.uri ? <a href={credito.uri} target="_blank" rel="noreferrer" className="underline">{credito.nome}</a> : credito.nome}</figcaption>)}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {c.servicos?.length > 0 && (
         <section id="servicos" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
