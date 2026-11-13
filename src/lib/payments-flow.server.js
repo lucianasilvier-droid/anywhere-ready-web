@@ -222,6 +222,8 @@ export async function applyPaymentStatus(base44, pagamentoOuCodigo, novoStatus, 
         status_producao: pedido.status_producao === "aguardando" ? "em_producao" : pedido.status_producao,
         metodo_pagamento: pagamento.metodo,
       });
+    }
+    if (novoStatus === "aprovado") {
       await confirmarVendaDoPedido(svc, pedido);
     }
     if (novoStatus === "reembolsado" && pedido.status_pagamento !== "reembolsado") {
