@@ -16,11 +16,10 @@ import {
 
 async function iaValues(base44) {
   const cliente = base44.asServiceRole || base44;
-  const [groq, claude] = await Promise.all([
-    resolveCredentials(cliente, "groq"),
-    resolveCredentials(cliente, "claude"),
-  ]);
-  return { ...groq.values, ...claude.values };
+  // CRM: somente ROQ. Claude permanece como integração separada do painel,
+  // mas não recebe análises, mensagens ou dados dos leads.
+  const roq = await resolveCredentials(cliente, "groq");
+  return roq.values;
 }
 
 function requireAdmin(context) {
