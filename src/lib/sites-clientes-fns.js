@@ -141,7 +141,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
-        whatsapp: existente?.whatsapp || lead.telefone || "",
+        whatsapp: existente?.whatsapp || "",
         conteudo,
         orientacoes: data.orientacoes || "",
         modelo: "gerador-automatico-sem-api",
