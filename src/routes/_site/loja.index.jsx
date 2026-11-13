@@ -47,7 +47,7 @@ function LojaPage() {
       ].map((b) => <div key={b.t} className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><b.icon className="mt-0.5 h-4.5 w-4.5 text-primary" /><div><p className="text-[13px] font-semibold text-white">{b.t}</p><p className="text-[11.5px] leading-relaxed text-white/45">{b.d}</p></div></div>)}</div>
     </div></section>
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
-      <div className="mb-6 flex items-center justify-between"><h2 className="flex items-center gap-2 font-heading text-lg font-bold text-white"><ShoppingBag className="h-4.5 w-4.5 text-primary" /> Catálogo</h2><Link to="/carrinho" className="text-[12.5px] font-semibold text-primary hover:underline">Ver carrinho</Link></div>
+      <div className="mb-6"><h2 className="flex items-center gap-2 font-heading text-lg font-bold text-white"><ShoppingBag className="h-4.5 w-4.5 text-primary" /> Catálogo</h2></div>
       {carregando ? <div className="flex items-center justify-center gap-2 py-20 text-sm text-white/50"><Loader2 className="h-4 w-4 animate-spin" /> Carregando produtos...</div> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{produtos.map((p) => <ProductCard key={p.id} produto={p} />)}</div>}
     </section>
   </div>;
