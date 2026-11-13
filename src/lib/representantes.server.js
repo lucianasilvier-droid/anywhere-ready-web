@@ -450,6 +450,22 @@ export async function decidirSolicitacao(base44, payload, adminEmail) {
       "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND data->>'solicitacao_id' = $1 FOR UPDATE",
       [String(solicitacao.id)],
     );
+    if (["aprovar", "pagar"].includes(payload.acao)) {
+      const idsEsperados = Array.isArray(solicitacao.vendas) ? solicitacao.vendas.map(String).sort() : [];
+      const idsEncontrados = vendas.map((v) => String(v.id)).sort();
+      const valorAtual = round(vendas.reduce((total, venda) => total + (Number(venda.data?.comissao_valor) || 0), 0));
+      const integras = idsEsperados.length > 0
+        && idsEsperados.length === idsEncontrados.length
+        && idsEsperados.every((id, index) => id === idsEncontrados[index])
+        && vendas.every((v) =>
+          String(v.data?.representante_id) === String(solicitacao.representante_id)
+          && v.data?.status_comissao === "solicitada"
+        )
+        && valorAtual === round(solicitacao.valor);
+      if (!integras) {
+        throw erro("As comissões vinculadas a esta solicitação não conferem. Nenhuma alteração foi realizada; revise os registros antes de continuar.", 409);
+      }
+    }
     let patch;
     let acao;
     let detalhe;
@@ -497,7 +513,7 @@ export async function decidirSolicitacao(base44, payload, adminEmail) {
         observacoes: payload.observacoes || solicitacao.observacoes || "",
       };
       for (const venda of vendas) {
-        if (!["solicitada", "disponivel"].includes(venda.data?.status_comissao)) continue;
+        if (venda.data?.status_comissao !== "solicitada") continue;
         await tx(
           "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1",
           [venda.id, JSON.stringify({
