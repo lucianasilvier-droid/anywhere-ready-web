@@ -542,7 +542,7 @@ export function buildWhatsappTemplateRequest({ to, body, tipo }, values = {}) {
   if (!/^[a-z]{2}_[A-Z]{2}$/.test(language)) {
     return { ok: false, error: "Idioma do template inválido. Use o formato pt_BR." };
   }
-  const digits = String(to || "").replace(/\\D/g, "");
+  const digits = String(to || "").replace(/\D/g, "");
   if (digits.length < 10) return { ok: false, error: "Telefone inválido para envio no WhatsApp." };
   const number = digits.startsWith("55") ? digits : `55${digits}`;
   const text = String(body || "").trim();
