@@ -141,13 +141,24 @@ function SiteCliente({ site }) {
             <span style={serif} className="truncate text-[17px] font-bold">{site.empresa}</span>
           </a>
           <nav className="hidden items-center gap-6 text-[13.5px] font-medium text-[var(--muted)] md:flex">
-            <a href="#servicos" className="hover:text-[var(--ink)]">Serviços</a>
-            <a href="#sobre" className="hover:text-[var(--ink)]">Sobre</a>
-            <a href="#localizacao" className="hover:text-[var(--ink)]">Como chegar</a>
-            <a href="#agendar" className="hover:text-[var(--ink)]">Agendar</a>
+            {isRestaurante ? (
+              <>
+                <a href="#cardapio" className="hover:text-[var(--ink)]">Cardápio</a>
+                <a href="#sobre" className="hover:text-[var(--ink)]">Sobre</a>
+                <a href="#localizacao" className="hover:text-[var(--ink)]">Como chegar</a>
+                <a href="#reservas" className="hover:text-[var(--ink)]">Reservas</a>
+              </>
+            ) : (
+              <>
+                <a href="#servicos" className="hover:text-[var(--ink)]">Serviços</a>
+                <a href="#sobre" className="hover:text-[var(--ink)]">Sobre</a>
+                <a href="#localizacao" className="hover:text-[var(--ink)]">Como chegar</a>
+                <a href="#agendar" className="hover:text-[var(--ink)]">Agendar</a>
+              </>
+            )}
           </nav>
-          <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-[var(--accent-ink)] shadow-sm hover:opacity-90">
-            {isRestaurante ? "Reserve já" : "Agendar"}
+          <a href={isRestaurante ? (waReserva || "#reservas") : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-[var(--accent-ink)] shadow-sm hover:opacity-90">
+            {isRestaurante ? "Fazer reserva" : "Agendar"}
           </a>
         </div>
       </header>
@@ -168,7 +179,7 @@ function SiteCliente({ site }) {
             {c.subtitulo && <p className="mt-5 max-w-xl text-[16.5px] leading-relaxed text-[var(--muted)]">{c.subtitulo}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90">
-                <Calendar className="h-4 w-4" /> {isRestaurante ? "Reserve já" : "Agendar pelo WhatsApp"}
+                {isRestaurante ? <UtensilsCrossed className="h-4 w-4" /> : <Calendar className="h-4 w-4" />} {isRestaurante ? "Reservar mesa" : "Agendar pelo WhatsApp"}
               </a>
               <a href={linkRota} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--surface)] px-6 py-3.5 text-[14.5px] font-semibold hover:border-black/25">
                 <Navigation className="h-4 w-4" /> Como chegar
@@ -227,23 +238,43 @@ function SiteCliente({ site }) {
         </section>
       )}
 
-      {isRestaurante && c.cardapio?.length > 0 && (
+      {isRestaurante && (
         <section id="cardapio" className="mx-auto max-w-6xl px-5 py-16">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Cardápio</p>
-          <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Conheça nossas opções</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {c.cardapio.map((item, index) => (
-              <article key={`${item.nome}-${index}`} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)]">
-                {item.imagem_url && <img src={item.imagem_url} alt={item.nome} loading="lazy" className="h-44 w-full object-cover" />}
-                <div className="p-5">
-                  {item.categoria && <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)]">{item.categoria}</p>}
-                  <h3 className="mt-1 text-[16px] font-semibold">{item.nome}</h3>
-                  {item.descricao && <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--muted)]">{item.descricao}</p>}
-                  {item.preco && <p className="mt-3 font-bold text-[var(--accent)]">{item.preco}</p>}
-                </div>
-              </article>
-            ))}
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Cardápio</p>
+              <h2 style={serif} className="mt-2 text-[2rem] font-bold leading-tight">Conheça nossas opções</h2>
+            </div>
+            {waOla && <a href={wa("Olá! Gostaria de receber o cardápio atualizado de " + site.empresa + ".")} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[var(--accent)] underline underline-offset-4">Pedir cardápio atualizado</a>}
           </div>
+          {c.cardapio?.length > 0 ? (
+            <div className="mt-8 space-y-10">
+              {[...new Set(c.cardapio.map((item) => item.categoria || "Outras opções"))].map((categoria) => (
+                <div key={categoria}>
+                  <h3 className="mb-4 text-lg font-semibold">{categoria}</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {c.cardapio.filter((item) => (item.categoria || "Outras opções") === categoria).map((item, index) => (
+                      <article key={`${item.nome}-${index}`} className="overflow-hidden rounded-2xl border border-black/[0.06] bg-[var(--surface)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                        {item.imagem_url && <img src={item.imagem_url} alt={item.nome} loading="lazy" className="h-48 w-full object-cover" />}
+                        <div className="p-5">
+                          <h4 className="text-[16px] font-semibold">{item.nome}</h4>
+                          {item.descricao && <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--muted)]">{item.descricao}</p>}
+                          {item.preco && <p className="mt-3 text-lg font-bold text-[var(--accent)]">{item.preco}</p>}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-3xl border border-dashed border-black/15 bg-[var(--surface)] px-6 py-10 text-center">
+              <UtensilsCrossed className="mx-auto h-9 w-9 text-[var(--accent)]" />
+              <h3 className="mt-3 text-lg font-semibold">Cardápio em atualização</h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-[var(--muted)]">Estamos organizando as opções deste estabelecimento. Entre em contato para consultar o cardápio atualizado.</p>
+              {waOla && <a href={wa("Olá! Poderiam me enviar o cardápio atualizado?")} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-ink)]">Solicitar cardápio</a>}
+            </div>
+          )}
         </section>
       )}
 
@@ -277,7 +308,7 @@ function SiteCliente({ site }) {
         </div>
       </section>
 
-      <section id="agendar" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
+      <section id={isRestaurante ? "reservas" : "agendar"} className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
         <div className="grid gap-8 md:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{isRestaurante ? "Reservas" : "Agendamento"}</p>
@@ -286,7 +317,7 @@ function SiteCliente({ site }) {
               {c.chamada_agendamento || "Escolha o serviço e o melhor dia. Sua solicitação chega direto no nosso WhatsApp."}
             </p>
             <p className="mt-5 flex items-center gap-2 text-[13px] text-[var(--muted)]">
-              <MessageCircle className="h-4 w-4 text-[#25D366]" /> A confirmação do horário é feita pelo WhatsApp.
+              <MessageCircle className="h-4 w-4 text-[#25D366]" /> {isRestaurante ? "A equipe confirma a disponibilidade da mesa pelo WhatsApp." : "A confirmação do horário é feita pelo WhatsApp."}
             </p>
           </div>
           <Agendamento site={site} wa={wa} isRestaurante={isRestaurante} waReserva={waReserva} />
