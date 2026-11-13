@@ -33,7 +33,7 @@ export function completarProdutoComCatalogo(produto) {
     return {
       ...produto,
       checkout_url: checkoutBanco || undefined,
-      checkout_label: checkoutBanco ? produto.checkout_label : undefined,
+      checkout_label: checkoutBanco ? "Comprar pela InfinitePay" : undefined,
     };
   }
   const precoBanco = Number(produto.preco);
@@ -42,7 +42,7 @@ export function completarProdutoComCatalogo(produto) {
     ...produto,
     preco: Number.isFinite(precoBanco) && precoBanco > 0 ? precoBanco : fallback.preco,
     checkout_url: checkoutBanco || fallback.checkout_url,
-    checkout_label: checkoutBanco ? (produto.checkout_label || fallback.checkout_label) : fallback.checkout_label,
+    checkout_label: checkoutBanco ? "Comprar pela InfinitePay" : fallback.checkout_label,
     imagens: Array.isArray(produto.imagens) && produto.imagens.length ? produto.imagens : fallback.imagens,
   };
 }
