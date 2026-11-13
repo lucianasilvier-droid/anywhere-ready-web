@@ -327,9 +327,9 @@ export async function resumoRepresentante(base44, rep) {
       telefone: rep.telefone || "",
       codigo: rep.codigo || "",
       status: rep.status || "ativo",
-      comissao_perfil: Number(rep.comissao_perfil) || TABELA_COMISSAO.perfil_google.comissao,
+      comissao_perfil: comissaoConfigurada(rep.comissao_perfil, TABELA_COMISSAO.perfil_google.comissao),
       comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
-      comissao_placa: Number(rep.comissao_placa) || TABELA_COMISSAO.placa.comissaoUnidade,
+      comissao_placa: comissaoConfigurada(rep.comissao_placa, TABELA_COMISSAO.placa.comissaoUnidade),
       observacoes: rep.observacoes || "",
     },
     metricas: {
