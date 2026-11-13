@@ -32,9 +32,9 @@ export default function RepForm({ open, onOpenChange, representante, onSalvo }) 
         ? {
             ...VAZIO,
             ...representante,
-            comissao_perfil: Number(representante.comissao_perfil) || 100,
+            comissao_perfil: Number(representante.comissao_perfil ?? 100),
             comissao_mensalidade: 50,
-            comissao_placa: Number(representante.comissao_placa) || 20,
+            comissao_placa: Number(representante.comissao_placa ?? 20),
             limite_leads_dia: Number(representante.limite_leads_dia) || 20,
             convidar: false,
           }
