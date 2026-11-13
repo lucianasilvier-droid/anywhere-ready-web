@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { BRAND_NAME } from "@/lib/site-content";
 import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
+import { slugDisponivel, slugify } from "@/lib/landing-representante.server";
 import {
   CREDENTIAL_KEYS,
   iaJSON,
@@ -62,6 +63,20 @@ function leadBrief(lead) {
   ].join("\n");
 }
 
+async function slugPaginaLivre(base44, nome, repId) {
+  let base = slugify(nome) || "representante";
+  if (["admin", "api", "login", "representante", "loja", "conta"].includes(base)) base = `rep-${base}`;
+  for (let i = 0; i < 20; i += 1) {
+    const tentativa = i === 0 ? base : `${base}-${i + 1}`;
+    try {
+      return await slugDisponivel(base44, tentativa, repId);
+    } catch (e) {
+      if (e?.status !== 409) throw e;
+    }
+  }
+  return `${base}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 // Who is sending the message: the company name set in Configurações (or the brand) and
 // the person writing (sales representative or the signed-in operator).
 async function senderIdentity(context) {
@@ -77,9 +92,18 @@ async function senderIdentity(context) {
   let remetente = "";
   let perfilUrl = "";
   try {
-    const rep = await base44.representante();
+    let rep = await base44.representante();
     remetente = String(rep?.nome || "").trim();
-    const slug = String(rep?.pagina_slug || "").trim();
+    let slug = String(rep?.pagina_slug || "").trim();
+    if (rep && !slug) {
+      // Corrige representantes antigos automaticamente antes de montar a primeira assinatura.
+      slug = await slugPaginaLivre(svc, rep.nome, rep.id);
+      rep = await svc.entities.Representante.update(rep.id, {
+        pagina_slug: slug,
+        pagina_ativa: rep.pagina_ativa !== false,
+      });
+      slug = String(rep?.pagina_slug || slug).trim();
+    }
     if (slug) {
       const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
       perfilUrl = `${appUrl}/r/${slug}`;
