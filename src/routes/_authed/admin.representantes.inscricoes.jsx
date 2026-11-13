@@ -111,6 +111,7 @@ function InscricoesPage() {
           {lista.map((c) => {
             const st = STATUS[c.status] || STATUS.pendente;
             const fone = String(c.telefone || "").replace(/\D/g, "");
+            const linkPerfil = linksPerfis[c.id] || (c.representante_slug ? `/r/${c.representante_slug}` : "");
             return (
               <div key={c.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -130,11 +131,11 @@ function InscricoesPage() {
                   <span>{EXPERIENCIA[c.experiencia] || c.experiencia}</span>
                 </div>
                 {c.mensagem && <p className="mt-2 whitespace-pre-line text-[12px] leading-relaxed text-white/60">{c.mensagem}</p>}
-                {linksPerfis[c.id] && (
+                {linkPerfil && (
                   <div className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-400/[0.06] px-3 py-2">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Página do representante criada</p>
-                    <a href={linksPerfis[c.id]} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 break-all text-[12px] font-semibold text-emerald-200 hover:underline">
-                      {linksPerfis[c.id]} <ExternalLink className="h-3 w-3 shrink-0" />
+                    <a href={linkPerfil} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 break-all text-[12px] font-semibold text-emerald-200 hover:underline">
+                      {linkPerfil} <ExternalLink className="h-3 w-3 shrink-0" />
                     </a>
                   </div>
                 )}
