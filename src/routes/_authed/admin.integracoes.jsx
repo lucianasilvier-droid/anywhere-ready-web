@@ -43,9 +43,10 @@ const DESCRICOES = {
     texto: "Envio de mensagens pelo botão do CRM, sempre com revisão do operador e autorização registrada.",
     passos: [
       "Configure o app no Meta for Developers",
-      "Copie o Access Token permanente e o Phone Number ID",
-      "Cole os dois campos acima e salve",
+      "Copie o Access Token permanente, Phone Number ID e App Secret",
+      "Cole as credenciais nos campos acima e salve",
       "Defina o verify token abaixo (o mesmo texto será informado na Meta)",
+      "Informe o prefixo dos templates aprovados, se for usar mensagens por modelo",
       "Cadastre a URL do webhook exibida abaixo na Meta",
     ],
   },
