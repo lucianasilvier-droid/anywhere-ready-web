@@ -40,7 +40,7 @@ const DESCRICOES = {
   },
   whatsapp: {
     titulo: "WhatsApp Business",
-    texto: "Envio de mensagens pelo botão do CRM, sempre com revisão do operador e autorização registrada.",
+    texto: "Envio pela API somente após consentimento prévio registrado e evidência documentada no CRM. Sem opt-in, o sistema bloqueia também a abertura direta do WhatsApp.",
     passos: [
       "Configure o app no Meta for Developers",
       "Copie o Access Token permanente, Phone Number ID e App Secret",
