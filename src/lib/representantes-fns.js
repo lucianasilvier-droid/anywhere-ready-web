@@ -14,6 +14,7 @@ import {
   resumoRepresentante,
 } from "@/lib/representantes.server";
 import { TABELA_COMISSAO } from "@/lib/comissoes";
+import { slugDisponivel, slugify } from "@/lib/landing-representante.server";
 
 function requireAdmin(context) {
   if (context.user?.role !== "admin") {
@@ -36,6 +37,19 @@ const repInput = z.object({
   observacoes: z.string().trim().max(1000).optional().default(""),
   convidar: z.boolean().optional().default(false),
 });
+
+async function slugPaginaLivre(base44, nome, repId) {
+  const base = slugify(nome) || "representante";
+  for (let i = 0; i < 20; i += 1) {
+    const tentativa = i === 0 ? base : `${base}-${i + 1}`;
+    try {
+      return await slugDisponivel(base44, tentativa, repId);
+    } catch (e) {
+      if (e?.status !== 409) throw e;
+    }
+  }
+  return `${base}-${novoCodigo("", 4).toLowerCase()}`;
+}
 
 const vendaInput = z.object({
   representante_id: z.string().min(1),
@@ -169,6 +183,14 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       );
     }
 
+    const atual = data.id
+      ? await base44.entities.Representante.get(data.id).catch(() => null)
+      : null;
+    if (data.id && !atual) {
+      setResponseStatus(404);
+      throw Object.assign(new Error("Representante não encontrado."), { status: 404 });
+    }
+
     const patch = {
       nome: data.nome.trim(),
       email: data.email.trim().toLowerCase(),
@@ -181,6 +203,12 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       limite_leads_dia: Number(data.limite_leads_dia) || 20,
       observacoes: data.observacoes || "",
     };
+    // Todo representante cadastrado pelo admin já recebe um endereço público.
+    // Isso garante que o link possa entrar na assinatura da primeira autorização.
+    if (!atual?.pagina_slug) {
+      patch.pagina_slug = await slugPaginaLivre(base44, patch.nome, data.id);
+      if (atual && atual.pagina_ativa === undefined) patch.pagina_ativa = true;
+    }
 
     let rep;
     if (data.id) {
@@ -190,6 +218,7 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
         ...patch,
         codigo: novoCodigo("REP-", 6),
         criado_por: context.user.email,
+        pagina_ativa: true,
       });
     }
 
