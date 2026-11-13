@@ -13,6 +13,7 @@ function dataHora(value) {
 }
 
 function tipoAtividade(item) {
+  if (item.tipo === "contato_pagina") return { titulo: "Novo contato pela página do representante", classe: "text-emerald-200", fundo: "bg-emerald-500/10" };
   if (item.tipo === "whatsapp_recebido") return { titulo: item.resposta_tipo === "nao" ? "Cliente recusou o contato" : item.resposta_tipo === "sim" ? "Cliente autorizou o contato" : "Cliente respondeu no WhatsApp", classe: item.resposta_tipo === "sim" ? "text-emerald-300" : item.resposta_tipo === "nao" ? "text-red-300" : "text-amber-200", fundo: item.resposta_tipo === "sim" ? "bg-emerald-500/10" : item.resposta_tipo === "nao" ? "bg-red-500/10" : "bg-amber-500/10" };
   if (item.tipo === "whatsapp_enviado") return { titulo: "Mensagem enviada pelo representante", classe: "text-emerald-200", fundo: "bg-emerald-500/10" };
   if (item.tipo === "sistema" || item.tipo === "etapa_alterada") return { titulo: "Movimentação no CRM", classe: "text-sky-200", fundo: "bg-sky-500/10" };
@@ -23,7 +24,7 @@ function tipoAtividade(item) {
   return { titulo: item.titulo || "Atividade do representante", classe: "text-white/75", fundo: "bg-white/[0.04]" };
 }
 
-export default function WhatsAppReplyNotifications() {
+export default function WhatsAppReplyNotifications({ representante = false }) {
   const [items, setItems] = useState([]);
   const [aberto, setAberto] = useState(false);
   const [erro, setErro] = useState("");
@@ -40,7 +41,7 @@ export default function WhatsAppReplyNotifications() {
       try {
         const [interacoesRaw, atividadesRaw] = await Promise.all([
           base44.entities.LeadInteraction.filter({}, { sort: "-created_date", limit: 60 }),
-          base44.entities.AtividadeLog.filter({}, { sort: "-created_date", limit: 60 }),
+          representante ? Promise.resolve([]) : base44.entities.AtividadeLog.filter({}, { sort: "-created_date", limit: 60 }),
         ]);
         if (!ativo) return;
         const interacoes = (Array.isArray(interacoesRaw) ? interacoesRaw : interacoesRaw?.items || [])
@@ -147,7 +148,7 @@ export default function WhatsAppReplyNotifications() {
       {aberto && (
         <div className="fixed left-1/2 top-[4.25rem] z-[100] flex max-h-[calc(100dvh-5.25rem)] w-[calc(100vw-1.5rem)] max-w-[420px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1426] shadow-2xl shadow-black/50 lg:absolute lg:left-auto lg:right-0 lg:top-11 lg:max-h-[min(70vh,620px)] lg:w-[420px] lg:translate-x-0">
           <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3">
-            <div><p className="text-[12px] font-bold text-white">Atividades dos representantes</p><p className="mt-0.5 text-[10.5px] text-white/40">{naoLidas} não lida(s) · atualização a cada 5 segundos</p></div>
+            <div><p className="text-[12px] font-bold text-white">{representante ? "Mensagens da minha página" : "Atividades dos representantes"}</p><p className="mt-0.5 text-[10.5px] text-white/40">{naoLidas} não lida(s) · atualização a cada 5 segundos</p></div>
             <div className="flex items-center gap-1">
               <button type="button" onClick={ativarAvisosDoNavegador} title="Ativar notificações do navegador" className="rounded-lg p-1.5 text-white/45 hover:bg-white/5 hover:text-white"><MessageCircle className="h-3.5 w-3.5" /></button>
               {naoLidas > 0 && <button type="button" onClick={marcarTodas} title="Marcar todas como lidas" className="rounded-lg p-1.5 text-white/45 hover:bg-white/5 hover:text-white"><CheckCheck className="h-3.5 w-3.5" /></button>}
@@ -169,7 +170,7 @@ export default function WhatsAppReplyNotifications() {
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[10px] text-white/35">{dataHora(item._date)}</span>
                     <div className="flex items-center gap-2">
-                      {item.lead_id && <Link to="/admin/lead/$leadId" params={{ leadId: item.lead_id }} onClick={() => { marcarLida(item); setAberto(false); }} className="text-[10.5px] font-bold text-primary hover:underline">Abrir lead</Link>}
+                      {item.lead_id && <Link to={representante ? "/representante/lead/$leadId" : "/admin/lead/$leadId"} params={{ leadId: item.lead_id }} onClick={() => { marcarLida(item); setAberto(false); }} className="text-[10.5px] font-bold text-primary hover:underline">{representante ? "Abrir contato" : "Abrir lead"}</Link>}
                       {!item._lida && <button type="button" onClick={() => marcarLida(item)} className="text-[10.5px] font-semibold text-white/45 hover:text-white">Lida</button>}
                     </div>
                   </div>
