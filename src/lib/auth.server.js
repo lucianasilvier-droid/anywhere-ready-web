@@ -243,7 +243,7 @@ async function consumeToken(raw, kinds) {
   return row || null;
 }
 
-async function sendLink(email, kind, raw) {
+async function sendLink(email, kind, raw, details = {}) {
   const base = appUrl();
   const messages = {
     confirm: {
@@ -269,7 +269,13 @@ async function sendLink(email, kind, raw) {
     },
   };
   const m = messages[kind];
-  const { text, html } = linkEmail(m);
+  const { text, html } = linkEmail({
+    ...m,
+    ...(kind === "invite" ? {
+      representativeName: details.representative?.name || "",
+      representativeProfileUrl: details.representative?.profileUrl || "",
+    } : {}),
+  });
   return sendMail({ to: email, subject: m.subject, text, html });
 }
 
@@ -375,10 +381,11 @@ export async function confirmEmailToken(token) {
 }
 
 /** Invitation e-mail (team members, administrators). */
-export async function inviteAuthUser(email, { roles = [] } = {}) {
+export async function inviteAuthUser(email, { roles = [], representative = null } = {}) {
   const row = await ensureAuthUser(email, { roles });
   await addRoles(row.id, roles);
-  const delivery = await sendLink(row.email, row.password_hash ? "recovery" : "invite", await createToken(row.id, row.password_hash ? "recovery" : "invite"));
+  const kind = row.password_hash ? "recovery" : "invite";
+  const delivery = await sendLink(row.email, kind, await createToken(row.id, kind), { representative });
   return { ok: true, delivered: delivery.delivered };
 }
 
