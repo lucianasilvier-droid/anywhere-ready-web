@@ -235,7 +235,20 @@ export const adminCandidatosFn = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     requireAdmin(context);
     const base44 = context.getBase44().asServiceRole;
-    return { candidatos: await listar(base44, "CandidatoRepresentante", {}, 300) };
+    const [candidatos, representantes] = await Promise.all([
+      listar(base44, "CandidatoRepresentante", {}, 300),
+      listar(base44, "Representante", {}, 300),
+    ]);
+    const porId = new Map(representantes.map((rep) => [rep.id, rep]));
+    return {
+      candidatos: candidatos.map((candidato) => {
+        const rep = candidato.representante_id ? porId.get(candidato.representante_id) : null;
+        return {
+          ...candidato,
+          representante_slug: rep?.pagina_slug || rep?.codigo || "",
+        };
+      }),
+    };
   });
 
 async function slugLivre(base44, nome) {
