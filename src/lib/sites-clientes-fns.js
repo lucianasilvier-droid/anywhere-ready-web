@@ -14,7 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
-import { resolveCredentials, resolveGooglePlacePhotos } from "@/lib/integrations.server";
+import { resolveCredentials, buscarFotosGooglePlace } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -111,11 +111,6 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
     const base44 = rep ? context.getBase44().asServiceRole : context.getBase44();
     try {
       const lead = await base44.entities.Lead.get(data.leadId);
-      let fotosGoogle = Array.isArray(lead.fotos) ? lead.fotos.slice(0, 4) : [];
-      if (!fotosGoogle.length && Array.isArray(lead.photo_names) && lead.photo_names.length) {
-        const credenciaisGoogle = await resolveCredentials(base44, "google_places");
-        fotosGoogle = await resolveGooglePlacePhotos(lead.photo_names, credenciaisGoogle.values);
-      }
       if (rep) {
         if (await sitePorLead(base44, lead.id)) {
           throw erro("Este cliente já tem um site. Para recriar ou ajustar, fale com o administrador.", 409);
@@ -142,7 +137,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         bairro: lead.bairro || "",
         estado: lead.estado || "",
         place_id: lead.place_id || "",
-        fotos: fotosGoogle,
+        // URLs temporárias do Google não são persistidas; as fotos são resolvidas ao abrir o site.\n        fotos: [],
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
@@ -331,5 +326,16 @@ export const sitePublicoFn = createServerFn({ method: "POST" })
     const base44 = context.getBase44().asServiceRole;
     const [site] = await listar(base44, "SiteCliente", { slug: data.slug.toLowerCase() }, 1);
     if (!site || site.status === "desativado") return { encontrado: false };
-    return { encontrado: true, site: sitePublico(site) };
+    const publico = sitePublico(site);
+    // photoUri do Places é temporário: buscar uma URL nova em cada abertura pública.
+    publico.fotos = [];
+    if (site.place_id) {
+      try {
+        const credenciaisGoogle = await resolveCredentials(base44, "google_places");
+        publico.fotos = await buscarFotosGooglePlace(site.place_id, credenciaisGoogle.values);
+      } catch {
+        publico.fotos = [];
+      }
+    }
+    return { encontrado: true, site: publico };
   });
