@@ -30,8 +30,7 @@ function normalize(text) {
 export function classifyReply(text) {
   const normalized = normalize(text);
   if (!normalized) return "indefinida";
-  if (normalized.includes("nao") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
-  if (normalized === "nao" || normalized === "negativo") return "nao";
+  if (normalized === "nao" || normalized === "negativo" || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
   if (YES_PHRASES.some((phrase) => normalized === phrase || normalized.startsWith(phrase + " "))) return "sim";
   return "indefinida";
 }
