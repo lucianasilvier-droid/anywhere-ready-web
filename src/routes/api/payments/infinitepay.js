@@ -87,16 +87,17 @@ export const Route = createFileRoute("/api/payments/infinitepay")({
           return Response.json({ ok: true, alterado: !!resultado.changed });
         }
 
-        if (evento === "refunded") {
-          await applyPaymentStatus(base44, pagamento, "reembolsado", { origem: "webhook" });
-          await logNotification(base44, { ...log, assinatura_valida: true, processado: true, status_aplicado: "reembolsado" });
-          return Response.json({ ok: true });
-        }
-
-        if (evento === "canceled") {
-          await applyPaymentStatus(base44, pagamento, "cancelado", { origem: "webhook" });
-          await logNotification(base44, { ...log, assinatura_valida: true, processado: true, status_aplicado: "cancelado" });
-          return Response.json({ ok: true });
+        // A InfinitePay não assina os webhooks. Um campo "refunded" ou
+        // "canceled" enviado por terceiros também não pode alterar o pedido.
+        // Só uma consulta autenticada ao payment_check pode confirmar pagamento.
+        if (evento === "refunded" || evento === "canceled") {
+          await logNotification(base44, {
+            ...log,
+            processado: false,
+            status_aplicado: pagamento.status || "pendente",
+            erro: `Evento "${evento}" recebido sem confirmação verificável do provedor; nenhuma alteração foi aplicada.`,
+          });
+          return Response.json({ ok: true, ignorado: true, motivo: "evento_nao_verificado" });
         }
 
         await logNotification(base44, {
