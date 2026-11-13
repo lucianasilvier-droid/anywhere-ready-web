@@ -485,6 +485,17 @@ export async function iaJSON(prompt, schemaHint, values = {}) {
 
 /* ------------------------------- WhatsApp -------------------------------- */
 
+/** A Cloud API message is allowed only after documented recipient opt-in. */
+export function validateWhatsappRecipientConsent(lead) {
+  if (!lead || lead.bloqueado || ["recusado", "revogado"].includes(lead.consentimento)) {
+    return { ok: false, error: "Este contato está bloqueado ou recusou mensagens. Nenhum envio foi permitido." };
+  }
+  if (lead.consentimento !== "autorizado") {
+    return { ok: false, error: "Envio bloqueado: registre primeiro o consentimento prévio do contato para receber mensagens desta empresa pelo WhatsApp." };
+  }
+  return { ok: true };
+}
+
 export async function sendWhatsappText({ to, body }, values = {}) {
   const token = values.whatsapp_access_token || readSecret("WHATSAPP_ACCESS_TOKEN");
   const phoneId = values.whatsapp_phone_number_id || readSecret("WHATSAPP_PHONE_NUMBER_ID");
