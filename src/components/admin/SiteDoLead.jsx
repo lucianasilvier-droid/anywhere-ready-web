@@ -212,7 +212,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             <button
               onClick={() =>
                 onUsarMensagem?.(
-                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e agendamento direto pelo WhatsApp:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
+                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e contato direto pelo WhatsApp:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
                 )
               }
               className={btnCls}
@@ -223,7 +223,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
-              WhatsApp de agendamento
+              WhatsApp para contato e reservas
               <input value={ajustes.whatsapp} onChange={(e) => setAjustes({ ...ajustes, whatsapp: e.target.value })} placeholder="(11) 99999-9999" className={`${inputCls} mt-1`} />
             </label>
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
@@ -240,7 +240,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             </label>
           </div>
           <p className="text-[10.5px] leading-relaxed text-white/30">
-            Se a empresa não usa WhatsApp no telefone do Google, informe o número certo para os agendamentos.
+            Se a empresa não usa WhatsApp no telefone do Google, informe o número correto para contato ou reservas.
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
