@@ -83,9 +83,21 @@ export const contatoRepresentanteFn = createServerFn({ method: "POST" })
     await base44.entities.LeadInteraction.create({
       lead_id: lead.id,
       empresa,
-      tipo: "sistema",
-      mensagem: `Contato recebido pela página do representante ${rep.nome} (${rep.codigo || rep.id}) para o serviço: ${data.servico}.`,
+      tipo: "contato_pagina",
+      mensagem: [
+        `Novo contato recebido pela página de ${rep.nome}.`,
+        `Nome: ${data.nome}`,
+        `E-mail: ${data.email}`,
+        `Telefone/WhatsApp: ${data.telefone}`,
+        data.cidade ? `Cidade: ${data.cidade}` : "",
+        `Serviço de interesse: ${data.servico}`,
+        data.mensagem ? `Mensagem: ${data.mensagem}` : "",
+      ].filter(Boolean).join("\n"),
       autor: data.nome,
+      representante_id: rep.id,
+      representante_nome: rep.nome,
+      pagina: `/r/${rep.pagina_slug || rep.codigo || ""}`,
+      notificacao_lida: false,
     });
 
     return { ok: true };
