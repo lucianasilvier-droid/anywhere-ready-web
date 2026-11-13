@@ -13,16 +13,20 @@ describe("classificação de respostas do WhatsApp", () => {
   });
 
   it.each([
-    ["sim", "sim"],
     ["Sim, autorizo", "sim"],
-    ["pode mandar", "sim"],
-    ["aceito receber", "sim"],
+    ["autorizo receber mensagens", "sim"],
+    ["pode mandar mensagens", "sim"],
+    ["aceito receber mensagens", "sim"],
   ])("identifica autorização afirmativa: %s", (mensagem, esperado) => {
     expect(classifyReply(mensagem)).toBe(esperado);
   });
 
   it("não presume autorização quando a resposta é ambígua", () => {
     expect(classifyReply("vou pensar e retorno")).toBe("indefinida");
+    expect(classifyReply("sim")).toBe("indefinida");
+    expect(classifyReply("ok")).toBe("indefinida");
+    expect(classifyReply("claro")).toBe("indefinida");
+    expect(classifyReply("pode")).toBe("indefinida");
     expect(classifyReply("")).toBe("indefinida");
   });
 });
