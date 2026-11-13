@@ -21,6 +21,14 @@ describe("envio WhatsApp com template aprovado", () => {
     expect(result.requestBody.to).toBe("5511999998888");
   });
 
+  it("recusa tipos de template que não fazem parte do fluxo aprovado do CRM", () => {
+    const result = buildWhatsappTemplateRequest(
+      { to: "11999998888", body: "Olá, tudo bem?", tipo: "template_invalido" },
+      values,
+    );
+    expect(result).toMatchObject({ ok: false });
+  });
+
   it("não permite envio sem prefixo configurado", () => {
     const result = buildWhatsappTemplateRequest(
       { to: "11999998888", body: "Olá, tudo bem?", tipo: "autorizacao" },
