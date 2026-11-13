@@ -463,6 +463,10 @@ export const registerConsentFn = createServerFn({ method: "POST" })
     await requireCrmAccess(context);
     const base44 = context.getBase44();
     const lead = await base44.entities.Lead.get(data.leadId);
+    if (data.status === "autorizado" && data.resposta.trim().length < 5) {
+      setResponseStatus(422);
+      throw Object.assign(new Error("Registre a evidência do consentimento prévio antes de liberar o contato pelo WhatsApp."), { status: 422 });
+    }
     const agora = new Date().toISOString();
 
     const patch = { consent_resposta: data.resposta, ultimo_contato_em: agora };
