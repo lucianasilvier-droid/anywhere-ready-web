@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
-  analyzeLeadFn, draftMessageFn, registerConsentFn, sendWhatsappFn, summarizeHistoryFn,
+  analyzeLeadFn, draftMessageFn, registerConsentFn, summarizeHistoryFn,
 } from "@/lib/admin-fns";
 import { useEntityList } from "@/hooks/useEntityList";
 import { FUNIL_STAGES } from "@/lib/site-content";
@@ -39,7 +39,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const analisar = useServerFn(analyzeLeadFn);
   const rascunho = useServerFn(draftMessageFn);
   const resumir = useServerFn(summarizeHistoryFn);
-  const enviar = useServerFn(sendWhatsappFn);
   const consentimento = useServerFn(registerConsentFn);
   const buscarSite = useServerFn(siteDoLeadFn);
   const gerarSite = useServerFn(gerarSiteFn);
@@ -108,17 +107,6 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
       reloadInteracoes();
     },
     onError: (e) => toast.error(e?.message || "Não foi possível resumir."),
-  });
-
-  const mEnviar = useMutation({
-    mutationFn: (tipo) => enviar({ data: { leadId, mensagem, tipo } }),
-    onSuccess: async () => {
-      toast.success("Mensagem enviada pelo WhatsApp Business.");
-      setMensagem("");
-      await carregar();
-      reloadInteracoes();
-    },
-    onError: (e) => toast.error(e?.message || "Não foi possível enviar a mensagem."),
   });
 
   const mConsent = useMutation({
