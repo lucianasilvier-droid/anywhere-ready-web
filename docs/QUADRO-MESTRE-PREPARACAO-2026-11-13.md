@@ -16,7 +16,8 @@
 
 ## 2. Implementado / preparado, mas ainda não verificado funcionalmente
 
-- [ ] Executar lint, testes unitários e build de produção em ambiente que não consuma créditos da Vercel.
+- [x] Executar testes unitários e build de produção no GitHub Actions, sem consumir créditos da Vercel (execução aprovada: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43432483468).
+- [ ] Executar lint separadamente.
 - [ ] Testar a análise com lead que tenha `site` preenchido: não pode sugerir criação de site em resumo, oportunidades ou proposta.
 - [ ] Testar a análise com lead sem site: só então pode considerar criação de site.
 - [ ] Testar o fallback local quando a API ROQ/Groq estiver indisponível.
