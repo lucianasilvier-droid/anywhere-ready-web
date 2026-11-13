@@ -75,14 +75,24 @@ async function senderIdentity(context) {
     empresa = "";
   }
   let remetente = "";
+  let perfilUrl = "";
   try {
     const rep = await base44.representante();
     remetente = String(rep?.nome || "").trim();
+    const slug = String(rep?.pagina_slug || "").trim();
+    if (slug) {
+      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\\/$/, "");
+      perfilUrl = `${appUrl}/r/${slug}`;
+    }
   } catch {
     remetente = "";
   }
   if (!remetente) remetente = String(context.user?.full_name || "").trim();
-  return { empresa: empresa || BRAND_NAME, remetente: remetente.split(/\s+/)[0] || "" };
+  return {
+    empresa: empresa || BRAND_NAME,
+    remetente: remetente.split(/\\s+/)[0] || "",
+    perfilUrl,
+  };
 }
 
 // Replaces any "[Nome da Empresa]"-style placeholder the model still leaves behind.
@@ -290,7 +300,9 @@ Regras obrigatórias:
 - A mensagem deve estar pronta para enviar, sem nenhuma edição.
 - O texto de solicitação de consentimento é para canal externo apropriado. Não instrua o operador a iniciar contato pelo WhatsApp sem opt-in prévio. Nunca inclua catálogo, preços, vídeo ou links; apenas explique a finalidade e peça autorização clara.
 - Nunca diga que criou um site quando não houver URL de prévia disponível.
-- Se quem envia for representante comercial, assine com o primeiro nome dele; caso contrário, identifique apenas a empresa.
+- Se quem envia for representante comercial, NÃO invente nem altere a assinatura: ela será acrescentada pelo sistema ao final.
+- Na primeira mensagem de autorização, o link do perfil público do representante deve ficar imediatamente abaixo do nome dele na assinatura, em uma linha separada. Link disponível: ${remetente.perfilUrl || "não há perfil público configurado"}.
+- Não coloque o link no meio do texto; ele deve aparecer somente abaixo do nome na assinatura.
 
 Contexto de materiais disponíveis:
 - Prévia real do site: ${previewSiteUrl || "não disponível"}
@@ -334,6 +346,18 @@ Devolva {"mensagem": string}.`,
         setResponseStatus(400);
         throw Object.assign(new Error(result.error), { status: 400 });
       }
+    }
+    if (data.tipo === "autorizacao" && remetente.remetente) {
+      // A assinatura é montada no servidor para manter o link do perfil
+      // imediatamente abaixo do nome do representante em qualquer resposta da IA.
+      const linhas = String(mensagemFinal || "").trim().split("\\n");
+      while (linhas.length && /^(atenciosamente[,!]?|cordialmente[,!]?|abraços[,!]?|\s*)$/i.test(linhas[linhas.length - 1].trim())) linhas.pop();
+      if (linhas.length && linhas[linhas.length - 1].trim().toLowerCase() === remetente.remetente.toLowerCase()) linhas.pop();
+      mensagemFinal = [
+        linhas.join("\\n").trim(),
+        remetente.remetente,
+        ...(remetente.perfilUrl ? [remetente.perfilUrl] : []),
+      ].filter(Boolean).join("\\n\\n");
     }
     if (data.tipo === "proposta") {
       const materiais = [
