@@ -109,7 +109,8 @@ async function senderIdentity(context) {
       perfilUrl = `${appUrl}/r/${slug}`;
     }
   } catch {
-    remetente = "";
+    // Se a página não puder ser criada agora, preserva o nome do representante.
+    // O link será incluído assim que houver um slug público válido.
   }
   if (!remetente) remetente = String(context.user?.full_name || "").trim();
   return {
