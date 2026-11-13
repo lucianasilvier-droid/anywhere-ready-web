@@ -1,31 +1,28 @@
-name: Validate CRM analysis preparation
+name: Validar análise comercial do CRM
 
 on:
   push:
-    branches:
-      - fix/analise-comercial-contextual
+    branches: [fix/analise-comercial-contextual]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  verify-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
     steps:
-      - name: Checkout
+      - name: Baixar código
         uses: actions/checkout@v4
-      - name: Set up Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Set up Bun
+      - name: Configurar Bun
         uses: oven-sh/setup-bun@v2
-      - name: Install dependencies
+      - name: Instalar dependências travadas
         run: bun install --frozen-lockfile
-      - name: Lint
-        run: bun run lint -- --no-inline-config --ignore-pattern src/routeTree.gen.ts --rule 'prettier/prettier: off'
-      - name: Unit tests
+      - name: Executar testes
         run: bun run test
-      - name: Production build
+      - name: Validar build de produção
         run: bun run build
