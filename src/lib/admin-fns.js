@@ -417,6 +417,10 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
     const base44 = context.getBase44();
     const lead = await base44.entities.Lead.get(data.leadId);
 
+    // A integração Meta está intencionalmente pausada nesta fase. O fluxo atual é manual.
+    setResponseStatus(503);
+    throw Object.assign(new Error("Envio pela API do WhatsApp está desativado nesta etapa. Use o fluxo manual do CRM."), { status: 503 });
+
     const consentimento = validateWhatsappRecipientConsent(lead);
     if (!consentimento.ok) {
       setResponseStatus(409);
