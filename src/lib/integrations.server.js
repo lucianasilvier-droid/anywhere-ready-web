@@ -34,6 +34,7 @@ export const CREDENTIAL_KEYS = {
     WHATSAPP_VERIFY_TOKEN: "whatsapp_verify_token",
     WHATSAPP_APP_SECRET: "whatsapp_app_secret",
     WHATSAPP_TEMPLATE_PREFIX: "whatsapp_template_prefix",
+    WHATSAPP_TEMPLATE_LANGUAGE: "whatsapp_template_language",
   },
 };
 
