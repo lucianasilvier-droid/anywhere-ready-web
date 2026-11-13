@@ -21,7 +21,7 @@ function normalize(text) {
     .trim();
 }
 
-function classifyReply(text) {
+export function classifyReply(text) {
   const normalized = normalize(text);
   if (!normalized) return "indefinida";
   if (normalized.includes("nao") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
