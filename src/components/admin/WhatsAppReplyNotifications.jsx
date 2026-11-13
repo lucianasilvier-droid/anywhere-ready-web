@@ -63,7 +63,7 @@ export default function WhatsAppReplyNotifications({ representante = false }) {
         }
         const normalizadas = combinadas.map((item) => {
           const nova = novas.some((x) => x._key === item._key);
-          const lidaSalva = item._entity === "AtividadeLog" ? item.lida : item.notificacao_lida;
+          const lidaSalva = item._entity === "AtividadeLog" ? item.lida : item.tipo === "contato_pagina" ? (representante ? item.notificacao_lida_representante : item.notificacao_lida_admin) : item.notificacao_lida;
           return { ...item, _lida: lidaSalva === true ? true : lidaSalva === false ? false : initialLoad.current || !nova };
         });
         combinadas.forEach((item) => knownIds.current.add(item._key));
@@ -108,7 +108,7 @@ export default function WhatsAppReplyNotifications({ representante = false }) {
   async function marcarLida(item) {
     try {
       if (item._entity === "AtividadeLog") await base44.entities.AtividadeLog.update(item.id, { lida: true });
-      else await base44.entities.LeadInteraction.update(item.id, { notificacao_lida: true });
+      else await base44.entities.LeadInteraction.update(item.id, item.tipo === "contato_pagina" ? { [representante ? "notificacao_lida_representante" : "notificacao_lida_admin"]: true } : { notificacao_lida: true });
       setItems((atual) => atual.map((x) => x._key === item._key ? { ...x, _lida: true } : x));
     } catch (e) {
       toast.error(e?.message || "Não foi possível atualizar a atividade.");
@@ -120,7 +120,7 @@ export default function WhatsAppReplyNotifications({ representante = false }) {
     try {
       for (const item of pendentes) {
         if (item._entity === "AtividadeLog") await base44.entities.AtividadeLog.update(item.id, { lida: true });
-        else await base44.entities.LeadInteraction.update(item.id, { notificacao_lida: true });
+        else await base44.entities.LeadInteraction.update(item.id, item.tipo === "contato_pagina" ? { [representante ? "notificacao_lida_representante" : "notificacao_lida_admin"]: true } : { notificacao_lida: true });
       }
       setItems((atual) => atual.map((item) => ({ ...item, _lida: true })));
       toast.success("Atividades marcadas como lidas.");
