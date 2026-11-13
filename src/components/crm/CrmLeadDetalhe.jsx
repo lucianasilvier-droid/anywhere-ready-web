@@ -30,6 +30,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const [emailEdicao, setEmailEdicao] = useState("");
   const [salvandoEmail, setSalvandoEmail] = useState(false);
   const [respostaManual, setRespostaManual] = useState("");
+  const [evidenciaConsentimento, setEvidenciaConsentimento] = useState("");
   const [tipoRespostaManual, setTipoRespostaManual] = useState("indefinida");
   const [salvandoRespostaManual, setSalvandoRespostaManual] = useState(false);
   const [erro, setErro] = useState("");
@@ -124,6 +125,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     mutationFn: (payload) => consentimento({ data: { leadId, ...payload } }),
     onSuccess: async () => {
       toast.success("Autorização atualizada.");
+      setEvidenciaConsentimento("");
       await carregar();
       reloadInteracoes();
     },
@@ -551,10 +553,21 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               </div>
             )}
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 space-y-2">
+              <label className="block text-[10.5px] font-semibold text-white/45">
+                Evidência do consentimento prévio
+                <textarea
+                  value={evidenciaConsentimento}
+                  onChange={(e) => setEvidenciaConsentimento(e.target.value)}
+                  rows={2}
+                  placeholder="Registre a resposta ou a origem da autorização (ex.: formulário do site, solicitação do próprio cliente)."
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11.5px] text-white placeholder:text-white/25 focus:border-primary/40 focus:outline-none"
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => mConsent.mutate({ status: "autorizado", resposta: "Autorização registrada manualmente pelo operador." })}
-                disabled={mConsent.isPending}
+                onClick={() => mConsent.mutate({ status: "autorizado", resposta: evidenciaConsentimento.trim(), origem: "Consentimento prévio documentado pelo operador" })}
+                disabled={mConsent.isPending || evidenciaConsentimento.trim().length < 5}
                 className="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-2 text-[11px] font-bold text-emerald-300 disabled:opacity-50"
               >
                 <ShieldCheck className="h-3 w-3" /> Autorizou
@@ -566,6 +579,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <ShieldX className="h-3 w-3" /> Recusou
               </button>
+              </div>
             </div>
             <button
               onClick={() => mConsent.mutate({ status: "revogado", resposta: "Autorização revogada." })}
