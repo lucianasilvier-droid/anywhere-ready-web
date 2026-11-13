@@ -14,6 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
+import { resolveCredentials, buscarFotosGooglePlace } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
@@ -136,6 +137,7 @@ export const gerarSiteFn = createServerFn({ method: "POST" })
         bairro: lead.bairro || "",
         estado: lead.estado || "",
         place_id: lead.place_id || "",
+        // URLs temporárias do Google não são persistidas; as fotos são resolvidas ao abrir o site.\n        fotos: [],
         nota_google: lead.nota_google ?? null,
         total_avaliacoes: lead.total_avaliacoes ?? null,
         telefone: lead.telefone || "",
@@ -324,5 +326,16 @@ export const sitePublicoFn = createServerFn({ method: "POST" })
     const base44 = context.getBase44().asServiceRole;
     const [site] = await listar(base44, "SiteCliente", { slug: data.slug.toLowerCase() }, 1);
     if (!site || site.status === "desativado") return { encontrado: false };
-    return { encontrado: true, site: sitePublico(site) };
+    const publico = sitePublico(site);
+    // photoUri do Places é temporário: buscar uma URL nova em cada abertura pública.
+    publico.fotos = [];
+    if (site.place_id) {
+      try {
+        const credenciaisGoogle = await resolveCredentials(base44, "google_places");
+        publico.fotos = await buscarFotosGooglePlace(site.place_id, credenciaisGoogle.values);
+      } catch {
+        publico.fotos = [];
+      }
+    }
+    return { encontrado: true, site: publico };
   });

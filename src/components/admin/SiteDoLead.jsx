@@ -17,27 +17,20 @@ function escaparHtml(valor) {
 
 function exportarSiteZip(site) {
   const conteudo = site.conteudo || {};
+  const fotos = (Array.isArray(site.fotos) ? site.fotos : []).filter((foto) => foto?.url && /^https:\/\//i.test(foto.url)).slice(0, 8);
   const publico = {
-    slug: site.slug,
-    empresa: site.empresa,
-    categoria: site.categoria || "",
-    endereco: site.endereco || "",
-    cidade: site.cidade || "",
-    bairro: site.bairro || "",
-    estado: site.estado || "",
-    telefone: site.telefone || "",
-    whatsapp: site.whatsapp || "",
-    instagram: site.instagram || "",
-    horario: site.horario || "",
-    conteudo,
+    slug: site.slug, empresa: site.empresa, categoria: site.categoria || "",
+    endereco: site.endereco || "", cidade: site.cidade || "", bairro: site.bairro || "",
+    estado: site.estado || "", telefone: site.telefone || "", whatsapp: site.whatsapp || "",
+    instagram: site.instagram || "", horario: site.horario || "", fotos, conteudo,
   };
   const servicos = (conteudo.servicos || []).map((item) =>
-    "<article><h3>" + escaparHtml(item.nome) + "</h3><p>" + escaparHtml(item.descricao) + "</p></article>"
+    "<article class='service-card'><span class='card-mark'>✦</span><h3>" + escaparHtml(item.nome) + "</h3><p>" + escaparHtml(item.descricao) + "</p></article>"
   ).join("");
   const cardapio = (conteudo.cardapio || []).map((item) =>
-    "<article>" + (item.imagem_url ? '<img src="' + escaparHtml(item.imagem_url) + '" alt="' + escaparHtml(item.nome) + '">' : "") +
+    "<article class='menu-card'>" + (item.imagem_url ? '<img src="' + escaparHtml(item.imagem_url) + '" alt="' + escaparHtml(item.nome) + '">' : "") +
     "<small>" + escaparHtml(item.categoria) + "</small><h3>" + escaparHtml(item.nome) + "</h3><p>" +
-    escaparHtml(item.descricao) + "</p><strong>" + escaparHtml(item.preco) + "</strong></article>"
+    escaparHtml(item.descricao) + "</p>" + (item.preco ? "<strong>" + escaparHtml(item.preco) + "</strong>" : "") + "</article>"
   ).join("");
   const perguntas = (conteudo.perguntas || []).map((item) =>
     "<details><summary>" + escaparHtml(item.pergunta) + "</summary><p>" + escaparHtml(item.resposta) + "</p></details>"
@@ -46,28 +39,30 @@ function exportarSiteZip(site) {
   const numero = String(site.whatsapp || site.telefone || "").replace(/\D/g, "");
   const wa = numero ? "https://wa.me/" + (numero.length <= 11 ? "55" + numero : numero) + "?text=" + encodeURIComponent("Olá, " + site.empresa + "! Gostaria de mais informações.") : "";
   const mapa = "https://www.google.com/maps?q=" + encodeURIComponent([site.empresa, local].filter(Boolean).join(", ")) + "&output=embed";
+  const galeria = fotos.length ? "<section class='gallery-section'><div class='section-heading'><span class='eyebrow'>CONHEÇA O ESPAÇO</span><h2>Imagens de " + escaparHtml(site.empresa) + "</h2></div><div class='gallery'>" + fotos.map((foto) => "<figure><img src='" + escaparHtml(foto.url) + "' alt='Foto de " + escaparHtml(site.empresa) + "' loading='lazy'>" + ((foto.creditos || []).some((x) => x.nome) ? "<figcaption>Imagem do Google Maps</figcaption>" : "") + "</figure>").join("") + "</div></section>" : "";
   const html = [
     "<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
-    "<title>" + escaparHtml(site.empresa) + (site.cidade ? " — " + escaparHtml(site.cidade) : "") + "</title>",
-    "<meta name='description' content='" + escaparHtml(conteudo.seo_descricao || conteudo.subtitulo || site.empresa) + "'><link rel='stylesheet' href='styles.css'></head><body>",
-    "<header><p>" + escaparHtml(site.empresa) + "</p><nav><a href='#servicos'>Serviços</a><a href='#sobre'>Sobre</a><a href='#local'>Localização</a></nav></header>",
-    "<main><section class='hero'><p class='eyebrow'>" + escaparHtml(conteudo.slogan) + "</p><h1>" + escaparHtml(conteudo.titulo || site.empresa) + "</h1><p>" + escaparHtml(conteudo.subtitulo) + "</p>" + (wa ? "<a class='button' href='" + wa + "'>Falar pelo WhatsApp</a>" : "") + "</section>",
-    "<section id='servicos'><h2>Serviços</h2><div class='grid'>" + servicos + "</div></section>",
-    cardapio ? "<section id='cardapio'><h2>Cardápio</h2><div class='grid'>" + cardapio + "</div></section>" : "",
-    "<section id='sobre'><h2>Sobre " + escaparHtml(site.empresa) + "</h2><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + (conteudo.observacao_operador ? "<p>" + escaparHtml(conteudo.observacao_operador) + "</p>" : "") + "</section>",
-    "<section><h2>Perguntas frequentes</h2>" + perguntas + "</section>",
-    "<section id='local'><h2>Localização</h2><p>" + escaparHtml(local) + "</p><iframe title='Mapa' loading='lazy' src='" + mapa + "'></iframe></section>",
-    "</main><footer>" + escaparHtml(site.empresa) + "</footer></body></html>",
+    "<meta name='theme-color' content='#101c2c'><title>" + escaparHtml(site.empresa) + (site.cidade ? " — " + escaparHtml(site.cidade) : "") + "</title>",
+    "<meta name='description' content='" + escaparHtml(conteudo.seo_descricao || conteudo.subtitulo || site.empresa) + "'><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap' rel='stylesheet'><link rel='stylesheet' href='styles.css'></head><body>",
+    "<header class='site-header'><a class='brand' href='#topo'>" + escaparHtml(site.empresa) + "</a><nav><a href='#servicos'>Serviços</a>" + (cardapio ? "<a href='#cardapio'>Cardápio</a>" : "") + "<a href='#sobre'>Sobre</a><a href='#local'>Localização</a></nav>" + (wa ? "<a class='button button-small' href='" + wa + "' target='_blank' rel='noreferrer'>Fale conosco ↗</a>" : "") + "</header>",
+    "<main id='topo'><section class='hero'><div class='hero-copy'><span class='eyebrow'>" + escaparHtml(conteudo.slogan || site.categoria || "SEJA BEM-VINDO") + "</span><h1>" + escaparHtml(conteudo.titulo || site.empresa) + "</h1><p class='lead'>" + escaparHtml(conteudo.subtitulo) + "</p>" + (wa ? "<a class='button' href='" + wa + "' target='_blank' rel='noreferrer'>Conversar pelo WhatsApp <span>↗</span></a>" : "") + (local ? "<p class='hero-location'>⌖ " + escaparHtml(local) + "</p>" : "") + "</div>" + (fotos[0] ? "<div class='hero-photo'><img src='" + escaparHtml(fotos[0].url) + "' alt='Foto de " + escaparHtml(site.empresa) + "'></div>" : "<div class='hero-placeholder'><span>✦</span><strong>" + escaparHtml(site.empresa) + "</strong></div>") + "</section>",
+    galeria,
+    servicos ? "<section id='servicos'><div class='section-heading'><span class='eyebrow'>O QUE OFERECEMOS</span><h2>Serviços e especialidades</h2></div><div class='grid'>" + servicos + "</div></section>" : "",
+    cardapio ? "<section id='cardapio' class='menu-section'><div class='section-heading'><span class='eyebrow'>NOSSAS OPÇÕES</span><h2>Cardápio</h2></div><div class='grid'>" + cardapio + "</div></section>" : "",
+    "<section id='sobre' class='about-section'><div><span class='eyebrow'>NOSSA HISTÓRIA</span><h2>Sobre " + escaparHtml(site.empresa) + "</h2></div><div><p>" + escaparHtml(conteudo.sobre).replace(/\n/g, "<br>") + "</p>" + (conteudo.observacao_operador ? "<p>" + escaparHtml(conteudo.observacao_operador) + "</p>" : "") + "</div></section>",
+    perguntas ? "<section class='faq-section'><div class='section-heading'><span class='eyebrow'>DÚVIDAS FREQUENTES</span><h2>Como podemos ajudar?</h2></div>" + perguntas + "</section>" : "",
+    "<section id='local' class='location-section'><div class='section-heading'><span class='eyebrow'>ESTAMOS AQUI</span><h2>Venha nos conhecer</h2><p>" + escaparHtml(local) + "</p></div><iframe title='Mapa de localização' loading='lazy' src='" + mapa + "'></iframe></section>",
+    "</main><footer><strong>" + escaparHtml(site.empresa) + "</strong><span>" + escaparHtml(site.categoria || "") + "</span><small>Informações sujeitas à confirmação diretamente com a empresa.</small></footer>" + (wa ? "<a class='whatsapp-float' href='" + wa + "' target='_blank' rel='noreferrer' aria-label='Falar pelo WhatsApp'>WhatsApp ↗</a>" : "") + "</body></html>",
   ].join("");
   const css = [
-    "*{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#142338;font:16px/1.6 Arial,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:20px;align-items:center}header p{font-weight:800}nav{display:flex;gap:18px}a{color:#145da8;text-decoration:none}.hero{padding:70px 24px;background:#e4edf7;border-radius:24px}.eyebrow{color:#145da8;text-transform:uppercase;letter-spacing:.12em;font-weight:700}h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.05}.button{display:inline-block;background:#145da8;color:white;padding:12px 22px;border-radius:30px;margin-top:16px}section{padding:42px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}article,details{background:white;border:1px solid #dce3ea;border-radius:16px;padding:20px}article img{width:100%;height:160px;object-fit:cover;border-radius:10px}iframe{width:100%;height:320px;border:0;border-radius:16px}footer{text-align:center;color:#65758a}@media(max-width:600px){header{display:block}nav{margin-top:12px;flex-wrap:wrap}.hero{padding:40px 20px}}",
+    "*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:#f7f8fa;color:#172437;font:16px/1.7 'DM Sans',Arial,sans-serif}a{color:inherit;text-decoration:none}.site-header,main,footer{max-width:1160px;margin:auto;padding-left:28px;padding-right:28px}.site-header{height:82px;display:flex;justify-content:space-between;gap:24px;align-items:center}.brand{font-weight:800;font-size:19px;letter-spacing:-.04em}.site-header nav{display:flex;gap:26px;color:#637083;font-size:13px;font-weight:600}.site-header nav a:hover{color:#172437}.button{display:inline-flex;align-items:center;gap:16px;background:#176b58;color:#fff;padding:15px 23px;border-radius:999px;font-weight:700;box-shadow:0 12px 28px #176b5830;transition:transform .2s,box-shadow .2s}.button:hover{transform:translateY(-2px);box-shadow:0 16px 32px #176b5840}.button-small{padding:10px 17px;font-size:12px}.hero{display:grid;grid-template-columns:1fr .9fr;gap:55px;align-items:center;padding-top:65px;padding-bottom:78px;min-height:490px}.hero-copy{max-width:560px}.eyebrow{display:inline-block;color:#176b58;font-size:11px;font-weight:800;letter-spacing:.17em;text-transform:uppercase}.hero h1,h2{font-family:'Playfair Display',Georgia,serif;letter-spacing:-.035em;line-height:1.08}.hero h1{font-size:clamp(42px,6vw,72px);margin:19px 0}.lead{font-size:18px;color:#647184;max-width:540px;margin-bottom:28px}.hero-location{font-size:13px;color:#6e7a8a;margin-top:20px}.hero-photo,.hero-placeholder{height:410px;border-radius:28px;overflow:hidden;background:#e6ecea;box-shadow:0 28px 65px #14233820}.hero-photo img{width:100%;height:100%;object-fit:cover}.hero-placeholder{display:grid;place-content:center;text-align:center;color:#176b58;gap:12px}.hero-placeholder span{font-size:48px}.hero-placeholder strong{font:700 24px 'Playfair Display',Georgia,serif}.section-heading{margin-bottom:30px}.section-heading h2,.about-section h2{font-size:clamp(30px,4vw,44px);margin:10px 0}.section-heading p{color:#667487}.gallery-section,#servicos,#cardapio,.faq-section,.location-section{padding-top:58px;padding-bottom:58px}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.gallery figure{margin:0;height:210px;border-radius:18px;overflow:hidden;background:#e8ecef;position:relative}.gallery img{width:100%;height:100%;object-fit:cover}.gallery figcaption{position:absolute;bottom:0;left:0;right:0;padding:20px 12px 9px;background:linear-gradient(transparent,#0009);color:white;font-size:10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}.service-card,.menu-card,details{background:#fff;border:1px solid #e7ebef;border-radius:20px;padding:25px;box-shadow:0 12px 30px #17243708}.service-card h3,.menu-card h3{font-size:18px;margin:12px 0 7px}.service-card p,.menu-card p,details p{color:#6b7787;font-size:14px}.card-mark{color:#176b58;font-size:22px}.menu-section{background:#eef3f1;margin:0 -28px;padding-left:28px;padding-right:28px}.menu-card img{width:100%;height:175px;object-fit:cover;border-radius:13px}.menu-card small{display:block;color:#176b58;margin-top:12px}.menu-card strong{color:#176b58}.about-section{display:grid;grid-template-columns:.75fr 1.25fr;gap:55px;padding:76px 0;border-top:1px solid #e3e8ec}.about-section p{color:#596779}.faq-section details{margin:12px 0;padding:18px 22px}.faq-section summary{font-weight:700;cursor:pointer}.location-section iframe{width:100%;height:330px;border:0;border-radius:22px}.location-section{padding-bottom:80px}footer{padding-top:28px;padding-bottom:35px;border-top:1px solid #e3e8ec;display:flex;align-items:center;gap:18px;flex-wrap:wrap}footer small{width:100%;color:#7a8492}.whatsapp-float{position:fixed;right:22px;bottom:22px;background:#176b58;color:white;padding:13px 20px;border-radius:999px;box-shadow:0 10px 30px #0003;font-weight:700;font-size:13px;z-index:5}@media(max-width:760px){.site-header,main,footer{padding-left:19px;padding-right:19px}.site-header{height:auto;min-height:74px;flex-wrap:wrap;padding-top:15px;padding-bottom:15px}.site-header nav{order:3;width:100%;gap:17px;overflow-x:auto;padding-bottom:5px}.site-header nav a{white-space:nowrap}.button-small{margin-left:auto}.hero{grid-template-columns:1fr;gap:27px;padding-top:38px;padding-bottom:48px;min-height:0}.hero h1{font-size:clamp(39px,11vw,58px)}.lead{font-size:16px}.hero-photo,.hero-placeholder{height:280px}.gallery-section,#servicos,#cardapio,.faq-section,.location-section{padding-top:42px;padding-bottom:42px}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.gallery figure{height:145px}.grid{grid-template-columns:1fr}.menu-section{margin:0 -19px;padding-left:19px;padding-right:19px}.about-section{grid-template-columns:1fr;gap:10px;padding:50px 0}.location-section iframe{height:260px}.whatsapp-float{right:14px;bottom:14px}}",
   ].join("");
   const arquivos = {
     "index.html": strToU8(html),
     "styles.css": strToU8(css),
     "site.json": strToU8(JSON.stringify(publico, null, 2)),
-    "README.txt": strToU8("SITE EDITÁVEL — " + site.empresa + "\n\nAbra index.html no navegador. Edite o conteúdo em site.json e o visual em styles.css. O site usa HTML e CSS simples, sem dependências pagas.\n\nO mapa é incorporado pelo Google Maps. O botão de contato abre o WhatsApp informado no cadastro.\n"),
-    "assets/README.txt": strToU8("O cadastro atual não contém arquivos de imagem locais para exportação. Imagens de itens do cardápio, quando informadas por URL, permanecem referenciadas externamente no index.html.\n"),
+    "README.txt": strToU8("SITE EDITÁVEL — " + site.empresa + "\n\nAbra index.html no navegador. Edite o conteúdo em site.json e o visual em styles.css. O layout é responsivo e não exige dependências pagas.\n\nAs fotos cadastradas do Google Maps e do cardápio são exibidas por URL; a disponibilidade depende da validade e das permissões dessas imagens.\n"),
+    "assets/README.txt": strToU8("As imagens deste site são carregadas pelas URLs registradas no cadastro. Para manter fotos locais, baixe-as respeitando os direitos e as condições de uso de cada imagem.\n"),
   };
   const pacote = zipSync(arquivos, { level: 6 });
   const blob = new Blob([pacote], { type: "application/zip" });
@@ -78,7 +73,6 @@ function exportarSiteZip(site) {
   link.click();
   URL.revokeObjectURL(url);
 }
-
 const STATUS = {
   demonstracao: { label: "Demonstração", cls: "border-amber-500/30 bg-amber-500/10 text-amber-200" },
   publicado: { label: "Publicado", cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" },
@@ -212,7 +206,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             <button
               onClick={() =>
                 onUsarMensagem?.(
-                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e agendamento direto pelo WhatsApp:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
+                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e contato direto pelo WhatsApp:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
                 )
               }
               className={btnCls}
@@ -223,7 +217,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
 
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
-              WhatsApp de agendamento
+              WhatsApp para contato e reservas
               <input value={ajustes.whatsapp} onChange={(e) => setAjustes({ ...ajustes, whatsapp: e.target.value })} placeholder="(11) 99999-9999" className={`${inputCls} mt-1`} />
             </label>
             <label className="text-[10.5px] font-semibold uppercase tracking-wider text-white/35">
@@ -240,7 +234,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             </label>
           </div>
           <p className="text-[10.5px] leading-relaxed text-white/30">
-            Se a empresa não usa WhatsApp no telefone do Google, informe o número certo para os agendamentos.
+            Se a empresa não usa WhatsApp no telefone do Google, informe o número correto para contato ou reservas.
           </p>
 
           <div className="flex flex-wrap items-center gap-2">

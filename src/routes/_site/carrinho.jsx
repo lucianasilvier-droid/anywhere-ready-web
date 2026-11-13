@@ -93,7 +93,8 @@ function CarrinhoPage() {
     },
   });
 
-  const subtotal = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const itensSemPreco = itens.some((item) => !(Number(item.preco) > 0));
+  const subtotal = itens.reduce((s, i) => s + (Number(i.preco) > 0 ? i.preco * i.quantidade : 0), 0);
   const frete = subtotal >= 150 ? 0 : 19.9;
   const total = subtotal + frete;
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
@@ -102,6 +103,7 @@ function CarrinhoPage() {
     event.preventDefault();
     setErro("");
     if (!itens.length) return setErro("Seu carrinho está vazio.");
+    if (itensSemPreco) return setErro("Há produto sem preço confirmado no carrinho. Remova esse item ou volte à loja para consultar o valor antes de finalizar.");
     if (form.nome.trim().length < 2) return setErro("Informe seu nome completo.");
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setErro("Informe um e-mail válido.");
     if (form.telefone.replace(/\D/g, "").length < 10) return setErro("Informe um telefone com DDD.");
@@ -285,12 +287,13 @@ function CarrinhoPage() {
 
             <button
               type="submit"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || itensSemPreco}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-4 text-sm font-bold text-[#0a1128] disabled:opacity-60"
             >
               {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {mutation.isPending ? "Registrando pedido..." : `Finalizar pedido · ${brl(total)}`}
             </button>
+            {itensSemPreco && <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">Um ou mais itens estão sem preço confirmado. Remova esses itens para finalizar o pedido com segurança.</p>}
             <p className="text-center text-[11px] leading-relaxed text-white/35">
               {metodo
                 ? `Após finalizar, o pagamento é feito por ${metodo.nome} e a confirmação é automática. Nada é aprovado sem a confirmação do provedor.`
@@ -305,7 +308,7 @@ function CarrinhoPage() {
                 <li key={item.produto_id} className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[13px] font-semibold text-white">{item.nome}</p>
-                    <p className="text-[11.5px] text-white/40">{brl(item.preco)} cada</p>
+                    <p className="text-[11.5px] text-white/40">{Number(item.preco) > 0 ? `${brl(item.preco)} cada` : "Preço pendente — consulte a equipe"}</p>
                     <div className="mt-1.5 flex items-center gap-1">
                       <button
                         type="button"
@@ -334,17 +337,17 @@ function CarrinhoPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-[13px] font-semibold text-white">{brl(item.preco * item.quantidade)}</p>
+                  <p className="text-[13px] font-semibold text-white">{Number(item.preco) > 0 ? brl(item.preco * item.quantidade) : "A confirmar"}</p>
                 </li>
               ))}
             </ul>
 
             <div className="mt-4 space-y-1.5 border-t border-white/[0.07] pt-4 text-[12.5px]">
-              <Row label="Subtotal" value={brl(subtotal)} />
+              <Row label="Subtotal" value={itensSemPreco ? "A confirmar" : brl(subtotal)} />
               <Row label="Frete" value={frete === 0 ? "Grátis" : brl(frete)} />
               <div className="flex items-center justify-between pt-1.5">
                 <span className="font-semibold text-white">Total</span>
-                <span className="font-heading text-lg font-extrabold text-primary">{brl(total)}</span>
+                <span className="font-heading text-lg font-extrabold text-primary">{itensSemPreco ? "A confirmar" : brl(total)}</span>
               </div>
             </div>
             <p className="mt-3 text-[11px] text-white/35">Frete grátis em pedidos acima de R$ 150,00.</p>

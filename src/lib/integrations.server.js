@@ -94,6 +94,7 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
         "places.userRatingCount",
         "places.primaryTypeDisplayName",
         "places.addressComponents",
+        "places.photos",
       ].join(","),
     },
     body: JSON.stringify({
@@ -124,13 +125,23 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
     };
   }
 
-  const places = (payload.places || []).map((p) => {
+  const places = await Promise.all((payload.places || []).map(async (p) => {
     const comp = p.addressComponents || [];
     const pick = (type) =>
       comp.find((c) => (c.types || []).includes(type))?.longText ||
       comp.find((c) => (c.types || []).includes(type))?.shortText ||
       "";
     return {
+      photo_names: (p.photos || []).slice(0, 4).map((photo) => ({
+        nome: photo.name,
+        largura: photo.widthPx || null,
+        altura: photo.heightPx || null,
+        creditos: (photo.authorAttributions || []).map((a) => ({
+          nome: a.displayName || "",
+          uri: a.uri || "",
+          foto_uri: a.photoUri || "",
+        })),
+      })).filter((photo) => photo.nome),
       place_id: p.id || "",
       empresa: p.displayName?.text || "Empresa sem nome",
       endereco: p.formattedAddress || p.shortFormattedAddress || "",
@@ -143,9 +154,72 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
       nota_google: typeof p.rating === "number" ? p.rating : null,
       total_avaliacoes: typeof p.userRatingCount === "number" ? p.userRatingCount : null,
     };
-  });
+  }));
 
   return { ok: true, places, error: null };
+}
+
+/** Resolve no máximo quatro fotos reais do Google somente quando o site é gerado,
+ * evitando dezenas de chamadas de mídia durante uma busca de leads. */
+export async function resolveGooglePlacePhotos(photoNames = [], values = {}) {
+  const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
+  if (!key || !Array.isArray(photoNames)) return [];
+  const fotos = await Promise.all(photoNames.slice(0, 4).map(async (photo) => {
+    if (!photo?.nome || !String(photo.nome).startsWith("places/")) return null;
+    try {
+      const mediaUrl = new URL(`https://places.googleapis.com/v1/${photo.nome}/media`);
+      mediaUrl.searchParams.set("maxWidthPx", "1400");
+      mediaUrl.searchParams.set("skipHttpRedirect", "true");
+      const response = await fetch(mediaUrl, { headers: { "X-Goog-Api-Key": key } });
+      if (!response.ok) return null;
+      const payload = await response.json().catch(() => ({}));
+      if (!/^https:\/\//i.test(String(payload.photoUri || ""))) return null;
+      return {
+        url: payload.photoUri,
+        largura: photo.largura || null,
+        altura: photo.altura || null,
+        creditos: Array.isArray(photo.creditos) ? photo.creditos.slice(0, 5) : [],
+      };
+    } catch {
+      return null;
+    }
+  }));
+  return fotos.filter(Boolean);
+}
+
+
+/**
+ * Busca referências de foto atualizadas a partir do Place ID e resolve uma foto
+ * imediatamente. O Google informa que photoUri é temporário e photo names expiram;
+ * por isso não persistimos esses endereços no cadastro do site.
+ */
+export async function buscarFotosGooglePlace(placeId, values = {}) {
+  const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
+  if (!key || !placeId) return [];
+  try {
+    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`;
+    const response = await fetch(url, {
+      headers: {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "photos",
+      },
+    });
+    if (!response.ok) return [];
+    const payload = await response.json().catch(() => ({}));
+    const photoNames = (payload.photos || []).slice(0, 1).map((photo) => ({
+      nome: photo.name,
+      largura: photo.widthPx || null,
+      altura: photo.heightPx || null,
+      creditos: (photo.authorAttributions || []).map((a) => ({
+        nome: a.displayName || "",
+        uri: a.uri || "",
+        foto_uri: a.photoUri || "",
+      })),
+    })).filter((photo) => photo.nome);
+    return resolveGooglePlacePhotos(photoNames, { google_maps_api_key: key });
+  } catch {
+    return [];
+  }
 }
 
 

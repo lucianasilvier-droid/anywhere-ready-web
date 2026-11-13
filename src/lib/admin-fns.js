@@ -3,6 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { BRAND_NAME } from "@/lib/site-content";
+import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
 import {
   CREDENTIAL_KEYS,
   iaJSON,
@@ -42,7 +43,7 @@ const CONTEXT_TOOL = `Você é um assistente comercial especialista em marketing
 A empresa vende quatro serviços para negócios locais no Brasil:
 1) Criação e configuração do Perfil da Empresa no Google Maps;
 2) Administração e gestão mensal desse perfil;
-3) Placas NFC que levam clientes ao link de avaliação do Google e ao Instagram;
+3) Placas NFC vendidas individualmente, que levam clientes ao link de avaliação do Google ou ao Instagram; nunca ofereça kits ou combos;
 4) Criação de site com mapa do Google Maps e agendamento pelo WhatsApp (ofereça sempre que a empresa não tiver site).
 Nunca prometa primeira posição no Google, quantidade garantida de avaliações ou resultados não comprováveis.
 Respeite a LGPD e as regras do WhatsApp: nenhuma mensagem promocional sem autorização prévia do estabelecimento.
@@ -192,29 +193,45 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const remetente = await senderIdentity(context);
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
-    const catalogoFallback = [
-      { nome: "Placa Google NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc", descricao: "Acesso direto à página de avaliação do Google." },
-      { nome: "Placa Instagram NFC", preco: "R$ 55,00", url: "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram", descricao: "Acesso direto ao Instagram do estabelecimento." },
-      { nome: "Kit Google + Instagram", preco: "R$ 95,00", url: "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram", descricao: "Duas placas para divulgar os dois canais." },
-    ];
-    let catalogo = catalogoFallback;
+    // Prioriza os produtos cadastrados. Se o banco estiver vazio ou incompleto,
+    // completa com os produtos unitários e links de pagamento já conferidos.
+    // Nunca usa preço zero, kit ou combo como oferta.
+    let catalogo = [];
     try {
       const svc = base44.asServiceRole || base44;
       const page = await svc.entities.Produto.filter({ ativo: true }, { limit: 30 });
-      const produtos = (Array.isArray(page) ? page : page?.items || [])
-        .filter((p) => Number(p.preco) > 0)
-        .filter((p) => /nfc|placa|google|instagram/i.test(p.nome || ""));
-      if (produtos.length) {
-        const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://anywhere-ready-web-lucianasilvier-droid.vercel.app").replace(/\/$/, "");
-        catalogo = produtos.slice(0, 6).map((p) => ({
+      const cadastrados = Array.isArray(page) ? page : page?.items || [];
+      const porSlug = new Map(cadastrados.map((p) => [String(p.slug || p.id || "").trim(), p]));
+      const combinados = [...cadastrados];
+      for (const fallback of CATALOGO_INICIAL) {
+        const chave = String(fallback.slug || fallback.id || "").trim();
+        if (chave && !porSlug.has(chave)) combinados.push(fallback);
+      }
+      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
+      catalogo = combinados
+        .filter((p) => !/kit|combo|conjunto/i.test(String(p.nome || "")))
+        .filter((p) => /nfc|placa|google|instagram/i.test(String(p.nome || "")))
+        .map((p) => ({ produto: p, preco: Number(p.preco) }))
+        .filter(({ preco }) => Number.isFinite(preco) && preco > 0)
+        .slice(0, 6)
+        .map(({ produto: p, preco }) => ({
+          nome: p.nome,
+          preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(preco),
+          url: p.checkout_url || p.link_pagamento || (p.slug ? appUrl + "/loja/" + p.slug : appUrl + "/loja"),
+          descricao: p.descricao_curta || p.descricao || "Placa NFC personalizada.",
+        }));
+    } catch {
+      // Mesmo sem leitura do banco, os links e preços fixos confirmados permanecem disponíveis.
+      catalogo = CATALOGO_INICIAL
+        .filter((p) => !/kit|combo|conjunto/i.test(String(p.nome || "")))
+        .filter((p) => /nfc|placa|google|instagram/i.test(String(p.nome || "")))
+        .filter((p) => Number.isFinite(Number(p.preco)) && Number(p.preco) > 0)
+        .map((p) => ({
           nome: p.nome,
           preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(p.preco)),
-          url: p.checkout_url || p.link_pagamento || (p.slug ? appUrl + "/loja/" + p.slug : appUrl + "/loja"),
-          descricao: p.descricao_curta || p.descricao || "Produto NFC personalizado.",
+          url: p.checkout_url,
+          descricao: p.descricao_curta || p.descricao || "Placa NFC personalizada.",
         }));
-      }
-    } catch {
-      // Mantém o catálogo público de contingência caso a listagem do banco falhe.
     }
 
     const result = await iaJSON(
@@ -238,7 +255,7 @@ Regras obrigatórias:
 Contexto de materiais disponíveis:
 - Prévia real do site: ${previewSiteUrl || "não disponível"}
 - Vídeo demonstrativo: ${videoDemoUrl || "ainda não configurado no servidor"}
-- Catálogo de produtos e preços: ${JSON.stringify(catalogo)}
+- Catálogo de produtos e preços confirmados: ${catalogo.length ? JSON.stringify(catalogo) : "indisponível no cadastro; não informe preços, kits ou links de produtos"}
 
 Dados do estabelecimento que vai receber a mensagem:
 ${leadBrief(lead)}
@@ -262,8 +279,10 @@ Devolva {"mensagem": string}.`,
       ];
       if (previewSiteUrl && !lead.site) materiais.push("🌐 Prévia do site preparado para " + lead.empresa + ":\n" + previewSiteUrl);
       if (videoDemoUrl) materiais.push("🎥 Assista ao vídeo demonstrativo das placas NFC:\n" + videoDemoUrl);
-      materiais.push("🛍️ CATÁLOGO NFC");
-      for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
+      if (catalogo.length) {
+        materiais.push("🛍️ CATÁLOGO NFC");
+        for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
+      }
       mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
     }
     return { ok: true, mensagem: mensagemFinal };

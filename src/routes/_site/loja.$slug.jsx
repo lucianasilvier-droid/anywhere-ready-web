@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
 import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
-import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
+import { CATALOGO_INICIAL, completarProdutoComCatalogo } from "@/lib/catalogo-inicial";
 
 export const Route = createFileRoute("/_site/loja/$slug")({
   head: () => ({ meta: [{ title: "Placas NFC personalizadas para empresas | Google NFC Connect" }, { name: "description", content: "Conheça placas NFC personalizadas para facilitar o acesso dos clientes à avaliação no Google e aos canais digitais da sua empresa." }] }),
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/_site/loja/$slug")({
 });
 
 const CHECKOUTS_CONHECIDOS = {
-  "placa-google-instagram": "https://loja.infinitepay.io/bikercourierexpress/vhh6927-kit-google-e-instagram",
   "placa-instagram": "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
   "placa-google": "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc",
   "perfil-google-maps": "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google",
@@ -58,7 +57,7 @@ function ProdutoPage() {
       if (!resultado) {
         resultado = CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null;
       }
-      if (ativo) setProduto(resultado);
+      if (ativo) setProduto(completarProdutoComCatalogo(resultado || CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null));
     }
     carregarProduto()
       .catch(() => ativo && setProduto(null))
@@ -90,6 +89,7 @@ function ProdutoPage() {
 
   const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
   const checkoutWhatsApp = String(checkoutUrl || "").startsWith("https://wa.me/");
+  const temPreco = Number(produto.preco) > 0;
 
   function adicionar(irParaCarrinho) {
     cart.add(produto, quantidade);
@@ -131,8 +131,8 @@ function ProdutoPage() {
           <p className="mt-3 text-[14.5px] leading-relaxed text-white/60">{produto.descricao_curta}</p>
 
           <div className="mt-5 flex items-end gap-3">
-            <p className="font-heading text-3xl font-extrabold text-primary">{brl(produto.preco)}</p>
-            {produto.preco_antigo > produto.preco && (
+            <p className="font-heading text-3xl font-extrabold text-primary">{temPreco ? brl(produto.preco) : "Consulte o valor no checkout"}</p>
+            {temPreco && produto.preco_antigo > produto.preco && (
               <p className="pb-1 text-sm text-white/35 line-through">{brl(produto.preco_antigo)}</p>
             )}
           </div>
@@ -142,7 +142,7 @@ function ProdutoPage() {
               : "Produção sob encomenda"}
           </p>
 
-          {!checkoutWhatsApp && <div className="mt-6 flex items-center gap-3">
+          {!checkoutUrl && !checkoutWhatsApp && temPreco && <div className="mt-6 flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
               <button
                 onClick={() => setQuantidade((q) => Math.max(1, q - 1))}

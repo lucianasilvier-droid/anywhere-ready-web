@@ -55,18 +55,34 @@ Entregue apenas o JSON, sem comentários antes ou depois.`;
 }
 
 function briefing(lead, orientacoes) {
+  const camposEstrategicos = [
+    ["ai_resumo", "Análise da empresa"], ["diagnostico", "Diagnóstico"],
+    ["analise", "Análise"], ["recomendacoes", "Recomendações"],
+    ["recomendacao", "Recomendação"], ["diferenciais", "Diferenciais identificados"],
+    ["especialidades", "Especialidades"], ["servicos", "Serviços cadastrados"],
+    ["produtos", "Produtos cadastrados"], ["cardapio", "Cardápio cadastrado"],
+    ["menu", "Menu cadastrado"], ["publico_alvo", "Público-alvo"],
+    ["posicionamento", "Posicionamento"], ["descricao", "Descrição do negócio"],
+  ].flatMap(([chave, rotulo]) => {
+    const valor = lead?.[chave];
+    if (valor == null || valor === "") return [];
+    const texto = typeof valor === "string" ? valor : Array.isArray(valor) ? valor.map((item) => {
+      if (typeof item === "string") return item;
+      if (!item || typeof item !== "object") return "";
+      return [item.nome || item.name || item.titulo, item.descricao || item.description, item.preco || item.price].filter(Boolean).join(" — ");
+    }).filter(Boolean).join("; ") : "";
+    return texto ? [`${rotulo}: ${texto.slice(0, 2400)}`] : [];
+  });
   return [
     `Nome da empresa: ${lead.empresa || "não informado"}`,
     `Ramo/categoria: ${lead.categoria || "não informado"}`,
     `Endereço: ${lead.endereco || "não informado"}`,
     `Cidade: ${lead.cidade || "não informada"}${lead.bairro ? `, bairro ${lead.bairro}` : ""}${lead.estado ? ` - ${lead.estado}` : ""}`,
     `Nota no Google: ${lead.nota_google ?? "sem dados"} (${lead.total_avaliacoes ?? 0} avaliações)`,
-    lead.ai_resumo ? `Análise comercial já feita: ${lead.ai_resumo}` : "",
-    lead.observacoes ? `Observações do CRM: ${lead.observacoes}` : "",
+    ...camposEstrategicos,
+    lead.observacoes ? `Observações do CRM (usar apenas se forem públicas e confirmadas): ${String(lead.observacoes).slice(0, 1200)}` : "",
     orientacoes ? `Pedidos do operador para este site: ${orientacoes}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 const textoSeguro = (valor, limite = 220) => String(valor ?? "").trim().slice(0, limite);
@@ -91,7 +107,7 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
         { nome: "Informações e orientações", descricao: "Consulte informações sobre os serviços e esclareça suas dúvidas diretamente com a equipe.", icone: "estrela" },
         { nome: "Contato direto", descricao: "Use os canais de contato e a localização desta página para falar com a empresa.", icone: "coracao" },
       ];
-  const itensCardapio = Array.isArray(lead.cardapio) ? lead.cardapio : Array.isArray(lead.menu) ? lead.menu : [];
+  const itensCardapio = Array.isArray(lead.cardapio) ? lead.cardapio : Array.isArray(lead.menu) ? lead.menu : Array.isArray(lead.produtos) ? lead.produtos : [];
   const cardapio = itensCardapio.slice(0, 80).map((item) => ({
     categoria: textoSeguro(item?.categoria || "", 60),
     nome: textoSeguro(item?.nome || item?.name || item?.produto || "", 100),
@@ -103,7 +119,11 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
     slogan: restaurante ? "Uma experiência para aproveitar" : `Conheça ${nome}` ,
     titulo: nome,
     subtitulo: [categoria, local].filter(Boolean).join(" · ") || "Conheça a empresa e fale diretamente com a equipe.",
-    sobre: `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}. Esta demonstração reúne as informações disponíveis no cadastro e facilita o contato com a empresa.\n\nPara confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe pelos canais informados nesta página.`,
+     sobre: [
+      `${nome}${categoria ? ` atua no segmento de ${categoria}` : ""}${local ? ` e está localizada em ${local}` : ""}.`,
+      textoSeguro(lead.ai_resumo, 850),
+      "Esta demonstração organiza as informações disponíveis no cadastro. Para confirmar serviços, disponibilidade, valores e horários, fale diretamente com a equipe.",
+    ].filter(Boolean).join("\n\n"),
     servicos,
     diferenciais: [
       { titulo: "Contato direto", texto: "Fale com a empresa para confirmar informações e tirar dúvidas." },
@@ -115,7 +135,7 @@ export function gerarConteudoSiteAutomatico(lead, orientacoes = "") {
       { pergunta: "Quais serviços ou opções estão disponíveis?", resposta: "Fale diretamente com a equipe para confirmar as opções disponíveis." },
       { pergunta: "Como confirmar valores e horários?", resposta: "Valores, disponibilidade e horários devem ser confirmados diretamente com a empresa." },
     ],
-    chamada_agendamento: restaurante ? "Faça sua reserva ou consulte a disponibilidade diretamente pelo WhatsApp." : "Entre em contato para saber mais e consultar a disponibilidade.",
+    chamada_agendamento: restaurante ? "Solicite sua reserva e confirme a disponibilidade diretamente com a equipe." : "Entre em contato para saber mais e consultar a disponibilidade.",
     tema,
     seo_descricao: `${nome}${categoria ? ` em ${categoria}` : ""}${local ? ` em ${local}` : ""}. Consulte informações e entre em contato diretamente com a empresa.`.slice(0, 160),
     tipo_negocio: restaurante ? "restaurante" : "servicos",
@@ -188,6 +208,14 @@ export function sitePublico(site) {
     bairro: site.bairro || "",
     estado: site.estado || "",
     place_id: site.place_id || "",
+    fotos: (Array.isArray(site.fotos) ? site.fotos : []).filter((foto) => foto && /^https:\/\//i.test(String(foto.url || ""))).slice(0, 8).map((foto) => ({
+      url: String(foto.url),
+      creditos: (Array.isArray(foto.creditos) ? foto.creditos : []).slice(0, 5).map((c) => ({
+        nome: textoSeguro(c.nome, 100),
+        uri: /^https:\/\//i.test(String(c.uri || "")) ? String(c.uri) : "",
+        foto_uri: /^https:\/\//i.test(String(c.foto_uri || "")) ? String(c.foto_uri) : "",
+      })),
+    })),
     nota_google: site.nota_google ?? null,
     total_avaliacoes: site.total_avaliacoes ?? null,
     whatsapp: whatsappDe(site.whatsapp),
