@@ -158,45 +158,63 @@ export async function criarVenda(base44, payload, autor) {
   if (rep.status !== "ativo") throw erro("Este representante não está ativo. Reative antes de lançar vendas.");
 
   const calculo = calcularVenda(rep, payload);
+  return withTransaction(async (tx) => {
+    await tx("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`venda-representante:${calculo.chave}`]);
+    const existentes = await tx(
+      "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND data->>'chave' = $1 LIMIT 1 FOR UPDATE",
+      [calculo.chave],
+    );
+    if (existentes[0]) {
+      return { ok: true, duplicada: true, venda: { ...existentes[0].data, id: existentes[0].id } };
+    }
 
-  const existentes = await listar(base44, "VendaRepresentante", { chave: calculo.chave }, 1);
-  if (existentes[0]) {
-    return { ok: true, duplicada: true, venda: existentes[0] };
-  }
+    const numero = novoCodigo("VEN-", 6);
+    const vendaId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    const vendaData = {
+      numero,
+      chave: calculo.chave,
+      representante_id: rep.id,
+      representante_nome: rep.nome,
+      representante_email: norm(rep.user_email || rep.email),
+      cliente_nome: String(payload.cliente_nome || "").trim(),
+      cliente_email: norm(payload.cliente_email),
+      tipo: calculo.tipo,
+      competencia: calculo.competencia,
+      quantidade: calculo.quantidade,
+      valor_venda: calculo.valor_venda,
+      comissao_valor: calculo.comissao_valor,
+      valor_empresa: calculo.valor_empresa,
+      status: "pendente",
+      status_comissao: "aguardando_pagamento",
+      data_venda: payload.data_venda || new Date().toISOString(),
+      pedido_id: payload.pedido_id || "",
+      origem: payload.origem || "painel",
+      observacoes: payload.observacoes || "",
+      registrado_por: autor || "",
+    };
 
-  const numero = novoCodigo("VEN-", 6);
-  const venda = await base44.entities.VendaRepresentante.create({
-    numero,
-    chave: calculo.chave,
-    representante_id: rep.id,
-    representante_nome: rep.nome,
-    representante_email: norm(rep.user_email || rep.email),
-    cliente_nome: String(payload.cliente_nome || "").trim(),
-    cliente_email: norm(payload.cliente_email),
-    tipo: calculo.tipo,
-    competencia: calculo.competencia,
-    quantidade: calculo.quantidade,
-    valor_venda: calculo.valor_venda,
-    comissao_valor: calculo.comissao_valor,
-    valor_empresa: calculo.valor_empresa,
-    status: "pendente",
-    status_comissao: "aguardando_pagamento",
-    data_venda: payload.data_venda || new Date().toISOString(),
-    pedido_id: payload.pedido_id || "",
-    origem: payload.origem || "painel",
-    observacoes: payload.observacoes || "",
-    registrado_por: autor || "",
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'VendaRepresentante', $2::jsonb, $3, NULL)",
+      [vendaId, JSON.stringify(vendaData), autor || null],
+    );
+    const logId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'AtividadeLog', $2::jsonb, $3, NULL)",
+      [logId, JSON.stringify({
+        acao: "Venda de representante registrada",
+        entidade: "VendaRepresentante",
+        registro_id: vendaId,
+        detalhe: `${numero} · ${rep.nome} · ${TIPO_LABEL[calculo.tipo]} · ${calculo.quantidade} un. · comissão ${calculo.comissao_valor}`,
+        autor_email: norm(autor),
+      }), autor || null],
+    );
+
+    return {
+      ok: true,
+      duplicada: false,
+      venda: { ...vendaData, id: vendaId, created_by: autor || undefined },
+    };
   });
-
-  await registrar(
-    base44,
-    "Venda de representante registrada",
-    `${numero} · ${rep.nome} · ${TIPO_LABEL[calculo.tipo]} · ${calculo.quantidade} un. · comissão ${calculo.comissao_valor}`,
-    autor,
-    venda.id,
-  );
-
-  return { ok: true, duplicada: false, venda };
 }
 
 /** Confirma o pagamento do cliente e libera a comissão. */
