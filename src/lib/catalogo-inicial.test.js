@@ -6,6 +6,7 @@ describe("checkout público do catálogo", () => {
     for (const slug of ["kit-google-instagram", "placa-instagram", "placa-google"]) {
       const produto = CATALOGO_INICIAL.find((item) => item.slug === slug);
       expect(produto.checkout_url).toMatch(/^https:\/\/loja\.infinitepay\.io\//);
+      expect(produto.checkout_label).toBe("Comprar pela InfinitePay");
       expect(completarProdutoComCatalogo({ ...produto, checkout_url: "" }).checkout_url).toBe(produto.checkout_url);
     }
   });
