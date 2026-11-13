@@ -143,10 +143,13 @@ export async function saveProviderCredentials(base44, tipo, valores = {}, meta =
     status: "aguardando_configuracao",
     mensagem: "Credenciais salvas. Execute o teste de conexão para confirmar.",
   };
+  // Alterar credenciais nunca deve ativar um provedor automaticamente.
+  // A ativação exige uma ação administrativa explícita e separada.
+  patch.ativo = false;
   if (atual.registro) await svc.entities.Integracao.update(atual.registro.id, patch);
-  else await svc.entities.Integracao.create({ ...patch, ativo: true });
+  else await svc.entities.Integracao.create(patch);
 
-  return { ok: true, alterados };
+  return { ok: true, alterados, ativo: false };
 }
 
 export async function setProviderEnabled(base44, tipo, ativo) {
