@@ -11,7 +11,7 @@
 - [x] Gravada na branch de preparação a substituição pelo token novo fornecido pelo usuário: `lOe-akk9BgudktTFlKS-Z2oEZX4L7SPv5AdhlqszxJo`.
 - [x] Conferido no GitHub que o token novo está no arquivo da branch e o token antigo não está mais nele.
 - [x] Atualizada a lógica de análise comercial em `src/lib/admin-fns.js`: instrução explícita para nunca recomendar criação de site quando `lead.site` estiver preenchido; fallback local e resumo/proposta também respeitam essa regra.
-- [x] Comparação GitHub confirmou que a branch tem 2 commits à frente de `main`, sem commits atrás, com alterações somente em `src/routes/__root.jsx` e `src/lib/admin-fns.js`.
+- [x] Comparação GitHub confirmou que a branch tem 3 commits à frente de `main`, sem commits atrás, com alterações somente em `src/routes/__root.jsx` e `src/lib/admin-fns.js`.
 - [x] Conferido o histórico da Vercel: no momento da consulta, não havia deployment dos dois novos commits; produção continuava no commit anterior de `main`.
 
 ## 2. Implementado / preparado, mas ainda não verificado funcionalmente
