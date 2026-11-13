@@ -51,12 +51,19 @@ export async function sendMail({ to, subject, text, html }) {
 const escape = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 /** A simple e-mail with one call-to-action link. */
-export function linkEmail({ title, intro, cta, url, outro = "Se você não pediu isto, ignore este e-mail." }) {
-  const text = `${title}\n\n${intro}\n\n${cta}: ${url}\n\n${outro}`;
+export function linkEmail({ title, intro, cta, url, outro = "Se você não pediu isto, ignore este e-mail.", representativeName = "", representativeProfileUrl = "" }) {
+  const profileText = representativeName && representativeProfileUrl
+    ? `\n\n${representativeName}\nSua página de representante: ${representativeProfileUrl}`
+    : "";
+  const profileHtml = representativeName && representativeProfileUrl
+    ? `<p style="margin:18px 0;color:#333;line-height:1.6"><strong>${escape(representativeName)}</strong><br><a href="${escape(representativeProfileUrl)}" style="color:#1a73e8">Acessar minha página de representante</a></p>`
+    : "";
+  const text = `${title}\n\n${intro}${profileText}\n\n${cta}: ${url}\n\n${outro}`;
   const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f4f6fb;padding:24px">
 <table role="presentation" style="max-width:520px;margin:auto;background:#fff;border-radius:12px;padding:28px">
 <tr><td><h2 style="margin:0 0 12px;color:#0a1128">${escape(title)}</h2>
 <p style="color:#333;line-height:1.5">${escape(intro)}</p>
+${profileHtml}
 <p style="margin:24px 0"><a href="${escape(url)}" style="background:#1a73e8;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">${escape(cta)}</a></p>
 <p style="color:#777;font-size:12px;line-height:1.5">${escape(outro)}<br>Link: ${escape(url)}</p></td></tr></table></body></html>`;
   return { text, html };
