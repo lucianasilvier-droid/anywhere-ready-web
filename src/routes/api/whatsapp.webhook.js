@@ -5,7 +5,13 @@ const STOP_WORDS = [
   "parar", "sair", "descadastrar", "remover", "nao quero", "nao tenho interesse",
   "nao autorizo", "prefiro nao", "bloquear", "nao aceito",
 ];
-const YES_WORDS = ["sim", "autorizo", "autorizado", "pode", "pode enviar", "pode mandar", "aceito", "concordo", "ok", "claro"];
+// Só considera autorização quando a resposta expressa claramente o aceite de receber mensagens.
+ // Respostas genéricas como "sim", "ok", "claro" ou "pode" não comprovam opt-in.
+const YES_PHRASES = [
+  "autorizo", "sim autorizo", "sim eu autorizo", "aceito receber",
+  "concordo em receber", "pode enviar mensagens", "pode mandar mensagens",
+  "autorizo receber mensagens", "aceito mensagens", "pode me enviar mensagens",
+];
 
 function digits(value) {
   return String(value || "").replace(/\D/g, "");
@@ -26,7 +32,7 @@ export function classifyReply(text) {
   if (!normalized) return "indefinida";
   if (normalized.includes("nao") || STOP_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "nao";
   if (normalized === "nao" || normalized === "negativo") return "nao";
-  if (YES_WORDS.some((word) => normalized === word || normalized.startsWith(word + " "))) return "sim";
+  if (YES_PHRASES.some((phrase) => normalized === phrase || normalized.startsWith(phrase + " "))) return "sim";
   return "indefinida";
 }
 
