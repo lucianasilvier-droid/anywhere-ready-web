@@ -262,6 +262,21 @@ async function repWrite(entity, kind, current, patch, rep, user) {
     return Object.fromEntries(Object.entries(patch).filter(([k]) => !REP_PROTECTED_LEAD_FIELDS.includes(k)));
   }
   if (entity === "LeadInteraction" && kind === "create" && (await leadDoRepresentante(patch.lead_id, rep.id))) {
+    // Um representante só pode registrar envio manual depois de o consentimento
+    // estar autorizado e enquanto o contato não estiver bloqueado.
+    if (patch.tipo === "whatsapp_enviado") {
+      const rows = await query(
+        `SELECT data FROM records WHERE entity = 'Lead' AND id = $1 AND data->>'representante_id' = $2 LIMIT 1`,
+        [String(patch.lead_id), String(rep.id)],
+      );
+      const lead = rows[0]?.data || {};
+      if (lead.bloqueado || lead.consentimento !== "autorizado") {
+        throw httpError("Não é permitido registrar envio manual sem consentimento autorizado e contato desbloqueado.", 409);
+      }
+      if (String(patch.mensagem || "").trim().length < 5) {
+        throw httpError("A mensagem registrada precisa ter pelo menos 5 caracteres.", 422);
+      }
+    }
     return {
       ...patch,
       autor_email: norm(user.email),
