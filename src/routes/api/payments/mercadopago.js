@@ -67,14 +67,14 @@ export const Route = createFileRoute("/api/payments/mercadopago")({
 
         let pagamento = null;
         const porTransacao = await base44.entities.Pagamento.filter(
-          { provedor_payment_id: String(dataId) },
+          { provedor: "mercadopago", provedor_payment_id: String(dataId) },
           { limit: 1 },
         );
         pagamento = (Array.isArray(porTransacao) ? porTransacao : porTransacao?.items || [])[0] || null;
 
         if (!pagamento && referencia) {
           const porPedido = await base44.entities.Pagamento.filter(
-            { pedido_numero: String(referencia) },
+            { provedor: "mercadopago", pedido_numero: String(referencia) },
             { sort: "-created_date", limit: 1 },
           );
           pagamento = (Array.isArray(porPedido) ? porPedido : porPedido?.items || [])[0] || null;
