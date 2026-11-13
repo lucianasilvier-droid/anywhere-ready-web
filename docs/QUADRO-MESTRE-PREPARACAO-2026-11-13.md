@@ -59,3 +59,12 @@
 - [ ] Google Search Console confirma a propriedade.
 
 **Importante:** commit no GitHub comprova que o código foi gravado; não comprova funcionamento, publicação ou verificação do Google.
+
+
+### Auditoria adicional de integrações e pagamentos — 13/11/2026
+- [x] Confirmado no fluxo do CRM que os resultados do Google Places são salvos com `...place`; o campo `websiteUri` é convertido em `site` no servidor. A ficha de análise recebe o registro salvo por `Lead.get`. O mapeamento do site está coerente no código; ainda falta teste funcional com lead real.
+- [x] Confirmado que `iaJSON` na branch atual chama somente ROQ/Groq. Claude permanece como integração separada e não recebe os prompts/dados do CRM.
+- [ ] A branch antiga contém uma proteção HMAC SHA-256 para validar a assinatura dos webhooks recebidos da Meta. A versão atual do webhook não faz essa validação e a configuração atual de credenciais WhatsApp não inclui App Secret. Não copiar isoladamente: precisa incluir o campo no painel, armazenamento seguro e teste de verificação GET/POST para evitar interromper o webhook.
+- [ ] A branch antiga também torna obrigatória a assinatura do webhook do Mercado Pago e confere se a referência externa do pagamento corresponde ao pedido antes de liberar. A versão atual aceita a ausência do segredo de assinatura e não faz essa conferência adicional nesse ponto. É uma melhoria de segurança relevante, mas exige teste de pagamentos válidos, inválidos, repetidos e pedidos cancelados antes de integrar.
+- [ ] A branch antiga altera a política de reembolso para não marcar como concluído sem confirmação do provedor. Revisar fluxo completo e estados do painel antes de integrar.
+- [ ] Não foram copiadas mudanças de integrações, webhook ou pagamentos nesta rodada. A auditoria identificou melhorias candidatas, não uma implementação comprovada.
