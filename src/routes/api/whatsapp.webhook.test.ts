@@ -23,6 +23,7 @@ describe("classificação de respostas do WhatsApp", () => {
 
   it("não presume autorização quando a resposta é ambígua", () => {
     expect(classifyReply("vou pensar e retorno")).toBe("indefinida");
+    expect(classifyReply("não sei ainda")).toBe("indefinida");
     expect(classifyReply("sim")).toBe("indefinida");
     expect(classifyReply("ok")).toBe("indefinida");
     expect(classifyReply("claro")).toBe("indefinida");
