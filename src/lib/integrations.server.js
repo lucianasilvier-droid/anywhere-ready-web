@@ -530,6 +530,9 @@ export async function sendWhatsappText({ to, body }, values = {}) {
  * contain exactly one body placeholder ({{1}}) for the reviewed CRM message.
  */
 export function buildWhatsappTemplateRequest({ to, body, tipo }, values = {}) {
+  if (!["autorizacao", "proposta", "followup"].includes(tipo)) {
+    return { ok: false, error: "Tipo de template não permitido para envio pelo CRM." };
+  }
   const prefix = String(values.whatsapp_template_prefix || "").trim();
   if (!prefix) {
     return { ok: false, error: "Configure o prefixo dos templates aprovados da Meta antes de enviar mensagens." };
