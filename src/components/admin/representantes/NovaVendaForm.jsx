@@ -29,14 +29,14 @@ export default function NovaVendaForm({ open, onOpenChange, representantes, repr
 
   const comissaoPrevista =
     form.tipo === "placa"
-      ? (Number(rep?.comissao_placa) || 20) * (Number(form.quantidade) || 1)
+      ? (Number(rep?.comissao_placa ?? 20)) * (Number(form.quantidade) || 1)
       : form.tipo === "mensalidade"
         ? TABELA_COMISSAO.mensalidade.comissao
         : form.tipo === "site"
           ? Math.round((Number(form.valor_venda) || 0) * TABELA_COMISSAO.site.percentual * 100) / 100
           : form.tipo === "mensalidade_site"
             ? TABELA_COMISSAO.mensalidade_site.comissao
-            : Number(rep?.comissao_perfil) || 100;
+            : Number(rep?.comissao_perfil ?? 100);
   const mensal = form.tipo === "mensalidade" || form.tipo === "mensalidade_site";
 
   async function submit(e) {
