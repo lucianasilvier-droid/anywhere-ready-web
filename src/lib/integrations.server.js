@@ -467,15 +467,9 @@ export async function iaJSON(prompt, schemaHint, values = {}) {
     }
   }
 
-  if (!texto) {
-    const r = await chamarClaude(prompt, schemaHint, values.anthropic_api_key);
-    if (r.ok) {
-      texto = r.text;
-      usado = "claude-sonnet-5-5";
-    } else {
-      ultimoErro = `${ultimoErro} | ${r.error}`;
-    }
-  }
+  // A análise e as mensagens usam exclusivamente a integração ROQ.
+  // Se a ROQ estiver indisponível, o chamador decide a contingência local;
+  // nunca encaminhar prompts ou dados do CRM para outro provedor.
 
   const extra = { modelo: usado, modelo_solicitado: GROQ_MODELO };
   if (!texto) return { ok: false, error: ultimoErro || "A IA não retornou conteúdo.", data: null, ...extra };
