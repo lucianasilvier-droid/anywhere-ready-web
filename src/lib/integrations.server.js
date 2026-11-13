@@ -618,7 +618,7 @@ export async function testIntegration(tipo, values = {}) {
     }
     return {
       status: "conectado",
-      mensagem: `Conexão bem-sucedida: ${payload.verified_name || "conta"} · ${payload.display_phone_number || phoneId}.`,
+      mensagem: `Conexão da API confirmada: ${payload.verified_name || "conta"} · ${payload.display_phone_number || phoneId}. Para receber notificações com segurança, preencha também o App Secret e o Verify Token do webhook no painel.`,
     };
   }
 
