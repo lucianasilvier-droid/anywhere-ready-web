@@ -131,31 +131,17 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
       comp.find((c) => (c.types || []).includes(type))?.longText ||
       comp.find((c) => (c.types || []).includes(type))?.shortText ||
       "";
-    const fotos = await Promise.all((p.photos || []).slice(0, 8).map(async (photo) => {
-      try {
-        const mediaUrl = new URL(`https://places.googleapis.com/v1/${photo.name}/media`);
-        mediaUrl.searchParams.set("maxWidthPx", "1400");
-        mediaUrl.searchParams.set("skipHttpRedirect", "true");
-        const media = await fetch(mediaUrl, { headers: { "X-Goog-Api-Key": key } });
-        if (!media.ok) return null;
-        const mediaData = await media.json().catch(() => ({}));
-        if (!mediaData.photoUri || !/^https:\/\//i.test(mediaData.photoUri)) return null;
-        return {
-          url: mediaData.photoUri,
-          largura: photo.widthPx || null,
-          altura: photo.heightPx || null,
-          creditos: (photo.authorAttributions || []).map((a) => ({
-            nome: a.displayName || "",
-            uri: a.uri || "",
-            foto_uri: a.photoUri || "",
-          })),
-        };
-      } catch {
-        return null;
-      }
-    }));
     return {
-      fotos: fotos.filter(Boolean),
+      photo_names: (p.photos || []).slice(0, 4).map((photo) => ({
+        nome: photo.name,
+        largura: photo.widthPx || null,
+        altura: photo.heightPx || null,
+        creditos: (photo.authorAttributions || []).map((a) => ({
+          nome: a.displayName || "",
+          uri: a.uri || "",
+          foto_uri: a.photoUri || "",
+        })),
+      })).filter((photo) => photo.nome),
       place_id: p.id || "",
       empresa: p.displayName?.text || "Empresa sem nome",
       endereco: p.formattedAddress || p.shortFormattedAddress || "",
@@ -171,6 +157,34 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
   }));
 
   return { ok: true, places, error: null };
+}
+
+/** Resolve no máximo quatro fotos reais do Google somente quando o site é gerado,
+ * evitando dezenas de chamadas de mídia durante uma busca de leads. */
+export async function resolveGooglePlacePhotos(photoNames = [], values = {}) {
+  const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
+  if (!key || !Array.isArray(photoNames)) return [];
+  const fotos = await Promise.all(photoNames.slice(0, 4).map(async (photo) => {
+    if (!photo?.nome || !String(photo.nome).startsWith("places/")) return null;
+    try {
+      const mediaUrl = new URL(`https://places.googleapis.com/v1/${photo.nome}/media`);
+      mediaUrl.searchParams.set("maxWidthPx", "1400");
+      mediaUrl.searchParams.set("skipHttpRedirect", "true");
+      const response = await fetch(mediaUrl, { headers: { "X-Goog-Api-Key": key } });
+      if (!response.ok) return null;
+      const payload = await response.json().catch(() => ({}));
+      if (!/^https:\/\//i.test(String(payload.photoUri || ""))) return null;
+      return {
+        url: payload.photoUri,
+        largura: photo.largura || null,
+        altura: photo.altura || null,
+        creditos: Array.isArray(photo.creditos) ? photo.creditos.slice(0, 5) : [],
+      };
+    } catch {
+      return null;
+    }
+  }));
+  return fotos.filter(Boolean);
 }
 
 
