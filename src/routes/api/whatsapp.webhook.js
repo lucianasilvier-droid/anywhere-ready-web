@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const STOP_WORDS = [
   "parar", "sair", "descadastrar", "remover", "nao quero", "nao tenho interesse",
@@ -60,9 +61,25 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
       },
 
       POST: async ({ request, context }) => {
-        const payload = await request.json().catch(() => null);
-        if (!payload) return Response.json({ received: true });
+        const { resolveCredentials } = await import("@/lib/integrations.server");
+        const base44 = context.getBase44().asServiceRole;
+        const creds = await resolveCredentials(base44, "whatsapp");
+        const appSecret = creds.values.whatsapp_app_secret || "";
+        const signature = request.headers.get("x-hub-signature-256") || "";
 
+        // Never process webhook events without validating Meta's HMAC signature.
+        if (!appSecret || !/^sha256=[a-f0-9]{64}$/i.test(signature)) {
+          return Response.json({ error: "Assinatura do webhook ausente ou integração ainda não configurada." }, { status: 401 });
+        }
+
+        const rawBody = await request.text();
+        const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest();
+        const received = Buffer.from(signature.slice(7), "hex");
+        if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
+          return Response.json({ error: "Assinatura do webhook inválida." }, { status: 401 });
+        }
+
+        const payload = JSON.parse(rawBody);
         const base44 = context.getBase44().asServiceRole;
         const messages =
           payload?.entry?.flatMap((entry) =>
