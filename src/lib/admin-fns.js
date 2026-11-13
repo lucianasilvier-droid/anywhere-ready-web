@@ -287,7 +287,7 @@ Devolva {"mensagem": string}.`,
         `Encontrei o perfil da ${lead.empresa || "empresa"} no Google${detalhes ? ` (${detalhes})` : ""} e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações por meio de uma placa NFC.`,
         "Posso enviar uma breve apresentação, sem compromisso? Se preferirem não receber esse tipo de mensagem, é só me avisar.",
         remetente.remetente ? ` ${remetente.remetente}` : "",
-      ].join("\\n\\n").trim();
+      ].join("\n\n").trim();
     } else {
       setResponseStatus(400);
       throw Object.assign(new Error(result.error), { status: 400 });
