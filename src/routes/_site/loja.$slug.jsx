@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
 import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
-import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
+import { CATALOGO_INICIAL, completarProdutoComCatalogo } from "@/lib/catalogo-inicial";
 
 export const Route = createFileRoute("/_site/loja/$slug")({
   head: () => ({ meta: [{ title: "Placas NFC personalizadas para empresas | Google NFC Connect" }, { name: "description", content: "Conheça placas NFC personalizadas para facilitar o acesso dos clientes à avaliação no Google e aos canais digitais da sua empresa." }] }),
@@ -57,7 +57,7 @@ function ProdutoPage() {
       if (!resultado) {
         resultado = CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null;
       }
-      if (ativo) setProduto(resultado);
+      if (ativo) setProduto(completarProdutoComCatalogo(resultado || CATALOGO_INICIAL.find((item) => item.slug === slug || item.id === slug) || null));
     }
     carregarProduto()
       .catch(() => ativo && setProduto(null))
