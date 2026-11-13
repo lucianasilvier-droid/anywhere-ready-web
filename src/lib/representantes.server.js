@@ -364,12 +364,12 @@ export async function criarSolicitacao(base44, rep, user) {
   return withTransaction(async (tx) => {
     await tx("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`solicitacao-comissao:${rep.id}`]);
 
-    const pendentes = await tx(
-      "SELECT id FROM records WHERE entity = 'SolicitacaoPagamento' AND data->>'representante_id' = $1 AND data->>'status' = 'pendente' LIMIT 1 FOR UPDATE",
+    const emAberto = await tx(
+      "SELECT id FROM records WHERE entity = 'SolicitacaoPagamento' AND data->>'representante_id' = $1 AND data->>'status' IN ('pendente', 'aprovada') LIMIT 1 FOR UPDATE",
       [String(rep.id)],
     );
-    if (pendentes[0]) {
-      throw erro("Você já tem uma solicitação de pagamento aguardando aprovação.", 409);
+    if (emAberto[0]) {
+      throw erro("Você já tem uma solicitação de pagamento em andamento. Aguarde a conclusão ou a rejeição antes de abrir outra.", 409);
     }
 
     const disponiveis = await tx(
