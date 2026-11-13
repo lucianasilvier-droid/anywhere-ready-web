@@ -515,7 +515,9 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               )}
               <button
                 onClick={registrarEnvioManual}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/55 hover:text-white"
+                disabled={!autorizado || bloqueado || mensagem.trim().length < 5}
+                title={!autorizado || bloqueado ? "Disponível após consentimento prévio do contato." : "Registra no histórico uma mensagem enviada manualmente, fora da API."}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/55 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
               >
                 Registrar envio manual
               </button>
