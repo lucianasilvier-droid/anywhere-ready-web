@@ -81,7 +81,7 @@ async function senderIdentity(context) {
     remetente = String(rep?.nome || "").trim();
     const slug = String(rep?.pagina_slug || "").trim();
     if (slug) {
-      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\\/$/, "");
+      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
       perfilUrl = `${appUrl}/r/${slug}`;
     }
   } catch {
@@ -90,7 +90,7 @@ async function senderIdentity(context) {
   if (!remetente) remetente = String(context.user?.full_name || "").trim();
   return {
     empresa: empresa || BRAND_NAME,
-    remetente: remetente.split(/\\s+/)[0] || "",
+    remetente: remetente.split(/\s+/)[0] || "",
     perfilUrl,
   };
 }
@@ -350,14 +350,14 @@ Devolva {"mensagem": string}.`,
     if (data.tipo === "autorizacao" && remetente.remetente) {
       // A assinatura é montada no servidor para manter o link do perfil
       // imediatamente abaixo do nome do representante em qualquer resposta da IA.
-      const linhas = String(mensagemFinal || "").trim().split("\\n");
+      const linhas = String(mensagemFinal || "").trim().split("\n");
       while (linhas.length && /^(atenciosamente[,!]?|cordialmente[,!]?|abraços[,!]?|\s*)$/i.test(linhas[linhas.length - 1].trim())) linhas.pop();
       if (linhas.length && linhas[linhas.length - 1].trim().toLowerCase() === remetente.remetente.toLowerCase()) linhas.pop();
       mensagemFinal = [
-        linhas.join("\\n").trim(),
+        linhas.join("\n").trim(),
         remetente.remetente,
         ...(remetente.perfilUrl ? [remetente.perfilUrl] : []),
-      ].filter(Boolean).join("\\n\\n");
+      ].filter(Boolean).join("\n\n");
     }
     if (data.tipo === "proposta") {
       const materiais = [
