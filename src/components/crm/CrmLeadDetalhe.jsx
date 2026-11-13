@@ -191,12 +191,11 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     if (mensagem.trim().length < 5) return toast.error("Escreva a mensagem antes de registrar.");
     try {
       const agora = new Date().toISOString();
+      // O consentimento já deve estar autorizado; o registro manual não altera
+      // campos protegidos de consentimento, apenas data e etapa do atendimento.
       await base44.entities.Lead.update(leadId, {
         ultimo_contato_em: agora,
-        consent_mensagem: mensagem,
-        consentimento: "autorizado",
         etapa: lead.etapa,
-        consent_origem: lead.consent_origem || "Consentimento prévio registrado no CRM",
       });
       await base44.entities.LeadInteraction.create({
         lead_id: leadId,
