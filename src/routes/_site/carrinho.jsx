@@ -35,6 +35,18 @@ const vazio = {
 };
 
 function CarrinhoPage() {
+  return (
+    <div className="mx-auto w-full max-w-2xl px-4 py-20 text-center sm:px-6">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-8">
+        <h1 className="font-heading text-2xl font-extrabold text-white">Compra direta pela InfinitePay</h1>
+        <p className="mt-3 text-sm leading-relaxed text-white/55">O carrinho e o checkout interno estão desativados. Escolha uma placa na loja e use o botão Comprar pela InfinitePay para concluir sua compra no link oficial do produto.</p>
+        <Link to="/loja" className="mt-6 inline-flex rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-6 py-3 text-sm font-bold text-[#0a1128]">Voltar à loja</Link>
+      </div>
+    </div>
+  );
+}
+
+function CarrinhoPageAntigo() {
   const navigate = useNavigate();
   const finalizar = useServerFn(createOrder);
   const infoPagamento = useServerFn(checkoutPaymentInfoFn);
