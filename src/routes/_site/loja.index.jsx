@@ -33,7 +33,8 @@ function LojaPage() {
       .then((page) => {
         if (!ativo) return;
         const lista = Array.isArray(page) ? page : page?.items || [];
-        setProdutos(lista.length ? lista : CATALOGO_INICIAL);
+        const individuais = lista.filter((produto) => !/kit|combo|conjunto/i.test(String(produto.nome || "")));
+        setProdutos(individuais.length ? individuais : CATALOGO_INICIAL);
       })
       .catch(() => ativo && setProdutos(CATALOGO_INICIAL))
       .finally(() => ativo && setCarregando(false));
