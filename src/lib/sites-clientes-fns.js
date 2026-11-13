@@ -14,7 +14,7 @@ import {
 import { criarVenda, listar } from "@/lib/representantes.server";
 import { avaliarPrecoSite } from "@/lib/preco-site.server";
 import { PRECO_SITE } from "@/lib/preco-site";
-import { resolveCredentials, buscarFotosGooglePlace, buscarFotosGooglePlaceDetalhado } from "@/lib/integrations.server";
+import { resolveCredentials, buscarFotosGooglePlaceDetalhado } from "@/lib/integrations.server";
 
 function falhar(e) {
   if (e?.status) setResponseStatus(e.status);
