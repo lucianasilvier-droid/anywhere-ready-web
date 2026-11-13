@@ -79,8 +79,12 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
           return Response.json({ error: "Assinatura do webhook inválida." }, { status: 401 });
         }
 
-        const payload = JSON.parse(rawBody);
-        const base44 = context.getBase44().asServiceRole;
+        let payload;
+        try {
+          payload = JSON.parse(rawBody);
+        } catch {
+          return Response.json({ error: "Payload JSON inválido." }, { status: 400 });
+        }
         const messages =
           payload?.entry?.flatMap((entry) =>
             (entry?.changes || []).flatMap((change) => change?.value?.messages || []),
