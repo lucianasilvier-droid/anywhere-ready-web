@@ -11,6 +11,7 @@ import {
   resolveCredentials,
   searchPlaces,
   sendWhatsappTemplate,
+  validateWhatsappRecipientConsent,
   testIntegration,
 } from "@/lib/integrations.server";
 
@@ -416,20 +417,10 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
     const base44 = context.getBase44();
     const lead = await base44.entities.Lead.get(data.leadId);
 
-    if (lead.bloqueado || lead.consentimento === "recusado" || lead.consentimento === "revogado") {
+    const consentimento = validateWhatsappRecipientConsent(lead);
+    if (!consentimento.ok) {
       setResponseStatus(409);
-      throw Object.assign(
-        new Error("Este contato recusou ou revogou a autorização. Nenhuma mensagem será enviada."),
-        { status: 409 },
-      );
-    }
-
-    if (data.tipo !== "autorizacao" && lead.consentimento !== "autorizado") {
-      setResponseStatus(409);
-      throw Object.assign(
-        new Error("É necessário ter autorização registrada antes de enviar material promocional."),
-        { status: 409 },
-      );
+      throw Object.assign(new Error(consentimento.error), { status: 409 });
     }
 
     const credsWhats = await resolveCredentials(base44.asServiceRole, "whatsapp");
@@ -441,13 +432,7 @@ export const sendWhatsappFn = createServerFn({ method: "POST" })
 
     const agora = new Date().toISOString();
     const patch = { ultimo_contato_em: agora };
-    if (data.tipo === "autorizacao") {
-      patch.consentimento = "solicitado";
-      patch.consent_solicitado_em = agora;
-      patch.consent_mensagem = data.mensagem;
-      patch.consent_origem = "WhatsApp Business Platform";
-      patch.etapa = "aguardando_autorizacao";
-    } else if (data.tipo === "proposta") {
+    if (data.tipo === "proposta") {
       patch.etapa = "proposta_enviada";
     }
     await base44.entities.Lead.update(lead.id, patch);
