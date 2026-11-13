@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, Loader2, MapPin, MessageCircle, UserPlus, X } from "lucide-react";
+import { Check, ExternalLink, Loader2, MapPin, MessageCircle, UserPlus, X } from "lucide-react";
 import { adminCandidatosFn, decidirCandidatoFn } from "@/lib/landing-representante-fns";
 import { dataHora } from "@/lib/format";
 
@@ -30,6 +30,7 @@ function InscricoesPage() {
   const [carregando, setCarregando] = useState(true);
   const [filtro, setFiltro] = useState("pendente");
   const [processando, setProcessando] = useState("");
+  const [linksPerfis, setLinksPerfis] = useState({});
 
   const carregar = useCallback(async () => {
     try {
@@ -52,7 +53,14 @@ function InscricoesPage() {
     setProcessando(c.id);
     try {
       const r = await decidirFn({ data: { id: c.id, acao } });
-      toast.success(acao === "aprovar" ? `${c.nome} agora é representante. ${r.convite || ""}` : "Inscrição rejeitada.");
+      if (acao === "aprovar" && r.representante) {
+        const slug = r.representante.pagina_slug || r.representante.codigo;
+        const link = slug ? `${window.location.origin}/r/${slug}` : "";
+        if (link) setLinksPerfis((atual) => ({ ...atual, [c.id]: link }));
+        toast.success(`Representante aprovado. ${r.convite || ""}${link ? ` Perfil: ${link}` : ""}`);
+      } else {
+        toast.success("Inscrição rejeitada.");
+      }
       await carregar();
     } catch (e) {
       toast.error(e?.message || "Não foi possível concluir.");
@@ -122,6 +130,14 @@ function InscricoesPage() {
                   <span>{EXPERIENCIA[c.experiencia] || c.experiencia}</span>
                 </div>
                 {c.mensagem && <p className="mt-2 whitespace-pre-line text-[12px] leading-relaxed text-white/60">{c.mensagem}</p>}
+                {linksPerfis[c.id] && (
+                  <div className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-400/[0.06] px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Página do representante criada</p>
+                    <a href={linksPerfis[c.id]} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 break-all text-[12px] font-semibold text-emerald-200 hover:underline">
+                      {linksPerfis[c.id]} <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  </div>
+                )}
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <span className="text-[10.5px] text-white/30">{dataHora(c.created_date)}</span>
                   {c.status === "pendente" && (
