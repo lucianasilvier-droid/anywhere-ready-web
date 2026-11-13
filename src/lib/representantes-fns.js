@@ -175,9 +175,9 @@ export const salvarRepresentanteFn = createServerFn({ method: "POST" })
       user_email,
       telefone: data.telefone || "",
       status: data.status || "ativo",
-      comissao_perfil: Number(data.comissao_perfil) || 100,
+      comissao_perfil: data.comissao_perfil ?? 100,
       comissao_mensalidade: TABELA_COMISSAO.mensalidade.comissao,
-      comissao_placa: Number(data.comissao_placa) || 20,
+      comissao_placa: data.comissao_placa ?? 20,
       limite_leads_dia: Number(data.limite_leads_dia) || 20,
       observacoes: data.observacoes || "",
     };
