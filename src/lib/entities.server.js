@@ -172,6 +172,9 @@ const REP_PROTECTED_LEAD_FIELDS = [
   "arquivado", "arquivado_em", "arquivado_motivo", "arquivado_origem", "arquivado_por",
   "arquivado_prazo_dias", "arquivado_ultima_atividade_em", "arquivado_etapa",
   "restaurado_em", "restaurado_por", "ultimo_arquivamento",
+  // Consentimento e bloqueio só podem ser alterados pela ação validada do servidor.
+  "consentimento", "bloqueado", "consent_resposta", "consent_autorizado_em",
+  "consent_revogado_em", "consent_origem", "consent_mensagem",
 ];
 
 function repCondition(entity, repId, params) {
