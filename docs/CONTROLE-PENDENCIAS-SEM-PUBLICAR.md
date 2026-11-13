@@ -471,3 +471,25 @@ Arquivos alterados: src/lib/integrations.server.js, src/lib/entities.server.js e
 **Status real:** alterações confirmadas no GitHub. Checkout e valores conferidos no site da InfinitePay; arquivos de imagem do projeto conferidos diretamente. Ainda não foi executado build nem teste visual do catálogo no navegador. Nenhum build, deploy ou publicação foi iniciado. A revisão visual final permanece pendente.
 
 **Nota de validação Vercel — 12/11/2026:** a Vercel criou automaticamente uma prévia após um push no branch; não foi acionada manualmente. O build falhou por erro de sintaxe no arquivo da proposta da Barbearia da Vinci, não nos arquivos do catálogo. O erro era uma sequência literal `\\n` dentro do array de serviços. Corrigido no commit `3a8c0a5`. Não iniciar nova build sem autorização; a validação visual do catálogo e a confirmação do build corrigido continuam pendentes.
+
+## Monitoramento de validação visual — 13/11/2026
+
+### Estado dos checks e deployments
+- Branch monitorada: `work/pendencias-sem-publicar-2026-11-12`.
+- HEAD consultado: `afda23c1e5f8b739a6125ae9774fb4312f21525b` (12/11/2026 21:34:23 UTC), commit `Registrar imagem composta com as duas placas originais no kit`.
+- O commit HEAD contém os quatro commits de implementação de fotos solicitados: comparação GitHub indica o HEAD 29 commits à frente de `97296e25`, 28 à frente de `d1bead1a`, 27 à frente de `a5f13468` e 26 à frente de `4ee0cc5c`.
+- GitHub: zero check-runs; status agregado `failure`. O check `Vercel – anywhere-ready-web-s71m` informa **“Deployment rate limited — retry in 24 hours.”**, criado em `2026-11-12T21:34:25Z`, com destino `upgradeToPro=build-rate-limit`.
+- Vercel: inventário consultado retornou 64 deployments recentes do projeto; nenhum corresponde à branch monitorada, ao HEAD ou aos quatro SHAs acima. As consultas específicas por branch e por SHA também retornaram zero. Os deployments recentes listados pertencem a `main`/produção ou a outras branches; nenhum preview disponível para esta validação.
+
+### Revisão estática atualizada das fotos
+- A implementação dos quatro commits permanece presente no HEAD: coleta HTTPS de imagens do domínio oficial, persistência em `fotos_site`, exposição pública filtrada e prioridade da primeira foto oficial na capa, com combinação de fotos Google na galeria.
+- As fotos Google preservam `autor` e `autor_uri`; a galeria mostra o crédito quando o autor está disponível. **Ponto estático pendente:** quando a foto de destaque é uma foto Google (fallback por ausência de foto oficial), o componente da capa mostra apenas “Imagem do perfil no Google” e não renderiza `autor`/`autor_uri`. Conferir/corrigir a atribuição do destaque Google antes de aprovar esse cenário.
+- A geração usa `lead.site` e `lead.place_id` já gravados no CRM. Sem abrir uma prévia e conferir o registro correto do lead, não há evidência de que o domínio e o Place ID usados pertençam à Barbearia da Vinci.
+
+### Matriz de validação — não concluir
+- **Implementação:** presente no código do HEAD, confirmada por leitura dos arquivos e dos quatro commits.
+- **Revisão estática:** realizada; inclui a observação de atribuição ausente na capa quando o destaque vier do Google.
+- **Teste visual/funcional em navegador:** bloqueado; não existe preview/deployment da branch disponível e o check continua limitado por `build-rate-limit`. Imagens carregadas, erros de rede, domínio oficial e perfil Google correto ainda não foram verificados visualmente.
+- **Publicação:** não realizada; nenhuma ação de build, preview, deploy, promoção ou publicação foi iniciada nesta verificação. Produção permanece fora do escopo e exige autorização expressa.
+
+**Próximo passo:** continuar monitorando o status da Vercel. Se o limite for removido mas não houver preview pronto, solicitar autorização explícita antes de gerar qualquer prévia; se houver preview já existente, abrir somente esse deployment e concluir a revisão visual sem publicar.
