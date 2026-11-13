@@ -6,6 +6,7 @@
 
 import { TABELA_COMISSAO } from "@/lib/comissoes";
 import { PRECO_SITE } from "@/lib/preco-site";
+import { withTransaction } from "@/lib/db.server";
 
 export { TABELA_COMISSAO };
 
@@ -300,52 +301,81 @@ export async function resumoRepresentante(base44, rep) {
 export async function criarSolicitacao(base44, rep, user) {
   if (rep.status === "bloqueado") throw erro("Conta bloqueada. Fale com o administrador.", 403);
 
-  const pendentes = await listar(base44, "SolicitacaoPagamento", {
-    representante_id: rep.id,
-    status: "pendente",
-  }, 1);
-  if (pendentes[0]) {
-    throw erro("Você já tem uma solicitação de pagamento aguardando aprovação.", 409);
-  }
+  // Serializa solicitações do mesmo representante e reserva as comissões em
+  // uma única transação. Evita duas solicitações simultâneas ou saldo duplicado.
+  return withTransaction(async (tx) => {
+    await tx("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`solicitacao-comissao:${rep.id}`]);
 
-  const disponiveis = await listar(base44, "VendaRepresentante", {
-    representante_id: rep.id,
-    status_comissao: "disponivel",
-  }, 200);
+    const pendentes = await tx(
+      "SELECT id FROM records WHERE entity = 'SolicitacaoPagamento' AND data->>'representante_id' = $1 AND data->>'status' = 'pendente' LIMIT 1 FOR UPDATE",
+      [String(rep.id)],
+    );
+    if (pendentes[0]) {
+      throw erro("Você já tem uma solicitação de pagamento aguardando aprovação.", 409);
+    }
 
-  if (!disponiveis.length) {
-    throw erro("Não há comissões disponíveis para solicitar. A comissão é liberada após o pagamento do cliente.");
-  }
+    const disponiveis = await tx(
+      "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND data->>'representante_id' = $1 AND data->>'status_comissao' = 'disponivel' ORDER BY created_date FOR UPDATE",
+      [String(rep.id)],
+    );
+    if (!disponiveis.length) {
+      throw erro("Não há comissões disponíveis para solicitar. A comissão é liberada após o pagamento do cliente.");
+    }
 
-  const valor = round(disponiveis.reduce((t, v) => t + (Number(v.comissao_valor) || 0), 0));
-  const agora = new Date().toISOString();
+    const valor = round(disponiveis.reduce((t, v) => t + (Number(v.data?.comissao_valor) || 0), 0));
+    const agora = new Date().toISOString();
+    const solicitacaoId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    const numero = novoCodigo("SOL-", 6);
+    const vendaIds = disponiveis.map((v) => v.id);
+    const solicitacaoData = {
+      numero,
+      chave: `sol|${rep.id}|${agora}`,
+      representante_id: rep.id,
+      representante_nome: rep.nome,
+      representante_email: norm(rep.user_email || rep.email),
+      valor,
+      quantidade_comissoes: disponiveis.length,
+      vendas: vendaIds,
+      status: "pendente",
+      solicitado_em: agora,
+    };
 
-  const solicitacao = await base44.entities.SolicitacaoPagamento.create({
-    numero: novoCodigo("SOL-", 6),
-    chave: `sol|${rep.id}|${agora}`,
-    representante_id: rep.id,
-    representante_nome: rep.nome,
-    representante_email: norm(rep.user_email || rep.email),
-    valor,
-    quantidade_comissoes: disponiveis.length,
-    vendas: disponiveis.map((v) => v.id),
-    status: "pendente",
-    solicitado_em: agora,
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'SolicitacaoPagamento', $2::jsonb, $3, $4)",
+      [solicitacaoId, JSON.stringify(solicitacaoData), user?.email || null, user?.id || null],
+    );
+
+    for (const venda of disponiveis) {
+      await tx(
+        "UPDATE records SET data = data || $3::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1 AND data->>'status_comissao' = 'disponivel' AND data->>'representante_id' = $2",
+        [venda.id, String(rep.id), JSON.stringify({ status_comissao: "solicitada", solicitacao_id: solicitacaoId })],
+      );
+    }
+
+    const logId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'AtividadeLog', $2::jsonb, $3, $4)",
+      [logId, JSON.stringify({
+        acao: "Solicitação de pagamento aberta",
+        entidade: "VendaRepresentante",
+        registro_id: solicitacaoId,
+        detalhe: `${numero} · ${rep.nome} · ${valor} em ${disponiveis.length} comissão(ões)`,
+        autor_email: norm(user?.email),
+      }), user?.email || null, user?.id || null],
+    );
+
+    return {
+      ok: true,
+      solicitacao: {
+        ...solicitacaoData,
+        id: solicitacaoId,
+        created_date: agora,
+        updated_date: agora,
+        created_by: user?.email || undefined,
+        created_by_id: user?.id || undefined,
+      },
+    };
   });
-
-  await base44.entities.VendaRepresentante.bulkUpdate(
-    disponiveis.map((v) => ({ id: v.id, status_comissao: "solicitada", solicitacao_id: solicitacao.id })),
-  );
-
-  await registrar(
-    base44,
-    "Solicitação de pagamento aberta",
-    `${solicitacao.numero} · ${rep.nome} · ${valor} em ${disponiveis.length} comissão(ões)`,
-    norm(user?.email),
-    solicitacao.id,
-  );
-
-  return { ok: true, solicitacao };
 }
 
 /** Aprova, rejeita ou registra o pagamento de uma solicitação. */
