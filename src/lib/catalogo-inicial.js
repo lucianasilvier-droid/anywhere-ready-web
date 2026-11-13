@@ -13,9 +13,9 @@ export const CATALOGO_INICIAL = [
  */
 export function completarProdutoComCatalogo(produto) {
   if (!produto) return null;
-  const chave = String(produto.slug || produto.id || "").trim();
+  const chaves = [produto.slug, produto.id].filter(Boolean).map((valor) => String(valor).trim());
   const fallback = CATALOGO_INICIAL.find((item) =>
-    [item.slug, item.id].filter(Boolean).map(String).includes(chave)
+    [item.slug, item.id].filter(Boolean).some((valor) => chaves.includes(String(valor)))
   );
   if (!fallback) return produto;
   const precoBanco = Number(produto.preco);
