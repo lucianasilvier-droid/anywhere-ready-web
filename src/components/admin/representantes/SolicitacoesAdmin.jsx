@@ -77,9 +77,10 @@ export default function SolicitacoesAdmin({ solicitacoes, onAcao, processando })
                   </>
                 )}
 
-                {["pendente", "aprovada"].includes(s.status) && (
+                {s.status === "aprovada" && (
                   <button
                     onClick={() => setPagando(s)}
+                    disabled={ocupado}
                     className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-bold text-[#0a1128]"
                   >
                     <Banknote className="h-3 w-3" /> Registrar pagamento
