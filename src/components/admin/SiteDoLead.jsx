@@ -132,6 +132,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
   });
 
   const semSite = !lead.site;
+  const ehAlimentacao = /restaurante|bar\\b|boteco|choperia|cervejaria|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria|pastelaria|rotisseria|cantina|bistrô|bistro|casa de sucos/i.test(String(lead.categoria || "") + " " + String(lead.empresa || ""));
   const url = site && typeof window !== "undefined" ? `${window.location.origin}/site/${site.slug}` : "";
 
 
