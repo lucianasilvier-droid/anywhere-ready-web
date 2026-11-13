@@ -563,9 +563,5 @@ export async function decidirSolicitacao(base44, payload, adminEmail) {
 /** Libera a comissão da venda ligada a um pedido pago pela loja (indicação pela página do representante). */
 export async function confirmarVendaDoPedido(base44, pedido) {
   if (!pedido?.representante_venda_id) return null;
-  try {
-    return await confirmarPagamentoCliente(base44, pedido.representante_venda_id, "pagamento-automatico");
-  } catch {
-    return null;
-  }
+  return confirmarPagamentoCliente(base44, pedido.representante_venda_id, "pagamento-automatico");
 }
