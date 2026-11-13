@@ -18,7 +18,7 @@ export const Route = createRootRoute({
         content:
           "Melhore a presença digital do seu negócio com configuração e gestão do Perfil da Empresa no Google, placas NFC para avaliações e sites profissionais. Atendimento em todo o Brasil.",
       },
-      { name: "google-site-verification", content: "quTWAR4_UmBqhf19Xd2_J-9BOp3_i5WSuGiscIcaOAs" },
+      { name: "google-site-verification", content: "lOe-akk9BgudktTFlKS-Z2oEZX4L7SPv5AdhlqszxJo" },
       { name: "theme-color", content: "#070d1c" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Google NFC Connect" },
