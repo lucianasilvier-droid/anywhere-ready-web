@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, ShoppingBag, Nfc, ShieldCheck, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ProductCard from "@/components/store/ProductCard";
