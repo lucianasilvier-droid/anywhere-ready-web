@@ -491,7 +491,9 @@ export const registerConsentFn = createServerFn({ method: "POST" })
       patch.etapa = data.status === "recusado" ? "recusou_contato" : "bloqueado";
     }
 
-    await base44.entities.Lead.update(lead.id, patch);
+    // O lead foi carregado pelo cliente do visitante (com escopo do representante).
+    // A gravação dos campos protegidos usa o serviço confiável somente após essa checagem.
+    await base44.asServiceRole.entities.Lead.update(lead.id, patch);
     await base44.entities.LeadInteraction.create({
       lead_id: lead.id,
       empresa: lead.empresa,
