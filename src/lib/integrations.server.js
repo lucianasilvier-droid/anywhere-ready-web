@@ -522,6 +522,76 @@ export async function sendWhatsappText({ to, body }, values = {}) {
   return { ok: true, messageId: payload?.messages?.[0]?.id || null, error: null };
 }
 
+
+/**
+ * Builds the Cloud API payload for an approved template.
+ * The configured prefix maps to <prefix>_<type>; each approved template must
+ * contain exactly one body placeholder ({{1}}) for the reviewed CRM message.
+ */
+export function buildWhatsappTemplateRequest({ to, body, tipo }, values = {}) {
+  const prefix = String(values.whatsapp_template_prefix || "").trim();
+  if (!prefix) {
+    return { ok: false, error: "Configure o prefixo dos templates aprovados da Meta antes de enviar mensagens." };
+  }
+  const templateName = `${prefix}_${tipo}`;
+  if (!/^[a-z0-9_]{1,512}$/.test(templateName)) {
+    return { ok: false, error: "Prefixo inválido. Use somente letras minúsculas, números e sublinhado." };
+  }
+  const language = String(values.whatsapp_template_language || "pt_BR").trim();
+  if (!/^[a-z]{2}_[A-Z]{2}$/.test(language)) {
+    return { ok: false, error: "Idioma do template inválido. Use o formato pt_BR." };
+  }
+  const digits = String(to || "").replace(/\\D/g, "");
+  if (digits.length < 10) return { ok: false, error: "Telefone inválido para envio no WhatsApp." };
+  const number = digits.startsWith("55") ? digits : `55${digits}`;
+  const text = String(body || "").trim();
+  if (!text || text.length > 1024) {
+    return { ok: false, error: "A mensagem do template deve ter entre 1 e 1024 caracteres." };
+  }
+  return {
+    ok: true,
+    phoneNumber: number,
+    templateName,
+    requestBody: {
+      messaging_product: "whatsapp",
+      to: number,
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: language },
+        components: [{
+          type: "body",
+          parameters: [{ type: "text", text }],
+        }],
+      },
+    },
+  };
+}
+
+export async function sendWhatsappTemplate({ to, body, tipo }, values = {}) {
+  const token = values.whatsapp_access_token || readSecret("WHATSAPP_ACCESS_TOKEN");
+  const phoneId = values.whatsapp_phone_number_id || readSecret("WHATSAPP_PHONE_NUMBER_ID");
+  if (!token || !phoneId) {
+    return { ok: false, error: "WhatsApp Business não configurado. Informe o access token e o phone number ID no painel." };
+  }
+  const prepared = buildWhatsappTemplateRequest({ to, body, tipo }, values);
+  if (!prepared.ok) return prepared;
+
+  const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(prepared.requestBody),
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: payload?.error?.message || `O WhatsApp respondeu ${res.status}. Confirme se o template "${prepared.templateName}" está aprovado no idioma configurado.`,
+    };
+  }
+  return { ok: true, messageId: payload?.messages?.[0]?.id || null, templateName: prepared.templateName, error: null };
+}
+
 /* -------------------------------- Testes --------------------------------- */
 
 export async function testIntegration(tipo, values = {}) {
