@@ -208,6 +208,14 @@ export function sitePublico(site) {
     bairro: site.bairro || "",
     estado: site.estado || "",
     place_id: site.place_id || "",
+    fotos: (Array.isArray(site.fotos) ? site.fotos : []).filter((foto) => foto && /^https:\/\//i.test(String(foto.url || ""))).slice(0, 8).map((foto) => ({
+      url: String(foto.url),
+      creditos: (Array.isArray(foto.creditos) ? foto.creditos : []).slice(0, 5).map((c) => ({
+        nome: textoSeguro(c.nome, 100),
+        uri: /^https:\/\//i.test(String(c.uri || "")) ? String(c.uri) : "",
+        foto_uri: /^https:\/\//i.test(String(c.foto_uri || "")) ? String(c.foto_uri) : "",
+      })),
+    })),
     nota_google: site.nota_google ?? null,
     total_avaliacoes: site.total_avaliacoes ?? null,
     whatsapp: whatsappDe(site.whatsapp),
