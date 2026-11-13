@@ -87,7 +87,7 @@ function SiteCliente({ site }) {
   }`;
   const wa = (texto) => (site.whatsapp ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(texto)}` : "");
   const waOla = wa(`Olá, ${site.empresa}! Vi o site de vocês e gostaria de mais informações.`);
-  const isRestaurante = c.tipo_negocio === "restaurante";
+  const isRestaurante = c.tipo_negocio === "restaurante" || /restaurante|bar\\b|pub|boteco|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria/i.test(`${site.categoria || ""} ${site.empresa || ""}`);
   const waReserva = wa(`Olá, ${site.empresa}! Gostaria de fazer uma reserva. Poderiam me informar a disponibilidade?`);
   const serif = { fontFamily: "'Fraunces', Georgia, serif" };
   const dadosEstruturados = {
@@ -163,70 +163,68 @@ function SiteCliente({ site }) {
         </div>
       </header>
 
-      <section id="topo" className="relative overflow-hidden">
-        <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-[var(--soft)] opacity-80" />
-        <div className="absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[var(--soft)] opacity-50" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.2fr_0.8fr] md:py-24">
-          <div>
-            {c.slogan && (
-              <p className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-[var(--surface)] px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-                {c.slogan}
-              </p>
-            )}
-            <h1 style={serif} className="mt-5 text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-[3.4rem]">
-              {c.titulo || site.empresa}
-            </h1>
-            {c.subtitulo && <p className="mt-5 max-w-xl text-[16.5px] leading-relaxed text-[var(--muted)]">{c.subtitulo}</p>}
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href={isRestaurante && waReserva ? waReserva : "#agendar"} target={isRestaurante && waReserva ? "_blank" : undefined} rel={isRestaurante && waReserva ? "noreferrer" : undefined} className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90">
-                {isRestaurante ? <UtensilsCrossed className="h-4 w-4" /> : <Calendar className="h-4 w-4" />} {isRestaurante ? "Reservar mesa" : "Agendar pelo WhatsApp"}
-              </a>
-              <a href={linkRota} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--surface)] px-6 py-3.5 text-[14.5px] font-semibold hover:border-black/25">
-                <Navigation className="h-4 w-4" /> Como chegar
-              </a>
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            {site.fotos?.[0]?.url && (
-              <figure className="overflow-hidden rounded-[28px] border border-black/[0.06] bg-[var(--surface)] shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
-                <img src={site.fotos[0].url} alt={`Foto real de ${site.empresa} no Google Maps`} className="h-[260px] w-full object-cover md:h-[320px]" loading="eager" />
-                {site.fotos[0].creditos?.map((credito, index) => credito.nome && (
-                  <figcaption key={index} className="px-3 py-1.5 text-[10px] text-[var(--muted)]">Foto: {credito.uri ? <a href={credito.uri} target="_blank" rel="noreferrer" className="underline">{credito.nome}</a> : credito.nome}</figcaption>
-                ))}
-              </figure>
-            )}
-            <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
-            {site.nota_google != null && (
-              <div className="border-b border-black/[0.06] pb-5">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className={`h-5 w-5 ${i <= Math.round(site.nota_google) ? "fill-[#FBBC05] text-[#FBBC05]" : "text-black/15"}`} />
-                  ))}
-                </div>
-                <p className="mt-2 text-[14px]">
-                  <strong style={serif} className="text-[26px]">{String(site.nota_google).replace(".", ",")}</strong>{" "}
-                  <span className="text-[var(--muted)]">no Google · {site.total_avaliacoes || 0} avaliações</span>
-                </p>
+      {isRestaurante ? (
+        <section id="topo" className="relative isolate min-h-[650px] overflow-hidden bg-[#17110f] text-white">
+          {site.fotos?.[0]?.url && (
+            <img src={site.fotos[0].url} alt={`Ambiente de ${site.empresa}`} className="absolute inset-0 -z-20 h-full w-full object-cover" fetchPriority="high" />
+          )}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/90 via-black/65 to-black/20" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+          <div className="mx-auto flex min-h-[650px] max-w-7xl flex-col justify-end px-5 pb-16 pt-28 md:px-10 md:pb-24">
+            <div className="max-w-3xl">
+              {c.slogan && <p className="mb-5 inline-flex rounded-full border border-white/30 bg-black/25 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90 backdrop-blur">{c.slogan}</p>}
+              <h1 style={serif} className="max-w-3xl text-5xl font-bold leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">{c.titulo || site.empresa}</h1>
+              {c.subtitulo && <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl">{c.subtitulo}</p>}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={waReserva || "#reservas"} target={waReserva ? "_blank" : undefined} rel={waReserva ? "noreferrer" : undefined} className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-7 py-4 text-sm font-bold text-[var(--accent-ink)] shadow-xl transition hover:-translate-y-0.5 hover:brightness-110"><UtensilsCrossed className="h-4 w-4" /> Reservar uma mesa</a>
+                <a href="#cardapio" className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/10 px-7 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">Explorar o cardápio</a>
               </div>
-            )}
-            <ul className="space-y-3.5 pt-5 text-[14px]">
-              {(site.endereco || local) && (
-                <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.endereco || local}</span></li>
+              <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-white/80">
+                {site.nota_google != null && <span className="flex items-center gap-2"><Star className="h-4 w-4 fill-[#F8C65B] text-[#F8C65B]" /> <strong className="text-white">{String(site.nota_google).replace(".", ",")}</strong> no Google · {site.total_avaliacoes || 0} avaliações</span>}
+                {(site.bairro || site.cidade) && <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {[site.bairro, site.cidade].filter(Boolean).join(" · ")}</span>}
+              </div>
+            </div>
+            {!site.fotos?.length && <p className="mt-8 max-w-lg rounded-xl border border-amber-200/30 bg-black/40 px-4 py-3 text-xs text-amber-100">Fotografias do estabelecimento ainda não foram carregadas. Esta demonstração precisa de revisão antes de ser apresentada.</p>}
+          </div>
+        </section>
+      ) : (
+        <section id="topo" className="relative overflow-hidden">
+          <div className="absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-[var(--soft)] opacity-80" />
+          <div className="absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[var(--soft)] opacity-50" />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.2fr_0.8fr] md:py-24">
+            <div>
+              {c.slogan && <p className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-[var(--surface)] px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">{c.slogan}</p>}
+              <h1 style={serif} className="mt-5 text-[2.4rem] font-extrabold leading-[1.05] tracking-tight sm:text-[3.4rem]">{c.titulo || site.empresa}</h1>
+              {c.subtitulo && <p className="mt-5 max-w-xl text-[16.5px] leading-relaxed text-[var(--muted)]">{c.subtitulo}</p>}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="#agendar" className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3.5 text-[14.5px] font-semibold text-[var(--accent-ink)] shadow-[0_12px_30px_-12px_var(--accent)] hover:opacity-90"><Calendar className="h-4 w-4" /> Agendar pelo WhatsApp</a>
+                <a href={linkRota} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--surface)] px-6 py-3.5 text-[14.5px] font-semibold hover:border-black/25"><Navigation className="h-4 w-4" /> Como chegar</a>
+              </div>
+            </div>
+            <div className="space-y-5">
+              {site.fotos?.[0]?.url ? (
+                <figure className="overflow-hidden rounded-[28px] border border-black/[0.06] bg-[var(--surface)] shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
+                  <img src={site.fotos[0].url} alt={`Foto de ${site.empresa}`} className="h-[300px] w-full object-cover md:h-[390px]" fetchPriority="high" />
+                  {site.fotos[0].creditos?.map((credito, index) => credito.nome && <figcaption key={index} className="px-3 py-1.5 text-[10px] text-[var(--muted)]">Foto: {credito.uri ? <a href={credito.uri} target="_blank" rel="noreferrer" className="underline">{credito.nome}</a> : credito.nome}</figcaption>)}
+                </figure>
+              ) : (
+                <div className="grid min-h-[300px] place-items-center rounded-[28px] border border-dashed border-black/15 bg-[var(--surface)] p-8 text-center">
+                  <div><Sparkles className="mx-auto h-9 w-9 text-[var(--accent)]" /><p className="mt-3 text-sm font-semibold">Fotografias aguardando carregamento</p><p className="mt-1 text-xs text-[var(--muted)]">{site.fotos_mensagem || "A galeria será exibida quando as imagens estiverem disponíveis."}</p></div>
+                </div>
               )}
-              {site.telefone && (
-                <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`tel:${site.telefone.replace(/\D/g, "")}`} className="hover:underline">{site.telefone}</a></li>
-              )}
-              <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.horario || "Horários e disponibilidade pelo WhatsApp"}</span></li>
-              {site.instagram && (
-                <li className="flex gap-3"><Instagram className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noreferrer" className="hover:underline">@{site.instagram}</a></li>
-              )}
-            </ul>
+              <div className="rounded-[28px] border border-black/[0.06] bg-[var(--surface)] p-6 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.35)]">
+                {site.nota_google != null && <div className="border-b border-black/[0.06] pb-5"><div className="flex items-center gap-1">{[1,2,3,4,5].map((i)=><Star key={i} className={`h-5 w-5 ${i <= Math.round(site.nota_google) ? "fill-[#FBBC05] text-[#FBBC05]" : "text-black/15"}`} />)}</div><p className="mt-2 text-[14px]"><strong style={serif} className="text-[26px]">{String(site.nota_google).replace(".", ",")}</strong> <span className="text-[var(--muted)]">no Google · {site.total_avaliacoes || 0} avaliações</span></p></div>}
+                <ul className="space-y-3.5 pt-5 text-[14px]">
+                  {(site.endereco || local) && <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.endereco || local}</span></li>}
+                  {site.telefone && <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`tel:${site.telefone.replace(/\\D/g, "")}`} className="hover:underline">{site.telefone}</a></li>}
+                  <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.horario || "Horários e disponibilidade pelo WhatsApp"}</span></li>
+                  {site.instagram && <li className="flex gap-3"><Instagram className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noreferrer" className="hover:underline">@{site.instagram}</a></li>}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-
+        </section>
+      )}
       {site.fotos?.length > 1 && (
         <section className="mx-auto max-w-6xl px-5 pb-12">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
