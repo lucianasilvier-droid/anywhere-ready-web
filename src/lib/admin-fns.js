@@ -467,6 +467,11 @@ export const registerConsentFn = createServerFn({ method: "POST" })
       setResponseStatus(422);
       throw Object.assign(new Error("Registre a evidência do consentimento prévio antes de liberar o contato pelo WhatsApp."), { status: 422 });
     }
+    // Uma autorização nova nunca pode apagar uma recusa ou revogação anterior.
+    if (data.status === "autorizado" && (lead.bloqueado || ["recusado", "revogado"].includes(lead.consentimento))) {
+      setResponseStatus(409);
+      throw Object.assign(new Error("Este contato está bloqueado por recusa ou revogação anterior. Não é possível liberar o envio por este cadastro."), { status: 409 });
+    }
     const agora = new Date().toISOString();
 
     const patch = { consent_resposta: data.resposta, ultimo_contato_em: agora };
