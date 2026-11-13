@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Lint
-        run: "bun run lint -- --no-inline-config --rule 'prettier/prettier: off'"
+        run: "bun run lint -- --no-inline-config --ignore-pattern src/routeTree.gen.ts --rule 'prettier/prettier: off'"
       - name: Unit tests
         run: bun run test
       - name: Production build
