@@ -46,7 +46,7 @@ const DESCRICOES = {
       "Copie o Access Token permanente, Phone Number ID e App Secret",
       "Cole as credenciais nos campos acima e salve",
       "Defina o verify token abaixo (o mesmo texto será informado na Meta)",
-      "Informe o prefixo dos templates aprovados, se for usar mensagens por modelo",
+      "Defina o prefixo e idioma. A Meta deve ter aprovado <prefixo>_autorizacao, <prefixo>_proposta e <prefixo>_followup; cada template precisa de um único {{1}} no corpo.",
       "Cadastre a URL do webhook exibida abaixo na Meta",
     ],
   },
