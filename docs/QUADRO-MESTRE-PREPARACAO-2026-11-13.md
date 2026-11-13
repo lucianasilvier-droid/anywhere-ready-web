@@ -13,7 +13,7 @@
 - [x] Atualizada a lógica de análise comercial em `src/lib/admin-fns.js`: instrução explícita para nunca recomendar criação de site quando `lead.site` estiver preenchido; fallback local e resumo/proposta também respeitam essa regra.
 - [x] Incorporadas seletivamente correções seguras da branch antiga: telefone público não vira WhatsApp automaticamente; classificação ampliada de negócios de alimentação; rótulo do campo de WhatsApp diferencia reservas de contato.
 - [x] Adicionados testes para classificação de restaurantes, ausência de cardápio fictício, preservação dos dados cadastrados e WhatsApp confirmado.
-- [x] Reexecutados testes e build após as correções seletivas; GitHub Actions aprovado: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43433823881.
+- [x] Reexecutados testes e build após as correções seletivas; GitHub Actions aprovado: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43434501699.
 - [x] Revisadas as branches antigas: catálogo de contingência descartado por conter preços zerados e checkout de kit; branch extensa de trabalho não integrada por misturar credenciais Claude no contexto de IA do CRM e alterações amplas em integrações, pagamentos e autenticação.
 - [x] Comparação GitHub confirmou que a branch está à frente de `main`, sem commits atrás, com alterações somente em `src/routes/__root.jsx` e `src/lib/admin-fns.js`.
 - [x] Conferido o histórico da Vercel: no momento da consulta, não havia deployment dos dois novos commits; produção continuava no commit anterior de `main`.
@@ -21,7 +21,8 @@
 ## 2. Implementado / preparado, mas ainda não verificado funcionalmente
 
 - [x] Executar testes unitários e build de produção no GitHub Actions, sem consumir créditos da Vercel (execução aprovada: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43432483468).
-- [ ] Executar lint separadamente.
+- [x] Lint dos arquivos alterados aprovado (GitHub Actions: https://github.com/lucianasilvier-droid/anywhere-ready-web/actions/runs/43434501699).
+- [ ] Lint global do repositório continua com uma falha preexistente em `src/hooks/usePainelRepresentante.js` (regra `react-hooks/exhaustive-deps` não encontrada) e centenas de alertas de formatação Prettier; não alterado por não fazer parte desta correção.
 - [ ] Testar manualmente a análise com lead que tenha `site` preenchido: não pode sugerir criação de site em resumo, oportunidades ou proposta.
 - [ ] Testar a análise com lead sem site: só então pode considerar criação de site.
 - [ ] Testar o fallback local quando a API ROQ/Groq estiver indisponível.
