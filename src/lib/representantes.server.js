@@ -380,78 +380,113 @@ export async function criarSolicitacao(base44, rep, user) {
 
 /** Aprova, rejeita ou registra o pagamento de uma solicitação. */
 export async function decidirSolicitacao(base44, payload, adminEmail) {
-  const solicitacao = await base44.entities.SolicitacaoPagamento.get(payload.id).catch(() => null);
-  if (!solicitacao) throw erro("Solicitação não encontrada.", 404);
-  if (solicitacao.status === "paga") throw erro("Esta solicitação já foi paga.", 409);
-
-  const agora = new Date().toISOString();
-  const vendas = await listar(
-    base44,
-    "VendaRepresentante",
-    { solicitacao_id: solicitacao.id },
-    200,
-  );
-
-  if (payload.acao === "aprovar") {
-    if (solicitacao.status !== "pendente") throw erro("Somente solicitações pendentes podem ser aprovadas.", 409);
-    const atualizada = await base44.entities.SolicitacaoPagamento.update(solicitacao.id, {
-      status: "aprovada",
-      decidido_em: agora,
-      decidido_por: norm(adminEmail),
-      observacoes: payload.observacoes || solicitacao.observacoes || "",
-    });
-    await registrar(base44, "Solicitação de pagamento aprovada", `${solicitacao.numero} · ${solicitacao.valor}`, norm(adminEmail), solicitacao.id);
-    return { ok: true, solicitacao: atualizada };
-  }
-
-  if (payload.acao === "rejeitar") {
-    if (!["pendente", "aprovada"].includes(solicitacao.status)) {
-      throw erro("Esta solicitação não pode ser rejeitada.", 409);
-    }
-    const atualizada = await base44.entities.SolicitacaoPagamento.update(solicitacao.id, {
-      status: "rejeitada",
-      decidido_em: agora,
-      decidido_por: norm(adminEmail),
-      observacoes: payload.observacoes || "",
-    });
-    if (vendas.length) {
-      await base44.entities.VendaRepresentante.bulkUpdate(
-        vendas
-          .filter((v) => v.status_comissao === "solicitada")
-          .map((v) => ({ id: v.id, status_comissao: "disponivel", solicitacao_id: "" })),
-      );
-    }
-    await registrar(base44, "Solicitação de pagamento rejeitada", `${solicitacao.numero} · ${solicitacao.valor}`, norm(adminEmail), solicitacao.id);
-    return { ok: true, solicitacao: atualizada };
-  }
-
-  if (payload.acao === "pagar") {
-    if (solicitacao.status === "rejeitada") throw erro("Solicitação rejeitada não pode ser paga.", 409);
-    const atualizada = await base44.entities.SolicitacaoPagamento.update(solicitacao.id, {
-      status: "paga",
-      decidido_em: agora,
-      decidido_por: norm(adminEmail),
-      comprovante: payload.comprovante || solicitacao.comprovante || "",
-      observacoes: payload.observacoes || solicitacao.observacoes || "",
-    });
-    if (vendas.length) {
-      await base44.entities.VendaRepresentante.bulkUpdate(
-        vendas
-          .filter((v) => ["solicitada", "disponivel"].includes(v.status_comissao))
-          .map((v) => ({ id: v.id, status_comissao: "paga", paga_em: agora, solicitacao_id: solicitacao.id })),
-      );
-    }
-    await registrar(
-      base44,
-      "Pagamento de comissão registrado",
-      `${solicitacao.numero} · ${solicitacao.representante_nome} · ${solicitacao.valor}${payload.comprovante ? ` · ${payload.comprovante}` : ""}`,
-      norm(adminEmail),
-      solicitacao.id,
+  return withTransaction(async (tx) => {
+    const rows = await tx(
+      "SELECT id, data FROM records WHERE entity = 'SolicitacaoPagamento' AND id = $1 FOR UPDATE",
+      [String(payload.id)],
     );
-    return { ok: true, solicitacao: atualizada };
-  }
+    const row = rows[0];
+    if (!row) throw erro("Solicitação não encontrada.", 404);
+    const solicitacao = { ...row.data, id: row.id };
+    if (solicitacao.status === "paga") throw erro("Esta solicitação já foi paga.", 409);
 
-  throw erro("Ação inválida.");
+    const agora = new Date().toISOString();
+    const vendas = await tx(
+      "SELECT id, data FROM records WHERE entity = 'VendaRepresentante' AND data->>'solicitacao_id' = $1 FOR UPDATE",
+      [String(solicitacao.id)],
+    );
+    let patch;
+    let acao;
+    let detalhe;
+
+    if (payload.acao === "aprovar") {
+      if (solicitacao.status !== "pendente") {
+        throw erro("Somente solicitações pendentes podem ser aprovadas.", 409);
+      }
+      patch = {
+        status: "aprovada",
+        decidido_em: agora,
+        decidido_por: norm(adminEmail),
+        observacoes: payload.observacoes || solicitacao.observacoes || "",
+      };
+      acao = "Solicitação de pagamento aprovada";
+      detalhe = `${solicitacao.numero} · ${solicitacao.valor}`;
+    } else if (payload.acao === "rejeitar") {
+      if (!["pendente", "aprovada"].includes(solicitacao.status)) {
+        throw erro("Esta solicitação não pode ser rejeitada.", 409);
+      }
+      patch = {
+        status: "rejeitada",
+        decidido_em: agora,
+        decidido_por: norm(adminEmail),
+        observacoes: payload.observacoes || "",
+      };
+      for (const venda of vendas) {
+        if (venda.data?.status_comissao !== "solicitada") continue;
+        await tx(
+          "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1",
+          [venda.id, JSON.stringify({ status_comissao: "disponivel", solicitacao_id: "" })],
+        );
+      }
+      acao = "Solicitação de pagamento rejeitada";
+      detalhe = `${solicitacao.numero} · ${solicitacao.valor}`;
+    } else if (payload.acao === "pagar") {
+      if (solicitacao.status === "rejeitada") {
+        throw erro("Solicitação rejeitada não pode ser paga.", 409);
+      }
+      patch = {
+        status: "paga",
+        decidido_em: agora,
+        decidido_por: norm(adminEmail),
+        comprovante: payload.comprovante || solicitacao.comprovante || "",
+        observacoes: payload.observacoes || solicitacao.observacoes || "",
+      };
+      for (const venda of vendas) {
+        if (!["solicitada", "disponivel"].includes(venda.data?.status_comissao)) continue;
+        await tx(
+          "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'VendaRepresentante' AND id = $1",
+          [venda.id, JSON.stringify({
+            status_comissao: "paga",
+            paga_em: agora,
+            solicitacao_id: solicitacao.id,
+          })],
+        );
+      }
+      acao = "Pagamento de comissão registrado";
+      detalhe = `${solicitacao.numero} · ${solicitacao.representante_nome} · ${solicitacao.valor}${patch.comprovante ? ` · ${patch.comprovante}` : ""}`;
+    } else {
+      throw erro("Ação inválida.");
+    }
+
+    const atualizadas = await tx(
+      "UPDATE records SET data = data || $2::jsonb, updated_date = now() WHERE entity = 'SolicitacaoPagamento' AND id = $1 RETURNING id, data, created_date, updated_date, created_by, created_by_id",
+      [solicitacao.id, JSON.stringify(patch)],
+    );
+    const logId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    await tx(
+      "INSERT INTO records (id, entity, data, created_by, created_by_id) VALUES ($1, 'AtividadeLog', $2::jsonb, $3, NULL)",
+      [logId, JSON.stringify({
+        acao,
+        entidade: "VendaRepresentante",
+        registro_id: solicitacao.id,
+        detalhe,
+        autor_email: norm(adminEmail),
+      }), adminEmail || null],
+    );
+
+    const updated = atualizadas[0];
+    return {
+      ok: true,
+      solicitacao: {
+        ...updated.data,
+        id: updated.id,
+        created_date: updated.created_date instanceof Date ? updated.created_date.toISOString() : updated.created_date,
+        updated_date: updated.updated_date instanceof Date ? updated.updated_date.toISOString() : updated.updated_date,
+        created_by: updated.created_by ?? undefined,
+        created_by_id: updated.created_by_id ?? undefined,
+      },
+    };
+  });
 }
 
 /** Libera a comissão da venda ligada a um pedido pago pela loja (indicação pela página do representante). */
