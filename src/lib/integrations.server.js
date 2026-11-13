@@ -390,7 +390,7 @@ async function chamarGroq(modelo, key, prompt, schemaHint) {
             prompt + (schemaHint ? `\n\nResponda SOMENTE com um JSON válido neste formato: ${schemaHint}` : ""),
         },
       ],
-      ...(schemaHint ? { response_format: { type: "json_object" } } : {}),
+      // O modelo GPT-OSS da Roq rejeita o modo JSON forçado; o prompt já solicita JSON e a aplicação valida a resposta ao receber.\n      ...(schemaHint && !modelo.startsWith("openai/gpt-oss-") ? { response_format: { type: "json_object" } } : {}),
     }),
   });
   const payload = await res.json().catch(() => ({}));
