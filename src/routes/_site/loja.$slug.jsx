@@ -16,7 +16,6 @@ export const Route = createFileRoute("/_site/loja/$slug")({
 const CHECKOUTS_CONHECIDOS = {
   "placa-instagram": "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
   "placa-google": "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc",
-  "perfil-google-maps": "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google",
 };
 
 function ProdutoPage() {
