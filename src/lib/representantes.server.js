@@ -234,6 +234,9 @@ export async function confirmarPagamentoCliente(base44, vendaId, autor) {
     const venda = { ...row.data, id: row.id };
     if (venda.status === "cancelada") throw erro("Venda cancelada não pode ser confirmada.");
     if (venda.status_comissao === "paga") return { ok: true, jaConfirmada: true, venda };
+    if (venda.status === "confirmada" && venda.status_comissao !== "aguardando_pagamento") {
+      return { ok: true, jaConfirmada: true, venda };
+    }
 
     const agora = new Date().toISOString();
     const patch = {
