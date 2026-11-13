@@ -16,11 +16,10 @@ import {
 
 async function iaValues(base44) {
   const cliente = base44.asServiceRole || base44;
-  const [groq, claude] = await Promise.all([
-    resolveCredentials(cliente, "groq"),
-    resolveCredentials(cliente, "claude"),
-  ]);
-  return { ...groq.values, ...claude.values };
+  // CRM: somente ROQ. Claude permanece como integração separada do painel,
+  // mas não recebe análises, mensagens ou dados dos leads.
+  const roq = await resolveCredentials(cliente, "groq");
+  return roq.values;
 }
 
 function requireAdmin(context) {
@@ -96,6 +95,45 @@ function preencherPlaceholders(texto, { empresa, remetente }, lead) {
     .trim();
 }
 
+
+
+// Reserva local sem custo: mantém análise e rascunhos disponíveis quando os provedores
+// externos de IA estiverem indisponíveis. Usa somente os dados já cadastrados no lead.
+function analiseLocal(lead) {
+  const semSite = !String(lead.site || "").trim();
+  const avaliacoes = Number(lead.total_avaliacoes || 0);
+  const nota = Number(lead.nota_google || 0);
+  const oportunidades = [];
+  if (semSite) oportunidades.push("Criação de site: a empresa não informou um site; uma página própria pode apresentar serviços, localização e contato pelo WhatsApp.");
+  oportunidades.push("Placa NFC: facilita o acesso dos clientes ao perfil de avaliação do Google.");
+  if (lead.categoria || lead.bairro || lead.cidade) oportunidades.push("Perfil da Empresa no Google: revisar informações, fotos, serviços e dados de contato para manter a apresentação atualizada.");
+  const prioridade = semSite || avaliacoes >= 20 || nota >= 4.5 ? "alta" : (avaliacoes > 0 || lead.telefone ? "media" : "baixa");
+  return {
+    resumo: semSite
+      ? "Não foi identificado um site cadastrado para este estabelecimento. Há oportunidade de melhorar a apresentação digital e facilitar o contato dos clientes."
+      : "O estabelecimento possui presença digital identificada. Vale revisar a consistência das informações e facilitar o caminho entre descoberta, contato e avaliação.",
+    oportunidades: oportunidades.join(" "),
+    abordagem: "Iniciar com uma observação verdadeira sobre o segmento ou a localização do estabelecimento. Perguntar se pode apresentar uma solução simples, sem pressão e sem enviar material antes da autorização.",
+    proposta: "Apresentar a placa NFC individual para facilitar avaliações no Google e, se não houver site, oferecer uma prévia de site com informações do estabelecimento e contato pelo WhatsApp. Confirmar escopo e valores antes de fechar.",
+    prioridade,
+  };
+}
+
+function mensagemLocal(tipo, lead, remetente, previewSiteUrl) {
+  const nome = lead.empresa || "seu estabelecimento";
+  const detalhe = [lead.categoria, lead.bairro, lead.cidade].filter(Boolean).join(", ");
+  if (tipo === "proposta") {
+    return `Olá! Conforme nossa conversa e sua autorização, separei uma apresentação para ${nome}. A placa NFC facilita o acesso dos clientes às avaliações no Google, tornando esse processo mais simples no atendimento. Também podemos conversar sobre uma presença digital mais completa, caso faça sentido para o estabelecimento. Vou deixar os materiais e opções abaixo para você conhecer.\n\n${remetente.empresa}`;
+  }
+  if (tipo === "followup") {
+    return `Olá! Tudo bem? Estou retomando nosso contato sobre a solução de placa NFC para ${nome}${detalhe ? ` (${detalhe})` : ""}. Se ainda tiver interesse, posso esclarecer dúvidas e ajudar a escolher a opção mais adequada, sem compromisso.\n\n${remetente.remetente || remetente.empresa}`;
+  }
+  if (tipo === "resposta_avaliacao") {
+    return `Agradecemos muito por compartilhar sua avaliação, ${nome}! Ficamos felizes com seu retorno e esperamos receber você novamente. Conte sempre conosco!`;
+  }
+  return "";
+}
+
 /* --------------------------- Google Places (CRM) -------------------------- */
 
 export const searchPlacesFn = createServerFn({ method: "POST" })
@@ -122,7 +160,7 @@ export const analyzeLeadFn = createServerFn({ method: "POST" })
     const base44 = context.getBase44();
     const lead = await base44.entities.Lead.get(data.leadId);
 
-    const result = await iaJSON(
+    let result = await iaJSON(
       `${CONTEXT_TOOL}
 
 Analise a empresa abaixo e identifique o que faz sentido vender para ela.
@@ -138,6 +176,7 @@ Devolva:
       '{"resumo": string, "oportunidades": string, "abordagem": string, "proposta": string, "prioridade": string}',
       await iaValues(base44),
     );
+    if (!result.ok) result = { ok: true, data: analiseLocal(lead) };
 
     if (!result.ok) {
       setResponseStatus(400);
@@ -289,8 +328,11 @@ Devolva {"mensagem": string}.`,
         remetente.remetente ? ` ${remetente.remetente}` : "",
       ].join("\n\n").trim();
     } else {
-      setResponseStatus(400);
-      throw Object.assign(new Error(result.error), { status: 400 });
+      mensagemFinal = mensagemLocal(data.tipo, lead, remetente, previewSiteUrl);
+      if (!mensagemFinal) {
+        setResponseStatus(400);
+        throw Object.assign(new Error(result.error), { status: 400 });
+      }
     }
     if (data.tipo === "proposta") {
       const materiais = [
