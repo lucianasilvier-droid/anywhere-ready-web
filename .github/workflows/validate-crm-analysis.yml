@@ -24,5 +24,7 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Executar testes
         run: bun run test
+      - name: Executar lint
+        run: bun run lint
       - name: Validar build de produção
         run: bun run build
