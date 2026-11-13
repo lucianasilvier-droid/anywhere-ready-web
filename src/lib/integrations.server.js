@@ -159,12 +159,12 @@ async function searchGooglePlaces({ textQuery, maxResultCount = 10 }, values = {
   return { ok: true, places, error: null };
 }
 
-/** Resolve no máximo quatro fotos reais do Google somente quando o site é gerado,
+/** Resolve no máximo cinco fotos reais do Google somente quando o site é gerado,
  * evitando dezenas de chamadas de mídia durante uma busca de leads. */
 export async function resolveGooglePlacePhotos(photoNames = [], values = {}) {
   const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
   if (!key || !Array.isArray(photoNames)) return [];
-  const fotos = await Promise.all(photoNames.slice(0, 4).map(async (photo) => {
+  const fotos = await Promise.all(photoNames.slice(0, 5).map(async (photo) => {
     if (!photo?.nome || !String(photo.nome).startsWith("places/")) return null;
     try {
       const mediaUrl = new URL(`https://places.googleapis.com/v1/${photo.nome}/media`);
