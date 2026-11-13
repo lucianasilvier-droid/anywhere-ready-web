@@ -213,7 +213,7 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
             <button
               onClick={() =>
                 onUsarMensagem?.(
-                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e ${ehAlimentacao ? "reserva pelo WhatsApp" : "contato pelo WhatsApp"}:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
+                  `Olá! Tudo bem? Preparamos uma demonstração gratuita de site para a ${site.empresa}, com mapa do Google e botões de contato configuráveis:\n${url}\n\nSe gostar, ativamos com o seu domínio e ajustamos o que quiser. Posso te explicar como funciona?`,
                 )
               }
               className={btnCls}
