@@ -261,10 +261,24 @@ async function repWrite(entity, kind, current, patch, rep, user) {
   if (entity === "Lead" && kind === "update" && current?.representante_id === rep.id) {
     return Object.fromEntries(Object.entries(patch).filter(([k]) => !REP_PROTECTED_LEAD_FIELDS.includes(k)));
   }
-  if (entity === "LeadInteraction" && kind === "create" && (await leadDoRepresentante(patch.lead_id, rep.id))) {
-    // Um representante só pode registrar envio manual depois de o consentimento
-    // estar autorizado e enquanto o contato não estiver bloqueado.
-    if (patch.tipo === "whatsapp_enviado") {
+  if (entity === "LeadInteraction" && kind === "create") {
+    if (!(await leadDoRepresentante(patch.lead_id, rep.id))) {
+      throw httpError("Este histórico não pertence a um cliente seu.", 403);
+    }
+
+    // Só os eventos usados pelo CRM podem ser criados pelo representante.
+    // Isso impede fabricar tipos de notificação ou campos de auditoria arbitrários.
+    const tipo = String(patch.tipo || "");
+    const camposPorTipo = {
+      sistema: ["lead_id", "empresa", "tipo", "mensagem", "detalhe"],
+      email_aberto: ["lead_id", "empresa", "tipo", "mensagem", "detalhe"],
+      whatsapp_enviado: ["lead_id", "empresa", "tipo", "mensagem", "detalhe"],
+      whatsapp_recebido: ["lead_id", "empresa", "tipo", "mensagem", "detalhe", "resposta_tipo"],
+    };
+    const permitidos = camposPorTipo[tipo];
+    if (!permitidos) throw httpError("Tipo de atividade não permitido para representante.", 403);
+
+    if (tipo === "whatsapp_enviado") {
       const rows = await query(
         `SELECT data FROM records WHERE entity = 'Lead' AND id = $1 AND data->>'representante_id' = $2 LIMIT 1`,
         [String(patch.lead_id), String(rep.id)],
@@ -277,8 +291,27 @@ async function repWrite(entity, kind, current, patch, rep, user) {
         throw httpError("A mensagem registrada precisa ter pelo menos 5 caracteres.", 422);
       }
     }
+
+    if (tipo === "whatsapp_recebido") {
+      if (!["sim", "nao", "indefinida", "sim_bloqueado"].includes(patch.resposta_tipo)) {
+        throw httpError("Classificação da resposta inválida.", 422);
+      }
+      if (String(patch.mensagem || "").trim().length < 2) {
+        throw httpError("A resposta registrada precisa ter pelo menos 2 caracteres.", 422);
+      }
+    }
+
+    const clean = Object.fromEntries(
+      Object.entries(patch).filter(([key]) => permitidos.includes(key)),
+    );
     return {
-      ...patch,
+      ...clean,
+      ...(tipo === "whatsapp_recebido" ? {
+        origem_registro: "manual",
+        recebido_em: new Date().toISOString(),
+      } : {}),
+      ...(tipo === "whatsapp_enviado" ? { origem_registro: "manual" } : {}),
+      autor: rep.nome || user.full_name || user.email,
       autor_email: norm(user.email),
       representante_nome: rep.nome || "",
       notificacao_lida: false,
@@ -291,8 +324,17 @@ async function repWrite(entity, kind, current, patch, rep, user) {
     return Object.fromEntries(Object.entries(patch).filter(([key]) => allowed.includes(key)));
   }
   if (entity === "AtividadeLog" && kind === "create") {
+    const tipo = String(patch.tipo || "");
+    if (!["navegacao", "retorno_aba"].includes(tipo)) {
+      throw httpError("Tipo de atividade não permitido.", 403);
+    }
+    const permitidos = ["tipo", "mensagem", "pagina", "detalhe"];
+    const clean = Object.fromEntries(
+      Object.entries(patch).filter(([key]) => permitidos.includes(key)),
+    );
     return {
-      ...patch,
+      ...clean,
+      criado_em: new Date().toISOString(),
       representante_id: rep.id,
       representante_nome: rep.nome || "",
       autor: rep.nome || user.full_name || user.email,
