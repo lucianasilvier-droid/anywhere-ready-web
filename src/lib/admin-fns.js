@@ -3,6 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
 import { BRAND_NAME } from "@/lib/site-content";
+import { CATALOGO_INICIAL } from "@/lib/catalogo-inicial";
 import {
   CREDENTIAL_KEYS,
   iaJSON,
@@ -192,26 +193,45 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     const remetente = await senderIdentity(context);
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
-    // Só apresenta produtos e preços confirmados no cadastro. Nunca inventa valores
-    // nem usa catálogo fixo de contingência; as placas são oferecidas individualmente.
+    // Prioriza os produtos cadastrados. Se o banco estiver vazio ou incompleto,
+    // completa com os produtos unitários e links de pagamento já conferidos.
+    // Nunca usa preço zero, kit ou combo como oferta.
     let catalogo = [];
     try {
       const svc = base44.asServiceRole || base44;
       const page = await svc.entities.Produto.filter({ ativo: true }, { limit: 30 });
-      const produtos = (Array.isArray(page) ? page : page?.items || [])
+      const cadastrados = Array.isArray(page) ? page : page?.items || [];
+      const porSlug = new Map(cadastrados.map((p) => [String(p.slug || p.id || "").trim(), p]));
+      const combinados = [...cadastrados];
+      for (const fallback of CATALOGO_INICIAL) {
+        const chave = String(fallback.slug || fallback.id || "").trim();
+        if (chave && !porSlug.has(chave)) combinados.push(fallback);
+      }
+      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
+      catalogo = combinados
         .filter((p) => !/kit|combo|conjunto/i.test(String(p.nome || "")))
         .filter((p) => /nfc|placa|google|instagram/i.test(String(p.nome || "")))
         .map((p) => ({ produto: p, preco: Number(p.preco) }))
-        .filter(({ preco }) => Number.isFinite(preco) && preco > 0);
-      const appUrl = String(process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app").replace(/\/$/, "");
-      catalogo = produtos.slice(0, 6).map(({ produto: p, preco }) => ({
-        nome: p.nome,
-        preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(preco),
-        url: p.checkout_url || p.link_pagamento || (p.slug ? appUrl + "/loja/" + p.slug : appUrl + "/loja"),
-        descricao: p.descricao_curta || p.descricao || "Placa NFC personalizada.",
-      }));
+        .filter(({ preco }) => Number.isFinite(preco) && preco > 0)
+        .slice(0, 6)
+        .map(({ produto: p, preco }) => ({
+          nome: p.nome,
+          preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(preco),
+          url: p.checkout_url || p.link_pagamento || (p.slug ? appUrl + "/loja/" + p.slug : appUrl + "/loja"),
+          descricao: p.descricao_curta || p.descricao || "Placa NFC personalizada.",
+        }));
     } catch {
-      // Sem acesso ao cadastro, não envia preços nem links não confirmados.
+      // Mesmo sem leitura do banco, os links e preços fixos confirmados permanecem disponíveis.
+      catalogo = CATALOGO_INICIAL
+        .filter((p) => !/kit|combo|conjunto/i.test(String(p.nome || "")))
+        .filter((p) => /nfc|placa|google|instagram/i.test(String(p.nome || "")))
+        .filter((p) => Number.isFinite(Number(p.preco)) && Number(p.preco) > 0)
+        .map((p) => ({
+          nome: p.nome,
+          preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(p.preco)),
+          url: p.checkout_url,
+          descricao: p.descricao_curta || p.descricao || "Placa NFC personalizada.",
+        }));
     }
 
     const result = await iaJSON(
