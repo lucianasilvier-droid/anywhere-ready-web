@@ -41,6 +41,11 @@ export const STATUS_SOLICITACAO_LABEL = {
 
 const norm = (v) => String(v || "").trim().toLowerCase();
 const round = (v) => Math.round((Number(v) || 0) * 100) / 100;
+const comissaoConfigurada = (valor, padrao) => {
+  if (valor === null || valor === undefined || String(valor).trim() === "") return padrao;
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero >= 0 ? numero : padrao;
+};
 
 function erro(mensagem, status = 400) {
   return Object.assign(new Error(mensagem), { status });
@@ -99,7 +104,7 @@ export function calcularVenda(rep, payload) {
 
   if (tipo === "perfil_google") {
     valor_venda = TABELA_COMISSAO.perfil_google.valor;
-    comissao_valor = Number(rep.comissao_perfil) || TABELA_COMISSAO.perfil_google.comissao;
+    comissao_valor = comissaoConfigurada(rep.comissao_perfil, TABELA_COMISSAO.perfil_google.comissao);
     chave = `perfil|${rep.id}|${cliente}`;
   } else if (tipo === "mensalidade") {
     competencia = String(payload.competencia || "").trim();
@@ -128,7 +133,7 @@ export function calcularVenda(rep, payload) {
     valor_venda = round(Number(payload.valor_venda) || TABELA_COMISSAO.placa.valorUnidade * quantidade);
     if (valor_venda <= 0) throw erro("Informe o valor da venda da placa.");
     comissao_valor = round(
-      (Number(rep.comissao_placa) || TABELA_COMISSAO.placa.comissaoUnidade) * quantidade,
+      (comissaoConfigurada(rep.comissao_placa, TABELA_COMISSAO.placa.comissaoUnidade)) * quantidade,
     );
     if (comissao_valor > valor_venda) {
       throw erro("A comissão não pode ser maior que o valor da venda.");
