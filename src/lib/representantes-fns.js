@@ -39,7 +39,8 @@ const repInput = z.object({
 });
 
 async function slugPaginaLivre(base44, nome, repId) {
-  const base = slugify(nome) || "representante";
+  let base = slugify(nome) || "representante";
+  if (["admin", "api", "login", "representante", "loja", "conta"].includes(base)) base = `rep-${base}`;
   for (let i = 0; i < 20; i += 1) {
     const tentativa = i === 0 ? base : `${base}-${i + 1}`;
     try {
