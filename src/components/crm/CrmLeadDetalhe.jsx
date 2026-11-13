@@ -165,7 +165,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   async function salvarEmailLead(e) {
     e.preventDefault();
     const email = emailEdicao.trim().toLowerCase();
-    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("Informe um endereço de e-mail válido.");
       return;
     }
