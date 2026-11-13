@@ -189,13 +189,14 @@ export async function resolveGooglePlacePhotos(photoNames = [], values = {}) {
 
 
 /**
- * Busca referências de foto atualizadas a partir do Place ID e resolve uma foto
- * imediatamente. O Google informa que photoUri é temporário e photo names expiram;
- * por isso não persistimos esses endereços no cadastro do site.
+ * Busca e resolve até cinco fotos reais do estabelecimento no Google Places.
+ * Os photoUri são temporários; por isso são renovados a cada abertura pública.
+ * Retorna diagnóstico seguro para o painel não tratar galeria vazia como sucesso.
  */
-export async function buscarFotosGooglePlace(placeId, values = {}) {
+export async function buscarFotosGooglePlaceDetalhado(placeId, values = {}) {
   const key = values.google_maps_api_key || readSecret("GOOGLE_MAPS_API_KEY");
-  if (!key || !placeId) return [];
+  if (!key) return { fotos: [], status: "sem_chave", mensagem: "A chave do Google Places não está disponível no servidor." };
+  if (!placeId) return { fotos: [], status: "sem_place_id", mensagem: "Este cadastro não possui Place ID para localizar as fotos." };
   try {
     const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`;
     const response = await fetch(url, {
@@ -204,9 +205,11 @@ export async function buscarFotosGooglePlace(placeId, values = {}) {
         "X-Goog-FieldMask": "photos",
       },
     });
-    if (!response.ok) return [];
+    if (!response.ok) {
+      return { fotos: [], status: "erro_google", mensagem: `Google Places respondeu HTTP ${response.status} ao buscar as fotos.` };
+    }
     const payload = await response.json().catch(() => ({}));
-    const photoNames = (payload.photos || []).slice(0, 1).map((photo) => ({
+    const photoNames = (payload.photos || []).slice(0, 5).map((photo) => ({
       nome: photo.name,
       largura: photo.widthPx || null,
       altura: photo.heightPx || null,
@@ -216,10 +219,21 @@ export async function buscarFotosGooglePlace(placeId, values = {}) {
         foto_uri: a.photoUri || "",
       })),
     })).filter((photo) => photo.nome);
-    return resolveGooglePlacePhotos(photoNames, { google_maps_api_key: key });
+    if (!photoNames.length) {
+      return { fotos: [], status: "sem_fotos_google", mensagem: "O Google Places não retornou fotos para este estabelecimento." };
+    }
+    const fotos = await resolveGooglePlacePhotos(photoNames, { google_maps_api_key: key });
+    return fotos.length
+      ? { fotos, status: "ok", mensagem: `${fotos.length} foto(s) carregada(s) do Google Places.` }
+      : { fotos: [], status: "erro_midias", mensagem: "O Google encontrou fotos, mas não conseguiu disponibilizar as imagens." };
   } catch {
-    return [];
+    return { fotos: [], status: "erro_consulta", mensagem: "Não foi possível consultar as fotos do Google Places neste momento." };
   }
+}
+
+export async function buscarFotosGooglePlace(placeId, values = {}) {
+  const resultado = await buscarFotosGooglePlaceDetalhado(placeId, values);
+  return resultado.fotos;
 }
 
 
