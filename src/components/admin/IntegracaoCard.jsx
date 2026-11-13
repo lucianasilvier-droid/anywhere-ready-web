@@ -79,11 +79,11 @@ export default function IntegracaoCard({ item, info, testando, salvando, onTesta
                   </span>
                 </span>
                 <input
-                  type="password"
+                  type={["WHATSAPP_TEMPLATE_PREFIX", "WHATSAPP_TEMPLATE_LANGUAGE"].includes(campo) ? "text" : "password"}
                   autoComplete="off"
                   value={valores[campo] || ""}
                   onChange={(e) => setValores((v) => ({ ...v, [campo]: e.target.value }))}
-                  placeholder={item.origem?.[campo] ? "Cole uma nova chave para substituir" : "Cole a chave aqui"}
+                  placeholder={campo === "WHATSAPP_TEMPLATE_PREFIX" ? "ex.: google_nfc" : campo === "WHATSAPP_TEMPLATE_LANGUAGE" ? "pt_BR" : item.origem?.[campo] ? "Cole uma nova chave para substituir" : "Cole a chave aqui"}
                   className="mt-1 h-9 w-full rounded-lg border border-white/12 bg-black/40 px-2.5 font-mono text-[11.5px] text-white placeholder:text-white/25 focus:border-primary/50 focus:outline-none"
                 />
               </div>
