@@ -536,7 +536,7 @@ export const integrationStatusFn = createServerFn({ method: "GET" })
       const reg = registros.find((r) => r.tipo === def.tipo) || null;
       const { origem } = await resolveCredentials(base44, def.tipo);
       const configurado = def.campos
-        .filter((campo) => !["WHATSAPP_VERIFY_TOKEN", "WHATSAPP_TEMPLATE_PREFIX"].includes(campo))
+        .filter((campo) => !["WHATSAPP_VERIFY_TOKEN", "WHATSAPP_TEMPLATE_PREFIX", "WHATSAPP_TEMPLATE_LANGUAGE"].includes(campo))
         .every((campo) => !!origem[campo]);
       items.push({
         tipo: def.tipo,
