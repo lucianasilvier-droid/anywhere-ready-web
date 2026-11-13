@@ -87,7 +87,7 @@ function SiteCliente({ site }) {
   }`;
   const wa = (texto) => (site.whatsapp ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(texto)}` : "");
   const waOla = wa(`Olá, ${site.empresa}! Vi o site de vocês e gostaria de mais informações.`);
-  const isRestaurante = c.tipo_negocio === "restaurante" || /restaurante|bar\\b|pub|boteco|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria/i.test(`${site.categoria || ""} ${site.empresa || ""}`);
+  const isRestaurante = c.tipo_negocio === "restaurante" || /restaurante|bar\b|pub|boteco|lanchonete|pizzaria|hamburgueria|cafeteria|café|padaria|doceria|sorveteria|churrascaria/i.test(`${site.categoria || ""} ${site.empresa || ""}`);
   const waReserva = wa(`Olá, ${site.empresa}! Gostaria de fazer uma reserva. Poderiam me informar a disponibilidade?`);
   const serif = { fontFamily: "'Fraunces', Georgia, serif" };
   const dadosEstruturados = {
@@ -216,7 +216,7 @@ function SiteCliente({ site }) {
                 {site.nota_google != null && <div className="border-b border-black/[0.06] pb-5"><div className="flex items-center gap-1">{[1,2,3,4,5].map((i)=><Star key={i} className={`h-5 w-5 ${i <= Math.round(site.nota_google) ? "fill-[#FBBC05] text-[#FBBC05]" : "text-black/15"}`} />)}</div><p className="mt-2 text-[14px]"><strong style={serif} className="text-[26px]">{String(site.nota_google).replace(".", ",")}</strong> <span className="text-[var(--muted)]">no Google · {site.total_avaliacoes || 0} avaliações</span></p></div>}
                 <ul className="space-y-3.5 pt-5 text-[14px]">
                   {(site.endereco || local) && <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.endereco || local}</span></li>}
-                  {site.telefone && <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`tel:${site.telefone.replace(/\\D/g, "")}`} className="hover:underline">{site.telefone}</a></li>}
+                  {site.telefone && <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`tel:${site.telefone.replace(/\D/g, "")}`} className="hover:underline">{site.telefone}</a></li>}
                   <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><span>{site.horario || "Horários e disponibilidade pelo WhatsApp"}</span></li>
                   {site.instagram && <li className="flex gap-3"><Instagram className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" /><a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noreferrer" className="hover:underline">@{site.instagram}</a></li>}
                 </ul>
