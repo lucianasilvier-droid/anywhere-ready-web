@@ -24,6 +24,14 @@ function getTransport() {
   return transport;
 }
 
+function senderIdentity() {
+  const configured = String(env("SMTP_FROM") || "").trim();
+  const addressInBrackets = configured.match(/<([^<>]+)>/)?.[1]?.trim();
+  const address = addressInBrackets || (configured.includes("@") ? configured : "") || env("SMTP_USER");
+  if (!address) throw new Error("Configure SMTP_FROM ou SMTP_USER com o endereço de envio.");
+  return { name: "Google NFC Connect", address };
+}
+
 /** Sends an e-mail. Resolves to { delivered } — false when only logged. */
 export async function sendMail({ to, subject, text, html }) {
   if (!smtpConfigured()) {
@@ -31,7 +39,7 @@ export async function sendMail({ to, subject, text, html }) {
     return { delivered: false };
   }
   await getTransport().sendMail({
-    from: env("SMTP_FROM") || env("SMTP_USER"),
+    from: senderIdentity(),
     to,
     subject,
     text,
