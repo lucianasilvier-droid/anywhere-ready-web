@@ -12,20 +12,37 @@ export const CATALOGO_INICIAL = [
  * Dados válidos do banco têm prioridade; preço e checkout confirmados nunca
  * são substituídos por campos vazios ou valores zero.
  */
+function checkoutInfinitePayValido(valor) {
+  if (!valor) return "";
+  try {
+    const url = new URL(String(valor));
+    return url.protocol === "https:" && url.hostname === "loja.infinitepay.io" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
 export function completarProdutoComCatalogo(produto) {
   if (!produto) return null;
   const chaves = [produto.slug, produto.id].filter(Boolean).map((valor) => String(valor).trim());
   const fallback = CATALOGO_INICIAL.find((item) =>
     [item.slug, item.id].filter(Boolean).some((valor) => chaves.includes(String(valor)))
   );
-  if (!fallback) return produto;
+  const checkoutBanco = checkoutInfinitePayValido(produto.checkout_url || produto.link_pagamento);
+  if (!fallback) {
+    return {
+      ...produto,
+      checkout_url: checkoutBanco || undefined,
+      checkout_label: checkoutBanco ? produto.checkout_label : undefined,
+    };
+  }
   const precoBanco = Number(produto.preco);
   return {
     ...fallback,
     ...produto,
     preco: Number.isFinite(precoBanco) && precoBanco > 0 ? precoBanco : fallback.preco,
-    checkout_url: produto.checkout_url || produto.link_pagamento || fallback.checkout_url,
-    checkout_label: produto.checkout_label || fallback.checkout_label,
+    checkout_url: checkoutBanco || fallback.checkout_url,
+    checkout_label: checkoutBanco ? (produto.checkout_label || fallback.checkout_label) : fallback.checkout_label,
     imagens: Array.isArray(produto.imagens) && produto.imagens.length ? produto.imagens : fallback.imagens,
   };
 }
