@@ -424,7 +424,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               },
               onUsarMensagem: (texto) => {
                 setMensagem(texto);
-                toast.success("Mensagem pronta no campo de WhatsApp. Revise antes de enviar.");
+                toast.success("Texto pronto. Sem opt-in, use apenas para solicitar consentimento por outro canal apropriado.");
                 document.getElementById("mensagem-whatsapp")?.scrollIntoView({ behavior: "smooth", block: "center" });
               },
             };
@@ -432,10 +432,10 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
           })()}
 
           <section id="mensagem-whatsapp" className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-            <p className="text-[12px] font-bold uppercase tracking-wider text-white/50">Mensagem de WhatsApp</p>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-white/50">Mensagens e consentimento</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {[
-                { tipo: "autorizacao", label: "Pedir autorização" },
+                { tipo: "autorizacao", label: "Pedido de consentimento (outro canal)" },
                 { tipo: "proposta", label: "Proposta" },
                 { tipo: "followup", label: "Follow-up" },
                 { tipo: "resposta_avaliacao", label: "Resposta a avaliação" },
