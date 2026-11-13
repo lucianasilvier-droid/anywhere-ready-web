@@ -68,3 +68,11 @@
 - [ ] A branch antiga também torna obrigatória a assinatura do webhook do Mercado Pago e confere se a referência externa do pagamento corresponde ao pedido antes de liberar. A versão atual aceita a ausência do segredo de assinatura e não faz essa conferência adicional nesse ponto. É uma melhoria de segurança relevante, mas exige teste de pagamentos válidos, inválidos, repetidos e pedidos cancelados antes de integrar.
 - [ ] A branch antiga altera a política de reembolso para não marcar como concluído sem confirmação do provedor. Revisar fluxo completo e estados do painel antes de integrar.
 - [ ] Não foram copiadas mudanças de integrações, webhook ou pagamentos nesta rodada. A auditoria identificou melhorias candidatas, não uma implementação comprovada.
+
+
+### Esclarecimento de requisitos confirmado pelo usuário — 13/11/2026
+- [x] WhatsApp Cloud API ainda não está ativada. O painel administrativo deve permitir inserir e salvar as credenciais da Meta para concluir a ativação; não tratar a integração como ativa nem presumir credenciais já configuradas.
+- [x] Pagamento atualmente utilizado: checkout/link da InfinitePay. Manter essa opção como fluxo atual.
+- [x] Os provedores e credenciais de pagamento devem permanecer configuráveis pelo painel administrativo, permitindo ao usuário trocar o provedor quando desejar, sem alteração manual do código.
+- [x] Manter integrações e opções de configuração centralizadas no painel administrativo, com acesso restrito. Qualquer troca deve preservar o provedor atualmente em uso até que a nova configuração seja testada e escolhida pelo usuário.
+- [ ] Verificar se o painel atual expõe todos os campos necessários da Meta e as opções de pagamento descritas; validar a persistência das configurações e o fluxo InfinitePay antes de considerar concluído.
