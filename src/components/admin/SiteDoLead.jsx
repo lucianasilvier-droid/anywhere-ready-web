@@ -116,7 +116,11 @@ export default function SiteDoLead({ lead, onUsarMensagem, onGerado }) {
         return;
       }
       setSite(r.site);
-      toast.success("Site de demonstração criado e salvo no CRM.");
+      if (Number(r.site.fotos_count) > 0) {
+        toast.success(`Site salvo com ${r.site.fotos_count} foto(s) reais do Google. Link pronto para revisão.`);
+      } else {
+        toast.warning(`Site salvo, mas a galeria não foi validada: ${r.site.fotos_mensagem || "fotos indisponíveis"}. Não apresente ao cliente antes de revisar as imagens.`);
+      }
       onGerado?.();
     },
     onError: (e) => toast.error(e?.message || "Não foi possível criar o site."),
