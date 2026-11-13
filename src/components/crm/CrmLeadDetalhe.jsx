@@ -197,16 +197,16 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   }
 
   async function registrarEnvioManual() {
+    if (!autorizado || bloqueado) return toast.error("Registre o consentimento prévio do contato antes de enviar ou registrar uma mensagem pelo WhatsApp.");
     if (mensagem.trim().length < 5) return toast.error("Escreva a mensagem antes de registrar.");
     try {
       const agora = new Date().toISOString();
       await base44.entities.Lead.update(leadId, {
         ultimo_contato_em: agora,
         consent_mensagem: mensagem,
-        consentimento: lead.consentimento === "autorizado" ? "autorizado" : "solicitado",
-        consent_solicitado_em: lead.consent_solicitado_em || agora,
-        etapa: lead.consentimento === "autorizado" ? lead.etapa : "aguardando_autorizacao",
-        consent_origem: lead.consent_origem || "Envio manual pelo operador (registrado no CRM)",
+        consentimento: "autorizado",
+        etapa: lead.etapa,
+        consent_origem: lead.consent_origem || "Consentimento prévio registrado no CRM",
       });
       await base44.entities.LeadInteraction.create({
         lead_id: leadId,
@@ -466,19 +466,18 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
             )}
             {!bloqueado && !autorizado && (
               <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2 text-[11.5px] leading-relaxed text-amber-200">
-                Sem autorização registrada, apenas a mensagem de solicitação pode ser enviada.
-                O material promocional é liberado depois do consentimento.
+                A política do WhatsApp exige consentimento prévio antes de iniciar contato. Obtenha a autorização por um canal apropriado, identifique a empresa e registre a evidência aqui. Até lá, o CRM não libera envio pela API nem abertura do WhatsApp.
               </p>
             )}
 
             <div className="mt-2.5 flex flex-wrap gap-2">
               <button
                 onClick={() => mEnviar.mutate(lead.consentimento === "autorizado" ? "proposta" : "autorizacao")}
-                disabled={mEnviar.isPending || bloqueado || mensagem.trim().length < 5}
+                disabled={mEnviar.isPending || bloqueado || !autorizado || mensagem.trim().length < 5}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-[11.5px] font-bold text-[#062b14] disabled:opacity-40"
               >
                 {mEnviar.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                Enviar pela API
+                {autorizado ? "Enviar pela API" : "API bloqueada até autorização"}
               </button>
               <button
                 onClick={() => {
@@ -489,14 +488,20 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <Copy className="h-3 w-3" /> Copiar
               </button>
-              <a
-                href={`https://wa.me/${telefoneWhatsApp(lead.telefone)}?text=${encodeURIComponent(mensagem)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70"
-              >
-                <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
-              </a>
+              {autorizado && !bloqueado ? (
+                <a
+                  href={`https://wa.me/${telefoneWhatsApp(lead.telefone)}?text=${encodeURIComponent(mensagem)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70"
+                >
+                  <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
+                </a>
+              ) : (
+                <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-[11.5px] font-semibold text-white/30" title="Registre o consentimento prévio antes de abrir o WhatsApp.">
+                  <ExternalLink className="h-3 w-3" /> WhatsApp após autorização
+                </span>
+              )}
               {emailLead ? (
                 <a href={emailHref} onClick={registrarAberturaEmail} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
                   <Mail className="h-3 w-3" /> Abrir e-mail
