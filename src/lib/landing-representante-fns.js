@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
+import { appUrl } from "@/lib/env.server";
 import { listar, novoCodigo, representanteDoUsuario } from "@/lib/representantes.server";
 import {
   dadosDaPagina,
@@ -316,7 +317,12 @@ export const decidirCandidatoFn = createServerFn({ method: "POST" })
 
     let convite = "";
     try {
-      const envio = await base44.users.inviteUser(email, "user");
+      const envio = await base44.users.inviteUser(email, "user", {
+        representative: {
+          name: rep.nome,
+          profileUrl: `${appUrl()}/r/${rep.pagina_slug}`,
+        },
+      });
       convite = envio?.delivered
         ? "Representante aprovado. O convite para criar a senha foi enviado por e-mail."
         : "Representante aprovado, mas o e-mail NÃO foi enviado: o SMTP da Vercel não está configurado. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM para que o convite chegue à caixa de entrada.";
