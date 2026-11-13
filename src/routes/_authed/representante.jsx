@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { LayoutDashboard, ReceiptText, Wallet, LogOut, Home, Globe, Target, LayoutGrid } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import WhatsAppReplyNotifications from "@/components/admin/WhatsAppReplyNotifications";
 
 export const Route = createFileRoute("/_authed/representante")({
   head: () => ({ meta: [{ title: "Painel do representante — Google NFC Connect" }] }),
@@ -67,6 +68,7 @@ function RepresentanteLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <WhatsAppReplyNotifications representante />
             <Link
               to="/"
               className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold whitespace-nowrap text-white/70 hover:border-primary/40 hover:text-white sm:px-3 sm:text-[11.5px]"
