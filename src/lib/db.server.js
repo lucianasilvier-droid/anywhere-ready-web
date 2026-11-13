@@ -37,3 +37,30 @@ export async function query(text, params = []) {
   const result = await getPool().query(text, params);
   return result.rows;
 }
+
+/**
+ * Executes several database statements on one connection and transaction.
+ * The callback receives a query function that returns rows like query().
+ */
+export async function withTransaction(callback) {
+  const client = await getPool().connect();
+  const txQuery = async (text, params = []) => {
+    const result = await client.query(text, params);
+    return result.rows;
+  };
+  try {
+    await client.query("BEGIN");
+    const result = await callback(txQuery);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("[db] transaction rollback failed", rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
