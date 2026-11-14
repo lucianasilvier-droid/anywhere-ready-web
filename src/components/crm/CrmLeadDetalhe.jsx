@@ -27,6 +27,8 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
   const [lead, setLead] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState("");
+  const [emailEdit, setEmailEdit] = useState("");
+  const [salvandoEmail, setSalvandoEmail] = useState(false);
   const [respostaManual, setRespostaManual] = useState("");
   const [tipoRespostaManual, setTipoRespostaManual] = useState("indefinida");
   const [salvandoRespostaManual, setSalvandoRespostaManual] = useState(false);
@@ -57,7 +59,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId]);
 
-  const mAnalisar = useMutation({
+  useEffect(() => {\n    setEmailEdit(String(lead?.email || lead?.email_contato || lead?.email_publico || ""));\n  }, [lead?.id, lead?.email, lead?.email_contato, lead?.email_publico]);\n\n  const mAnalisar = useMutation({
     mutationFn: () => analisar({ data: { leadId } }),
     onSuccess: async () => {
       toast.success("Análise da IA concluída.");
@@ -158,8 +160,24 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     reloadInteracoes();
   }
 
+  async function salvarEmailLead(e) {
+    e.preventDefault();
+    const email = emailEdit.trim().toLowerCase();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("Informe um e-mail válido.");
+    setSalvandoEmail(true);
+    try {
+      await base44.entities.Lead.update(leadId, { email, email_publico: email });
+      toast.success(email ? "E-mail salvo no cadastro." : "E-mail removido do cadastro.");
+      await carregar();
+    } catch (error) {
+      toast.error(error?.message || "Não foi possível salvar o e-mail.");
+    } finally {
+      setSalvandoEmail(false);
+    }
+  }
+
   function registrarAberturaEmail() {
-    if (!emailLead) return;
+    if (!emailLead || bloqueado) return;
     base44.entities.LeadInteraction.create({
       lead_id: leadId,
       empresa: lead.empresa,
@@ -281,17 +299,21 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
     ? "https://www.google.com/maps/search/?api=1&query=" + mapsQuery + "&query_place_id=" + encodeURIComponent(mapsPlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + mapsQuery;
   const emailAssunto = "Uma ideia para valorizar " + (lead.empresa || "seu estabelecimento") + " no Google";
-  const emailCorpo = [
-    "Olá, equipe " + (lead.empresa || "do estabelecimento") + "!",
-    "",
-    "Encontrei o perfil de vocês" + (lead.categoria ? " na categoria " + lead.categoria : "") + ((lead.bairro || lead.cidade) ? " em " + [lead.bairro, lead.cidade].filter(Boolean).join(", ") : "") + " e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações no Google por meio de uma placa NFC.",
-    "",
-    "Se fizer sentido para vocês, posso enviar uma apresentação breve com os detalhes. Se não quiserem receber esse tipo de contato, basta me avisar.",
-    "",
-    "Atenciosamente,",
-    "Equipe Google NFC Connect",
-  ].join("\n");
-  const emailHref = emailLead
+  const emailCorpo = bloqueado
+    ? ""
+    : autorizado && mensagem.trim()
+      ? mensagem.trim()
+      : [
+          "Olá, equipe " + (lead.empresa || "do estabelecimento") + "!",
+          "",
+          "Encontrei o perfil de vocês" + (lead.categoria ? " na categoria " + lead.categoria : "") + ((lead.bairro || lead.cidade) ? " em " + [lead.bairro, lead.cidade].filter(Boolean).join(", ") : "") + " e gostaria de apresentar uma ideia para facilitar o acesso dos clientes às avaliações no Google por meio de uma placa NFC.",
+          "",
+          "Se fizer sentido para vocês, posso enviar uma apresentação breve com os detalhes. Se não quiserem receber esse tipo de contato, basta me avisar.",
+          "",
+          "Atenciosamente,",
+          "Equipe Google NFC Connect",
+        ].join("\n");
+  const emailHref = emailLead && !bloqueado
     ? "mailto:" + encodeURIComponent(emailLead) + "?subject=" + encodeURIComponent(emailAssunto) + "&body=" + encodeURIComponent(emailCorpo)
     : "";
 
@@ -314,6 +336,19 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
             {lead.site && <a href={lead.site} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#8ab4f8] hover:underline"><Globe className="h-3 w-3" />site</a>}
             {lead.nota_google != null && <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#FBBC05] text-[#FBBC05]" />{lead.nota_google} ({lead.total_avaliacoes || 0})</span>}
           </p>
+          <form onSubmit={salvarEmailLead} className="mt-2 flex max-w-xl flex-wrap items-center gap-2">
+            <Mail className="h-3.5 w-3.5 text-white/35" />
+            <input
+              type="email"
+              value={emailEdit}
+              onChange={(e) => setEmailEdit(e.target.value)}
+              placeholder="E-mail comercial do estabelecimento"
+              className="min-w-[220px] flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[11.5px] text-white placeholder:text-white/30 focus:border-primary/40 focus:outline-none"
+            />
+            <button type="submit" disabled={salvandoEmail} className="rounded-lg border border-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold text-white/65 disabled:opacity-50">
+              {salvandoEmail ? "Salvando..." : "Salvar e-mail"}
+            </button>
+          </form>
           {!representante && <RepresentanteDoLead lead={lead} variante="destaque" />}
         </div>
         <div className="flex items-center gap-2">
@@ -456,7 +491,7 @@ export default function CrmLeadDetalhe({ leadId, base = "/admin" }) {
               >
                 <ExternalLink className="h-3 w-3" /> Abrir WhatsApp
               </a>
-              {emailLead ? (
+              {emailLead && !bloqueado ? (
                 <a href={emailHref} onClick={registrarAberturaEmail} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-[11.5px] font-semibold text-white/70 hover:border-primary/40 hover:text-white">
                   <Mail className="h-3 w-3" /> Abrir e-mail
                 </a>

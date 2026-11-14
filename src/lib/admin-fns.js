@@ -230,6 +230,17 @@ export const draftMessageFn = createServerFn({ method: "POST" })
     }[data.tipo];
 
     const remetente = await senderIdentity(context);
+    // Usa a análise já salva no lead como fonte principal da oferta personalizada.
+    const contextoAnalise = [
+      { titulo: "Resumo", valor: lead.ai_resumo },
+      { titulo: "Oportunidades identificadas", valor: lead.ai_oportunidades },
+      { titulo: "Abordagem recomendada", valor: lead.ai_abordagem },
+      { titulo: "Proposta sugerida", valor: lead.ai_proposta },
+    ]
+      .filter((item) => String(item.valor || "").trim())
+      .map((item) => item.titulo + ": " + String(item.valor).trim())
+      .join("\n");
+
     const previewSiteUrl = String(data.previewSiteUrl || "").trim();
     const videoDemoUrl = String(process.env.WHATSAPP_DEMO_VIDEO_URL || process.env.DEMO_VIDEO_URL || "").trim();
     // Prioriza os produtos cadastrados. Se o banco estiver vazio ou incompleto,
@@ -299,9 +310,26 @@ Contexto de materiais disponíveis:
 Dados do estabelecimento que vai receber a mensagem:
 ${leadBrief(lead)}
 
+ANÁLISE DA EMPRESA — FONTE PRINCIPAL PARA PERSONALIZAR A OFERTA:
+${contextoAnalise || "Análise ainda não registrada."}
+
+REGRAS OBRIGATÓRIAS:
+- Identifique a necessidade prioritária desta empresa a partir da análise.
+- Ofereça o serviço que resolve essa necessidade, conforme oportunidades e proposta registradas.
+- Além desse serviço principal, inclua também as plaquinhas NFC como oferta complementar em toda mensagem de proposta comercial, conectando-as ao benefício de facilitar avaliações no Google e/ou acesso ao Instagram.
+- Portanto, nunca substitua o serviço indicado pela análise pelas plaquinhas: ofereça a solução prioritária e também as plaquinhas NFC como complemento.
+- Se a análise apontar necessidade no Perfil da Empresa no Google, ofereça criação/configuração ou gestão, conforme o diagnóstico.
+- Se apontar ausência de site, ofereça criação de site; só mencione prévia se houver URL disponível.
+- Se apontar potencial para placas NFC, explique o benefício das placas de forma específica.
+- Havendo várias oportunidades, priorize a mais relevante e apresente as demais com concisão, sem despejar catálogo genérico.
+- A mensagem deve refletir resumo, oportunidades, abordagem e proposta salvos na análise.
+- Não invente necessidades, problemas ou resultados. Se não houver análise salva, não finja que houve análise.
+- Adapte a mensagem à etapa "${data.tipo}" e respeite as regras de autorização já definidas.
+
 ${lead.ai_abordagem ? `Sugestão de abordagem já registrada: ${lead.ai_abordagem}` : ""}
 
-Devolva {"mensagem": string}.`,
+Devolva {"mensagem": string}.
+      `,
       '{"mensagem": string}',
       await iaValues(base44),
     );
@@ -367,7 +395,7 @@ export const summarizeHistoryFn = createServerFn({ method: "POST" })
     const historico = interacoes
       .slice()
       .reverse()
-      .map((i) => `[${i.tipo}] ${i.mensagem || ""}`)
+      .map((i) => "[" + i.tipo + "] " + (i.mensagem || ""))
       .join("\n");
 
     const result = await iaJSON(

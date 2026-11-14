@@ -276,7 +276,7 @@ async function osmFetchJson(url, opts = {}) {
 
 function osmParaLead(el) {
   const t = el.tags || {};
-  const tel = t.phone || t["contact:phone"] || t["contact:mobile"] || t.mobile || "";
+  const tel = t.phone || t["contact:phone"] || t["contact:mobile"] || t.mobile || "";\n  const email = t.email || t["contact:email"] || "";
   const site = t.website || t["contact:website"] || t["contact:facebook"] || "";
   const rua = [t["addr:street"], t["addr:housenumber"]].filter(Boolean).join(", ");
   const cidade = t["addr:city"] || "";
@@ -349,10 +349,63 @@ export async function searchOpenStreetMap({ textQuery, maxResultCount = 10 }) {
   }
 }
 
+/** Localiza um e-mail comercial publicado no próprio site da empresa. */
+async function findPublicEmail(site) {
+  try {
+    const url = new URL(site);
+    if (!["http:", "https:"].includes(url.protocol) || /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i.test(url.hostname)) return "";
+    const paginas = [url.href];
+    const ler = async (href) => {
+      const res = await fetch(href, {
+        headers: { "User-Agent": "GoogleNFCConnect/1.0 (public business contact lookup)", Accept: "text/html" },
+        signal: AbortSignal.timeout(3500),
+      });
+      if (!res.ok) return "";
+      const html = (await res.text()).slice(0, 500000);
+      const mailto = [...html.matchAll(/href=["']mailto:([^"'?]+)/gi)].map((m) => m[1]);
+      const texto = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ");
+      const encontrados = [...mailto, ...(texto.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [])];
+      const email = encontrados
+        .map((v) => decodeURIComponent(v).trim().replace(/[),.;]+$/, "").toLowerCase())
+        .find((v) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(v) && !/(example\.com|email\.com|wixpress|sentry|cloudflare|noreply|no-reply)/i.test(v));
+      if (email) return email;
+      const links = [...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
+      const contato = links
+        .map((href) => { try { return new URL(href, url); } catch { return null; } })
+        .find((link) => link && link.origin === url.origin && /contato|contact|fale-conosco|sobre/i.test(link.pathname));
+      if (contato && paginas.length === 1) paginas.push(contato.href);
+      return "";
+    };
+    for (const pagina of paginas) {
+      const email = await ler(pagina);
+      if (email) return email;
+    }
+  } catch {
+    // Site inacessível, sem e-mail público ou tempo esgotado: mantém o campo vazio.
+  }
+  return "";
+}
+
+async function enriquecerEmailsPublicos(places) {
+  const fila = [...places];
+  const resultado = new Array(places.length);
+  let indice = 0;
+  const workers = Array.from({ length: Math.min(5, places.length) }, async () => {
+    while (indice < fila.length) {
+      const i = indice++;
+      const place = fila[i];
+      const email = String(place.email || place.email_publico || "").trim() || (place.site ? await findPublicEmail(place.site) : "");
+      resultado[i] = { ...place, email, email_publico: email };
+    }
+  });
+  await Promise.all(workers);
+  return resultado;
+}
+
 /** Tenta o Google; se estiver bloqueado/sem chave, usa a busca reserva. */
 export async function searchPlaces(args, values = {}) {
   const google = await searchGooglePlaces(args, values);
-  if (google.ok) return google;
+  if (google.ok) return { ...google, places: await enriquecerEmailsPublicos(google.places || []) };
   const osm = await searchOpenStreetMap(args);
   if (osm.ok) {
     return {
