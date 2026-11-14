@@ -16,6 +16,8 @@ const CAMPO_LABEL = {
   WHATSAPP_ACCESS_TOKEN: "Access token (Meta for Developers)",
   WHATSAPP_PHONE_NUMBER_ID: "Phone number ID",
   WHATSAPP_VERIFY_TOKEN: "Verify token do webhook (você define)",
+  WHATSAPP_APP_SECRET: "App Secret (Meta for Developers)",
+  WHATSAPP_TEMPLATE_PREFIX: "Prefixo dos modelos aprovados (opcional)",
 };
 
 const ORIGEM_LABEL = {
@@ -76,7 +78,7 @@ export default function IntegracaoCard({ item, info, testando, salvando, onTesta
                   </span>
                 </span>
                 <input
-                  type="password"
+                  type={campo === "WHATSAPP_TEMPLATE_PREFIX" ? "text" : "password"}
                   autoComplete="off"
                   value={valores[campo] || ""}
                   onChange={(e) => setValores((v) => ({ ...v, [campo]: e.target.value }))}

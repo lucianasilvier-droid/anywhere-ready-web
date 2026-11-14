@@ -32,6 +32,8 @@ export const CREDENTIAL_KEYS = {
     WHATSAPP_ACCESS_TOKEN: "whatsapp_access_token",
     WHATSAPP_PHONE_NUMBER_ID: "whatsapp_phone_number_id",
     WHATSAPP_VERIFY_TOKEN: "whatsapp_verify_token",
+    WHATSAPP_APP_SECRET: "whatsapp_app_secret",
+    WHATSAPP_TEMPLATE_PREFIX: "whatsapp_template_prefix",
   },
 };
 
@@ -630,7 +632,7 @@ export async function testIntegration(tipo, values = {}) {
     }
     return {
       status: "conectado",
-      mensagem: `Conexão bem-sucedida: ${payload.verified_name || "conta"} · ${payload.display_phone_number || phoneId}.`,
+      mensagem: `Conexão da API confirmada: ${payload.verified_name || "conta"} · ${payload.display_phone_number || phoneId}. Para receber notificações com segurança, preencha também o App Secret e o Verify Token do webhook no painel.`,
     };
   }
 
