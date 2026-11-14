@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Minus, Plus, ShoppingCart, Check, ArrowLeft, Truck, ShieldCheck, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Loader2, Check, ArrowLeft, Truck, ShieldCheck, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PlateVisual from "@/components/store/PlateVisual";
-import { cart } from "@/lib/cart";
 import { brl } from "@/lib/format";
 import { CATALOGO_INICIAL, completarProdutoComCatalogo } from "@/lib/catalogo-inicial";
 
@@ -16,15 +14,12 @@ export const Route = createFileRoute("/_site/loja/$slug")({
 const CHECKOUTS_CONHECIDOS = {
   "placa-instagram": "https://loja.infinitepay.io/bikercourierexpress/xpg6030-placas-nfc-instagram",
   "placa-google": "https://loja.infinitepay.io/bikercourierexpress/hhy2911-placa-google-nfc",
-  "perfil-google-maps": "https://wa.me/5511913290911?text=Quero%20informacoes%20sobre%20o%20servico%20de%20Perfil%20da%20Empresa%20no%20Google",
 };
 
 function ProdutoPage() {
   const { slug } = Route.useParams();
-  const navigate = useNavigate();
   const [produto, setProduto] = useState(null);
   const [carregando, setCarregando] = useState(true);
-  const [quantidade, setQuantidade] = useState(1);
 
   useEffect(() => {
     let ativo = true;
@@ -89,13 +84,6 @@ function ProdutoPage() {
 
   const checkoutUrl = produto.checkout_url || CHECKOUTS_CONHECIDOS[slug] || CHECKOUTS_CONHECIDOS[produto.slug] || CHECKOUTS_CONHECIDOS[produto.id];
   const checkoutWhatsApp = String(checkoutUrl || "").startsWith("https://wa.me/");
-  const temPreco = Number(produto.preco) > 0;
-
-  function adicionar(irParaCarrinho) {
-    cart.add(produto, quantidade);
-    toast.success("Produto adicionado ao carrinho.");
-    if (irParaCarrinho) navigate({ to: "/carrinho" });
-  }
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
@@ -141,38 +129,6 @@ function ProdutoPage() {
               ? `${produto.estoque} unidade(s) em estoque · frete grátis acima de R$ 150,00`
               : "Produção sob encomenda"}
           </p>
-
-          {!checkoutUrl && !checkoutWhatsApp && temPreco && <div className="mt-6 flex items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-white/12 p-1">
-              <button
-                onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
-                className="grid h-8 w-8 place-items-center rounded-full text-white/70 hover:bg-white/10"
-                aria-label="Diminuir quantidade"
-              >
-                <Minus className="h-3.5 w-3.5" />
-              </button>
-              <span className="w-8 text-center text-sm font-semibold text-white">{quantidade}</span>
-              <button
-                onClick={() => setQuantidade((q) => Math.min(50, q + 1))}
-                className="grid h-8 w-8 place-items-center rounded-full text-white/70 hover:bg-white/10"
-                aria-label="Aumentar quantidade"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <button
-              onClick={() => adicionar(false)}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-bold text-primary"
-            >
-              <ShoppingCart className="h-4 w-4" /> Adicionar
-            </button>
-            <button
-              onClick={() => adicionar(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd97a] to-[#f0ac2b] px-5 py-3 text-sm font-bold text-[#0a1128]"
-            >
-              Comprar agora
-            </button>
-          </div>}
 
           {checkoutUrl ? (
             <a
