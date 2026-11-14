@@ -80,14 +80,27 @@ async function senderIdentity(context) {
     empresa = "";
   }
   let remetente = "";
+  let perfilUrl = "";
   try {
     const rep = await base44.representante();
     remetente = String(rep?.nome || "").trim();
+    const slug = String(rep?.pagina_slug || "").trim();
+    if (slug) {
+      const appUrl = String(
+        process.env.APP_URL || process.env.VITE_APP_URL || "https://google-nfc-connect.vercel.app",
+      ).replace(/\/$/, "");
+      perfilUrl = `${appUrl}/r/${encodeURIComponent(slug)}`;
+    }
   } catch {
     remetente = "";
+    perfilUrl = "";
   }
   if (!remetente) remetente = String(context.user?.full_name || "").trim();
-  return { empresa: empresa || BRAND_NAME, remetente: remetente.split(/\s+/)[0] || "" };
+  return {
+    empresa: empresa || BRAND_NAME,
+    remetente: remetente.split(/\s+/)[0] || "",
+    perfilUrl,
+  };
 }
 
 // Replaces any "[Nome da Empresa]"-style placeholder the model still leaves behind.
@@ -296,9 +309,10 @@ Regras obrigatórias:
 - Personalize de verdade para este estabelecimento: cite o nome dele e pelo menos um detalhe concreto dos dados abaixo
   (bairro/cidade, categoria, nota e avaliações no Google, ausência de site ou observações). Evite texto genérico que serviria para qualquer empresa.
 - A mensagem deve estar pronta para enviar, sem nenhuma edição.
-- Na primeira mensagem, nunca inclua catálogo, preços, vídeo ou links; apenas peça autorização.
+- Na primeira mensagem, nunca inclua catálogo, preços, vídeo ou links comerciais; apenas peça autorização.
 - Nunca diga que criou um site quando não houver URL de prévia disponível.
 - Se quem envia for representante comercial, assine com o primeiro nome dele; caso contrário, identifique apenas a empresa.
+- Não inclua link na mensagem gerada: o sistema acrescentará automaticamente o link do perfil público do representante logo abaixo da assinatura.
 
 Contexto de materiais disponíveis:
 - Prévia real do site: ${previewSiteUrl || "não disponível"}
@@ -355,6 +369,9 @@ Devolva {"mensagem": string}.`,
         for (const item of catalogo) materiais.push("\n" + item.nome + " — " + item.preco + "\n" + item.descricao + "\n" + item.url);
       }
       mensagemFinal = (mensagemFinal + "\n\n" + materiais.join("\n")).slice(0, 1450);
+    }
+    if (data.tipo === "autorizacao" && remetente.perfilUrl) {
+      mensagemFinal = `${String(mensagemFinal || "").trim()}\n${remetente.perfilUrl}`.trim();
     }
     return { ok: true, mensagem: mensagemFinal };
   });
