@@ -40,21 +40,27 @@ async function requireCrmAccess(context) {
 
 const CONTEXT_TOOL = `Você é um assistente comercial especialista em marketing local.
 A empresa vende quatro serviços para negócios locais no Brasil:
-1) Criação e configuração do Perfil da Empresa no Google Maps;
-2) Administração e gestão mensal desse perfil;
+1) Criação e configuração do Perfil da Empresa no Google Maps, somente quando o cadastro indicar que o perfil ainda não existe;
+2) Administração e gestão mensal desse perfil, somente quando houver uma oportunidade concreta de melhoria identificável nos dados;
 3) Placas NFC vendidas individualmente, que levam clientes ao link de avaliação do Google ou ao Instagram; nunca ofereça kits ou combos;
-4) Criação de site com mapa do Google Maps e agendamento pelo WhatsApp (ofereça sempre que a empresa não tiver site).
+4) Criação de site com mapa do Google Maps e agendamento pelo WhatsApp, somente quando o campo Site estiver vazio ou não informado.
+REGRA OBRIGATÓRIA SOBRE SITE: se o campo Site contiver qualquer endereço ou URL, considere que a empresa JÁ TEM SITE. Nesse caso, não sugira criar, fazer, montar ou oferecer um novo site, nem diga que a empresa está sem site. Só mencione o site existente se isso for relevante e com base nos dados fornecidos.
+REGRA SOBRE GOOGLE MAPS: não diga que a empresa não tem Perfil da Empresa quando o lead foi localizado por um perfil/registro do Google Places. Não confunda necessidade de gestão com ausência de perfil.
+Não trate nota alta nem grande quantidade de avaliações como problema: são sinais positivos, não motivos isolados para prioridade alta.
+Não invente falhas, necessidades, dados ou oportunidades. Se os dados não comprovarem uma necessidade, diga que não há evidência suficiente.
 Nunca prometa primeira posição no Google, quantidade garantida de avaliações ou resultados não comprováveis.
 Respeite a LGPD e as regras do WhatsApp: nenhuma mensagem promocional sem autorização prévia do estabelecimento.
 Escreva em português do Brasil, com tom profissional, cordial e direto.`;
 
 function leadBrief(lead) {
+  const site = String(lead.site || "").trim();
   return [
     `Empresa: ${lead.empresa || "não informada"}`,
     `Categoria: ${lead.categoria || "não informada"}`,
     `Cidade: ${lead.cidade || "não informada"}${lead.bairro ? `, bairro ${lead.bairro}` : ""}`,
     `Telefone: ${lead.telefone || "não informado"}`,
-    `Site: ${lead.site || "não informado"}`,
+    `Site cadastrado: ${site || "NÃO INFORMADO"}`,
+    `Status do site: ${site ? "JÁ POSSUI SITE — PROIBIDO sugerir criação de site" : "SEM SITE INFORMADO — avaliar se criação de site faz sentido"}`,
     `Nota no Google: ${lead.nota_google ?? "sem dados"} (${lead.total_avaliacoes ?? 0} avaliações)`,
     `Serviço de interesse: ${lead.servico_interesse || "a definir"}`,
     `Observações: ${lead.observacoes || "nenhuma"}`,
@@ -100,21 +106,24 @@ function preencherPlaceholders(texto, { empresa, remetente }, lead) {
 // Reserva local sem custo: mantém análise e rascunhos disponíveis quando os provedores
 // externos de IA estiverem indisponíveis. Usa somente os dados já cadastrados no lead.
 function analiseLocal(lead) {
-  const semSite = !String(lead.site || "").trim();
+  const site = String(lead.site || "").trim();
+  const semSite = !site;
   const avaliacoes = Number(lead.total_avaliacoes || 0);
-  const nota = Number(lead.nota_google || 0);
   const oportunidades = [];
-  if (semSite) oportunidades.push("Criação de site: a empresa não informou um site; uma página própria pode apresentar serviços, localização e contato pelo WhatsApp.");
-  oportunidades.push("Placa NFC: facilita o acesso dos clientes ao perfil de avaliação do Google.");
-  if (lead.categoria || lead.bairro || lead.cidade) oportunidades.push("Perfil da Empresa no Google: revisar informações, fotos, serviços e dados de contato para manter a apresentação atualizada.");
-  const prioridade = semSite || avaliacoes >= 20 || nota >= 4.5 ? "alta" : (avaliacoes > 0 || lead.telefone ? "media" : "baixa");
+  if (semSite) oportunidades.push("Criação de site: não há endereço de site informado no cadastro; confirmar essa informação com o estabelecimento antes de apresentar a solução.");
+  else oportunidades.push("Site existente: o cadastro já informa um endereço de site; não há motivo para oferecer criação de outro site.");
+  oportunidades.push("Placa NFC individual: pode facilitar o acesso dos clientes ao link de avaliação do Google; confirmar se o estabelecimento já utiliza esse recurso.");
+  if (lead.place_id) oportunidades.push("Perfil no Google Maps localizado: avaliar a gestão somente se forem identificados pontos concretos de melhoria; não oferecer criação de perfil como se não existisse.");
+  const prioridade = semSite ? "alta" : (lead.servico_interesse || lead.observacoes ? "media" : "baixa");
   return {
     resumo: semSite
-      ? "Não foi identificado um site cadastrado para este estabelecimento. Há oportunidade de melhorar a apresentação digital e facilitar o contato dos clientes."
-      : "O estabelecimento possui presença digital identificada. Vale revisar a consistência das informações e facilitar o caminho entre descoberta, contato e avaliação.",
+      ? "O cadastro não informa um site para este estabelecimento. Vale confirmar essa informação e, se realmente não houver site, avaliar uma solução simples para apresentar serviços, localização e contato."
+      : "O cadastro já contém um endereço de site. Portanto, criação de site não é uma oportunidade indicada; a conversa pode considerar a placa NFC individual e outras necessidades que sejam confirmadas pelo estabelecimento.",
     oportunidades: oportunidades.join(" "),
     abordagem: "Iniciar com uma observação verdadeira sobre o segmento ou a localização do estabelecimento. Perguntar se pode apresentar uma solução simples, sem pressão e sem enviar material antes da autorização.",
-    proposta: "Apresentar a placa NFC individual para facilitar avaliações no Google e, se não houver site, oferecer uma prévia de site com informações do estabelecimento e contato pelo WhatsApp. Confirmar escopo e valores antes de fechar.",
+    proposta: semSite
+      ? "Confirmar primeiro se a empresa realmente não possui site. Se não possuir, apresentar a opção de criação de site; em paralelo, explicar a placa NFC individual e confirmar interesse antes de enviar materiais."
+      : "Não oferecer criação de site, pois já existe um endereço cadastrado. Apresentar a placa NFC individual apenas como possibilidade, confirmando se o estabelecimento já usa uma e se deseja conhecer a solução.",
     prioridade,
   };
 }
