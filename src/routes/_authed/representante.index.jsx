@@ -9,6 +9,7 @@ import { brl, dataHora } from "@/lib/format";
 import { TABELA_COMISSAO } from "@/lib/comissoes";
 import { STATUS_SOLICITACAO } from "@/lib/representante-ui";
 import CobrarSaldo from "@/components/representante/CobrarSaldo";
+import TutoriaisRepresentante from "@/components/representante/TutoriaisRepresentante";
 
 export const Route = createFileRoute("/_authed/representante/")({
   head: () => ({ meta: [{ title: "Meu dashboard — Representante" }] }),
@@ -54,6 +55,8 @@ function DashboardRepresentante() {
           {representante.email}
         </p>
       </header>
+
+      <TutoriaisRepresentante />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={ShoppingBag} label="Total de vendas" value={metricas.total_vendas} hint={`${brl(metricas.valor_total_vendido)} vendidos`} />
